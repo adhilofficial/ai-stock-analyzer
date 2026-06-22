@@ -77,6 +77,14 @@ const SIGNAL_STYLE = {
 };
 
 function formatPrice(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "N/A";
+  }
+
   const number = Number(value);
 
   if (!Number.isFinite(number)) {
@@ -90,10 +98,18 @@ function formatPrice(value) {
 }
 
 function formatMetric(value, maximumFractionDigits = 2) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "N/A";
+  }
+
   const number = Number(value);
 
   if (!Number.isFinite(number)) {
-    return value || "N/A";
+    return String(value);
   }
 
   return new Intl.NumberFormat("en-IN", {
@@ -102,14 +118,24 @@ function formatMetric(value, maximumFractionDigits = 2) {
 }
 
 function formatIndianLargeNumber(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "N/A";
+  }
+
   const number = Number(value);
 
   if (!Number.isFinite(number)) {
-    return value || "N/A";
+    return String(value);
   }
 
   if (number >= 1_000_000_000_000) {
-    return `${(number / 1_000_000_000_000).toFixed(2)} Lakh Cr`;
+    return `${(
+      number / 1_000_000_000_000
+    ).toFixed(2)} Lakh Cr`;
   }
 
   if (number >= 10_000_000) {
@@ -121,6 +147,226 @@ function formatIndianLargeNumber(value) {
   }
 
   return new Intl.NumberFormat("en-IN").format(number);
+}
+
+function getCompanyDomain(website) {
+  if (!website) {
+    return "";
+  }
+
+  try {
+    return new URL(website).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function isAiLimitError(error) {
+  const message = String(
+    error instanceof Error
+      ? error.message
+      : error || "",
+  ).toLowerCase();
+
+  return (
+    message.includes("429") ||
+    message.includes("quota") ||
+    message.includes("rate limit") ||
+    message.includes("resource_exhausted") ||
+    message.includes("high demand") ||
+    message.includes("too many requests")
+  );
+}
+
+function createLiveResult(stockData, selectedStock) {
+  return {
+    symbol: stockData.symbol,
+
+    ticker: stockData.symbol,
+
+    company:
+      stockData.name ||
+      selectedStock?.name ||
+      stockData.symbol,
+
+    sector: stockData.sector || "N/A",
+
+    industry: stockData.industry || "N/A",
+
+    price: stockData.price ?? null,
+
+    changeAbs: stockData.change ?? 0,
+
+    changePercent: stockData.changePercent ?? 0,
+
+    marketCap: stockData.marketCap ?? null,
+
+    peRatio: stockData.peRatioTTM ?? null,
+
+    week52Low: stockData.fiftyTwoWeekLow ?? null,
+
+    week52High: stockData.fiftyTwoWeekHigh ?? null,
+
+    volume: stockData.volume ?? null,
+
+    chart: Array.isArray(stockData.chart)
+      ? stockData.chart
+      : [],
+
+    source: stockData.source || "Yahoo Finance",
+
+    lastUpdated: stockData.lastUpdated || null,
+
+    logoDomain:
+      stockData.logoDomain ||
+      getCompanyDomain(stockData.website),
+
+    signal: "WATCH",
+
+    summary: "",
+
+    keyThemes: [],
+
+    growthDrivers: [],
+
+    keyRisks: [],
+
+    confidenceScore: 0,
+
+    riskLevel: "Moderate",
+
+    fundamentalScore: 0,
+    fundamentalLabel: "AI unavailable",
+
+    momentumScore: 0,
+    momentumLabel: "AI unavailable",
+
+    valuationScore: 0,
+    valuationLabel: "AI unavailable",
+
+    sentimentScore: 0,
+    sentimentLabel: "AI unavailable",
+
+    aiAvailable: false,
+    aiSummaryCached: false,
+  };
+}
+
+function mergeAiAnalysis(liveResult, aiAnalysis) {
+  const strength = Number(aiAnalysis?.strength);
+
+  const confidenceScore =
+    aiAnalysis?.confidenceScore ??
+    (Number.isFinite(strength)
+      ? Math.min(100, Math.max(0, strength * 10))
+      : liveResult.confidenceScore);
+
+  return {
+    ...liveResult,
+    ...aiAnalysis,
+
+    symbol: liveResult.symbol,
+
+    ticker:
+      aiAnalysis?.ticker ||
+      liveResult.ticker,
+
+    company:
+      aiAnalysis?.company ||
+      liveResult.company,
+
+    sector:
+      aiAnalysis?.sector ||
+      liveResult.sector,
+
+    industry:
+      aiAnalysis?.industry ||
+      liveResult.industry,
+
+    /*
+     * Always retain live Yahoo Finance values.
+     * Gemini cannot replace these fields.
+     */
+    price: liveResult.price,
+    changeAbs: liveResult.changeAbs,
+    changePercent: liveResult.changePercent,
+    marketCap: liveResult.marketCap,
+    peRatio: liveResult.peRatio,
+    week52Low: liveResult.week52Low,
+    week52High: liveResult.week52High,
+    volume: liveResult.volume,
+    chart: liveResult.chart,
+    source: liveResult.source,
+    lastUpdated: liveResult.lastUpdated,
+
+    logoDomain:
+      aiAnalysis?.logoDomain ||
+      liveResult.logoDomain,
+
+    signal: String(
+      aiAnalysis?.signal || "NEUTRAL",
+    ).toUpperCase(),
+
+    summary:
+      aiAnalysis?.summary || "",
+
+    keyThemes: Array.isArray(aiAnalysis?.keyThemes)
+      ? aiAnalysis.keyThemes
+      : [],
+
+    growthDrivers: Array.isArray(
+      aiAnalysis?.growthDrivers,
+    )
+      ? aiAnalysis.growthDrivers
+      : Array.isArray(aiAnalysis?.positives)
+        ? aiAnalysis.positives
+        : [],
+
+    keyRisks: Array.isArray(aiAnalysis?.keyRisks)
+      ? aiAnalysis.keyRisks
+      : Array.isArray(aiAnalysis?.risks)
+        ? aiAnalysis.risks
+        : [],
+
+    confidenceScore,
+
+    riskLevel:
+      aiAnalysis?.riskLevel ||
+      liveResult.riskLevel,
+
+    fundamentalScore:
+      aiAnalysis?.fundamentalScore ?? 0,
+
+    fundamentalLabel:
+      aiAnalysis?.fundamentalLabel ||
+      "Not provided",
+
+    momentumScore:
+      aiAnalysis?.momentumScore ?? 0,
+
+    momentumLabel:
+      aiAnalysis?.momentumLabel ||
+      "Not provided",
+
+    valuationScore:
+      aiAnalysis?.valuationScore ?? 0,
+
+    valuationLabel:
+      aiAnalysis?.valuationLabel ||
+      "Not provided",
+
+    sentimentScore:
+      aiAnalysis?.sentimentScore ?? 0,
+
+    sentimentLabel:
+      aiAnalysis?.sentimentLabel ||
+      "Not provided",
+
+    aiAvailable: true,
+
+    aiSummaryCached:
+      Boolean(aiAnalysis?.aiSummaryCached),
+  };
 }
 
 function MetricCard({ icon: Icon, label, value }) {
@@ -231,7 +477,12 @@ function CompanyLogo({ domain, name, size = 52 }) {
   }, [domain]);
 
   const logoKey = import.meta.env.VITE_LOGO_KEY;
-  const showImage = Boolean(domain && logoKey && !failed);
+
+  const showImage = Boolean(
+    domain &&
+      logoKey &&
+      !failed,
+  );
 
   return (
     <div
@@ -279,7 +530,10 @@ export default function Analyze() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
+
   const [error, setError] = useState("");
+  const [aiNotice, setAiNotice] = useState("");
+
   const [result, setResult] = useState(null);
   const [timeframe, setTimeframe] = useState("1D");
   const [activeTab, setActiveTab] = useState("Overview");
@@ -293,13 +547,22 @@ export default function Analyze() {
 
     setLoading(true);
     setError("");
+    setAiNotice("");
     setResult(null);
 
     try {
+      /*
+       * Step 1: Find the Yahoo Finance symbol.
+       */
       const searchResults = await searchStocks(q);
 
-      if (!Array.isArray(searchResults) || searchResults.length === 0) {
-        throw new Error("No matching stock was found.");
+      if (
+        !Array.isArray(searchResults) ||
+        searchResults.length === 0
+      ) {
+        throw new Error(
+          "No matching stock was found.",
+        );
       }
 
       const selectedStock =
@@ -314,14 +577,20 @@ export default function Analyze() {
             item?.symbol?.endsWith(".BO"),
         ) ||
         searchResults.find(
-          (item) => item?.quoteType === "EQUITY",
+          (item) =>
+            item?.quoteType === "EQUITY",
         ) ||
         searchResults[0];
 
       if (!selectedStock?.symbol) {
-        throw new Error("A valid stock symbol was not found.");
+        throw new Error(
+          "A valid stock symbol was not found.",
+        );
       }
 
+      /*
+       * Step 2: Fetch live Yahoo Finance data.
+       */
       const stockData = await getStockData(
         selectedStock.symbol,
         RANGE_MAP[timeframe],
@@ -333,126 +602,83 @@ export default function Analyze() {
         );
       }
 
-      const aiAnalysis = await getAiAnalysis(stockData);
+      /*
+       * Immediately save the live market result.
+       * The dashboard continues working even if Gemini fails.
+       */
+      const liveResult = createLiveResult(
+        stockData,
+        selectedStock,
+      );
 
-      if (!aiAnalysis || typeof aiAnalysis !== "object") {
-        throw new Error("The AI returned incomplete analysis data.");
-      }
-
-      const completeResult = {
-        ...aiAnalysis,
-
-        symbol: stockData.symbol,
-        ticker:
-          aiAnalysis.ticker ||
-          stockData.symbol,
-
-        company:
-          aiAnalysis.company ||
-          stockData.name ||
-          selectedStock.name ||
-          stockData.symbol,
-
-        sector:
-          aiAnalysis.sector ||
-          stockData.sector ||
-          "N/A",
-
-        industry:
-          aiAnalysis.industry ||
-          stockData.industry ||
-          "N/A",
-
-        price:
-          stockData.price ??
-          aiAnalysis.price ??
-          null,
-
-        changeAbs:
-          stockData.change ??
-          aiAnalysis.changeAbs ??
-          0,
-
-        changePercent:
-          stockData.changePercent ??
-          aiAnalysis.changePercent ??
-          0,
-
-        marketCap:
-          stockData.marketCap ??
-          aiAnalysis.marketCap ??
-          null,
-
-        peRatio:
-          stockData.peRatioTTM ??
-          aiAnalysis.peRatio ??
-          null,
-
-        week52Low:
-          stockData.fiftyTwoWeekLow ??
-          aiAnalysis.week52Low ??
-          null,
-
-        week52High:
-          stockData.fiftyTwoWeekHigh ??
-          aiAnalysis.week52High ??
-          null,
-
-        volume:
-          stockData.volume ??
-          aiAnalysis.volume ??
-          null,
-
-        chart: Array.isArray(stockData.chart)
-          ? stockData.chart
-          : [],
-
-        source:
-          stockData.source ||
-          aiAnalysis.source ||
-          "Yahoo Finance",
-
-        lastUpdated:
-          stockData.lastUpdated ||
-          aiAnalysis.lastUpdated ||
-          null,
-
-        signal:
-          String(aiAnalysis.signal || "NEUTRAL").toUpperCase(),
-
-        keyThemes: Array.isArray(aiAnalysis.keyThemes)
-          ? aiAnalysis.keyThemes
-          : [],
-
-        growthDrivers: Array.isArray(aiAnalysis.growthDrivers)
-          ? aiAnalysis.growthDrivers
-          : Array.isArray(aiAnalysis.positives)
-            ? aiAnalysis.positives
-            : [],
-
-        keyRisks: Array.isArray(aiAnalysis.keyRisks)
-          ? aiAnalysis.keyRisks
-          : Array.isArray(aiAnalysis.risks)
-            ? aiAnalysis.risks
-            : [],
-      };
-
-      setResult(completeResult);
+      setResult(liveResult);
       setQuery("");
+
+      /*
+       * Step 3: Request the optional AI summary.
+       */
+      try {
+        const aiAnalysis = await getAiAnalysis(
+          stockData,
+        );
+
+        if (
+          !aiAnalysis ||
+          typeof aiAnalysis !== "object"
+        ) {
+          throw new Error(
+            "The AI returned incomplete analysis data.",
+          );
+        }
+
+        const completeResult = mergeAiAnalysis(
+          liveResult,
+          aiAnalysis,
+        );
+
+        setResult(completeResult);
+        setAiNotice("");
+      } catch (aiError) {
+        console.error(
+          "AI analysis unavailable:",
+          aiError,
+        );
+
+        if (isAiLimitError(aiError)) {
+          setAiNotice(
+            "The AI summary is temporarily unavailable because the free Gemini usage limit was reached. Live Yahoo Finance prices, metrics and chart data are still available.",
+          );
+        } else {
+          setAiNotice(
+            "The AI summary is temporarily unavailable. Live Yahoo Finance prices, metrics and chart data are still available.",
+          );
+        }
+
+        /*
+         * Do not call setError here.
+         * The Yahoo Finance result remains visible.
+         */
+        setResult(liveResult);
+      }
     } catch (caughtError) {
-      console.error("Stock analysis error:", caughtError);
+      console.error(
+        "Stock data error:",
+        caughtError,
+      );
 
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Unable to analyze this stock.",
+          : "Unable to retrieve this stock.",
       );
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleTimeframeChange(nextTimeframe) {
+  async function handleTimeframeChange(
+    nextTimeframe,
+  ) {
     if (
       !TIMEFRAMES.includes(nextTimeframe) ||
       chartLoading ||
@@ -473,10 +699,15 @@ export default function Analyze() {
     setError("");
 
     try {
-      const updatedStockData = await getStockData(
-        result.symbol,
-        RANGE_MAP[nextTimeframe],
-      );
+      /*
+       * This calls only Yahoo Finance.
+       * Gemini is not called when changing chart range.
+       */
+      const updatedStockData =
+        await getStockData(
+          result.symbol,
+          RANGE_MAP[nextTimeframe],
+        );
 
       setResult((currentResult) => {
         if (!currentResult) {
@@ -486,7 +717,9 @@ export default function Analyze() {
         return {
           ...currentResult,
 
-          chart: Array.isArray(updatedStockData?.chart)
+          chart: Array.isArray(
+            updatedStockData?.chart,
+          )
             ? updatedStockData.chart
             : [],
 
@@ -525,10 +758,17 @@ export default function Analyze() {
           lastUpdated:
             updatedStockData?.lastUpdated ??
             currentResult.lastUpdated,
+
+          source:
+            updatedStockData?.source ??
+            currentResult.source,
         };
       });
     } catch (caughtError) {
-      console.error("Chart update error:", caughtError);
+      console.error(
+        "Chart update error:",
+        caughtError,
+      );
 
       setTimeframe(previousTimeframe);
 
@@ -543,7 +783,10 @@ export default function Analyze() {
   }
 
   const chartData = useMemo(() => {
-    if (!result || !Array.isArray(result.chart)) {
+    if (
+      !result ||
+      !Array.isArray(result.chart)
+    ) {
       return [];
     }
 
@@ -566,17 +809,23 @@ export default function Analyze() {
   }, [result]);
 
   const sig = result
-    ? SIGNAL_STYLE[result.signal] || SIGNAL_STYLE.NEUTRAL
+    ? SIGNAL_STYLE[result.signal] ||
+      SIGNAL_STYLE.NEUTRAL
     : null;
 
-  const changePercent = Number(result?.changePercent) || 0;
-  const changeAbs = Number(result?.changeAbs) || 0;
+  const changePercent =
+    Number(result?.changePercent) || 0;
+
+  const changeAbs =
+    Number(result?.changeAbs) || 0;
 
   return (
     <div
       style={{
         width: "100%",
-        padding: isMobile ? "16px" : "20px 32px",
+        padding: isMobile
+          ? "16px"
+          : "20px 32px",
         boxSizing: "border-box",
         fontFamily: "Arial, sans-serif",
       }}
@@ -585,7 +834,9 @@ export default function Analyze() {
       <div
         style={{
           display: "flex",
-          flexDirection: isMobile ? "column" : "row",
+          flexDirection: isMobile
+            ? "column"
+            : "row",
           gap: 10,
           marginBottom: 14,
         }}
@@ -593,9 +844,14 @@ export default function Analyze() {
         <input
           type="text"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) =>
+            setQuery(event.target.value)
+          }
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !loading) {
+            if (
+              event.key === "Enter" &&
+              !loading
+            ) {
               analyze();
             }
           }}
@@ -603,7 +859,7 @@ export default function Analyze() {
           disabled={loading}
           style={{
             flex: 1,
-            width: "100%",
+            width: isMobile ? "100%" : "50%",
             boxSizing: "border-box",
             padding: "12px 16px",
             borderRadius: 10,
@@ -619,7 +875,10 @@ export default function Analyze() {
         <button
           type="button"
           onClick={() => analyze()}
-          disabled={loading || !query.trim()}
+          disabled={
+            loading ||
+            !query.trim()
+          }
           style={{
             padding: "12px 24px",
             borderRadius: 10,
@@ -639,7 +898,9 @@ export default function Analyze() {
                 : 1,
           }}
         >
-          {loading ? "Analyzing..." : "Analyze"}
+          {loading
+            ? "Analyzing..."
+            : "Analyze"}
         </button>
       </div>
 
@@ -665,7 +926,9 @@ export default function Analyze() {
               background: "#101a30",
               border: "1px solid #1e293b",
               color: "#cbd5e1",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: loading
+                ? "not-allowed"
+                : "pointer",
               opacity: loading ? 0.6 : 1,
             }}
           >
@@ -690,38 +953,61 @@ export default function Analyze() {
         </div>
       )}
 
-      {loading && (
+      {aiNotice && (
         <div
           style={{
-            textAlign: "center",
-            color: "#64748b",
-            padding: 60,
-            fontSize: 15,
+            padding: 14,
+            background: "#10233d",
+            border: "1px solid #365a84",
+            borderRadius: 10,
+            color: "#93c5fd",
+            marginBottom: 20,
+            fontSize: 14,
+            lineHeight: 1.6,
           }}
         >
-          Retrieving Yahoo Finance data and running AI analysis...
+          <strong>AI notice: </strong>
+          {aiNotice}
         </div>
       )}
 
-      {!result && !loading && !error && (
+      {loading && !result && (
         <div
           style={{
             textAlign: "center",
-            color: "#475569",
+            color: "#94a3b8",
             padding: 60,
-            fontSize: 14,
+            fontSize: 15,
+            fontWeight: 500,
           }}
         >
-          Search for a stock or select one above to view live market
-          data and AI-powered research.
+          Loading live Yahoo Finance data and AI analysis...
         </div>
       )}
+
+      {!result &&
+        !loading &&
+        !error && (
+          <div
+            style={{
+              textAlign: "center",
+              color: "#475569",
+              padding: 60,
+              fontSize: 14,
+            }}
+          >
+            Search for a stock or select one above to view live
+            market data and AI-powered research.
+          </div>
+        )}
 
       {result && sig && (
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "2fr 1fr",
             gap: 16,
           }}
         >
@@ -746,9 +1032,13 @@ export default function Analyze() {
               <div
                 style={{
                   display: "flex",
-                  flexDirection: isMobile ? "column" : "row",
+                  flexDirection: isMobile
+                    ? "column"
+                    : "row",
                   justifyContent: "space-between",
-                  alignItems: isMobile ? "stretch" : "flex-start",
+                  alignItems: isMobile
+                    ? "stretch"
+                    : "flex-start",
                   gap: 14,
                 }}
               >
@@ -783,7 +1073,10 @@ export default function Analyze() {
                         {result.company}
                       </span>
 
-                      <Star size={16} color="#64748b" />
+                      <Star
+                        size={16}
+                        color="#64748b"
+                      />
                     </div>
 
                     <div
@@ -795,7 +1088,11 @@ export default function Analyze() {
                     >
                       {result.ticker}
 
-                      <span style={{ color: "#64748b" }}>
+                      <span
+                        style={{
+                          color: "#64748b",
+                        }}
+                      >
                         {" "}
                         · {result.sector || "N/A"}
                       </span>
@@ -824,7 +1121,9 @@ export default function Analyze() {
                     <TrendingDown size={14} />
                   )}
 
-                  AI View: {sig.label}
+                  {result.aiAvailable
+                    ? `AI View: ${sig.label}`
+                    : "AI View: Unavailable"}
                 </span>
               </div>
 
@@ -857,9 +1156,17 @@ export default function Analyze() {
                         : "#ef4444",
                   }}
                 >
-                  {changePercent >= 0 ? "▲" : "▼"}{" "}
-                  {formatMetric(Math.abs(changeAbs))} (
-                  {formatMetric(Math.abs(changePercent))}%)
+                  {changePercent >= 0
+                    ? "▲"
+                    : "▼"}{" "}
+                  {formatMetric(
+                    Math.abs(changeAbs),
+                  )}{" "}
+                  (
+                  {formatMetric(
+                    Math.abs(changePercent),
+                  )}
+                  %)
                 </span>
 
                 <span
@@ -886,13 +1193,17 @@ export default function Analyze() {
               <MetricCard
                 icon={Building2}
                 label="Market cap"
-                value={formatIndianLargeNumber(result.marketCap)}
+                value={formatIndianLargeNumber(
+                  result.marketCap,
+                )}
               />
 
               <MetricCard
                 icon={BarChart3}
                 label="P/E ratio (TTM)"
-                value={formatMetric(result.peRatio)}
+                value={formatMetric(
+                  result.peRatio,
+                )}
               />
 
               <MetricCard
@@ -900,13 +1211,17 @@ export default function Analyze() {
                 label="52W range"
                 value={`${formatMetric(
                   result.week52Low,
-                )} - ${formatMetric(result.week52High)}`}
+                )} - ${formatMetric(
+                  result.week52High,
+                )}`}
               />
 
               <MetricCard
                 icon={Database}
                 label="Volume"
-                value={formatIndianLargeNumber(result.volume)}
+                value={formatIndianLargeNumber(
+                  result.volume,
+                )}
               />
             </div>
 
@@ -931,7 +1246,9 @@ export default function Analyze() {
                   <button
                     type="button"
                     key={tf}
-                    onClick={() => handleTimeframeChange(tf)}
+                    onClick={() =>
+                      handleTimeframeChange(tf)
+                    }
                     disabled={chartLoading}
                     style={{
                       padding: "5px 12px",
@@ -949,10 +1266,15 @@ export default function Analyze() {
                         timeframe === tf
                           ? "#fff"
                           : "#64748b",
-                      opacity: chartLoading ? 0.7 : 1,
+                      opacity: chartLoading
+                        ? 0.7
+                        : 1,
                     }}
                   >
-                    {chartLoading && timeframe === tf ? "..." : tf}
+                    {chartLoading &&
+                    timeframe === tf
+                      ? "..."
+                      : tf}
                   </button>
                 ))}
               </div>
@@ -977,7 +1299,10 @@ export default function Analyze() {
                     Updating chart...
                   </div>
                 ) : chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer
+                    width="100%"
+                    height="100%"
+                  >
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient
@@ -1006,24 +1331,34 @@ export default function Analyze() {
                         vertical={false}
                       />
 
-                      <XAxis dataKey="i" hide />
+                      <XAxis
+                        dataKey="i"
+                        hide
+                      />
 
                       <YAxis
-                        domain={["auto", "auto"]}
+                        domain={[
+                          "auto",
+                          "auto",
+                        ]}
                         tick={{
                           fill: "#64748b",
                           fontSize: 11,
                         }}
                         width={60}
                         tickFormatter={(value) =>
-                          formatMetric(value, 0)
+                          formatMetric(
+                            value,
+                            0,
+                          )
                         }
                       />
 
                       <Tooltip
                         contentStyle={{
                           background: "#0f172a",
-                          border: "1px solid #1e293b",
+                          border:
+                            "1px solid #1e293b",
                           borderRadius: 8,
                           color: "#fff",
                         }}
@@ -1068,7 +1403,8 @@ export default function Analyze() {
               style={{
                 display: "flex",
                 gap: 4,
-                borderBottom: "1px solid #1e293b",
+                borderBottom:
+                  "1px solid #1e293b",
                 overflowX: "auto",
               }}
             >
@@ -1083,7 +1419,9 @@ export default function Analyze() {
                 <button
                   type="button"
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() =>
+                    setActiveTab(tab)
+                  }
                   style={{
                     padding: "10px 16px",
                     fontSize: 14,
@@ -1118,26 +1456,40 @@ export default function Analyze() {
               >
                 <ScoreCard
                   title="Fundamental score"
-                  score={result.fundamentalScore}
-                  scoreLabel={result.fundamentalLabel}
+                  score={
+                    result.fundamentalScore
+                  }
+                  scoreLabel={
+                    result.fundamentalLabel
+                  }
                 />
 
                 <ScoreCard
                   title="Momentum score"
                   score={result.momentumScore}
-                  scoreLabel={result.momentumLabel}
+                  scoreLabel={
+                    result.momentumLabel
+                  }
                 />
 
                 <ScoreCard
                   title="Valuation score"
-                  score={result.valuationScore}
-                  scoreLabel={result.valuationLabel}
+                  score={
+                    result.valuationScore
+                  }
+                  scoreLabel={
+                    result.valuationLabel
+                  }
                 />
 
                 <ScoreCard
                   title="Sentiment score"
-                  score={result.sentimentScore}
-                  scoreLabel={result.sentimentLabel}
+                  score={
+                    result.sentimentScore
+                  }
+                  scoreLabel={
+                    result.sentimentLabel
+                  }
                 />
               </div>
             ) : (
@@ -1175,7 +1527,8 @@ export default function Analyze() {
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    "space-between",
                   gap: 20,
                 }}
               >
@@ -1191,7 +1544,11 @@ export default function Analyze() {
                   </div>
 
                   <ScoreGauge
-                    score={Number(result.confidenceScore) || 0}
+                    score={
+                      Number(
+                        result.confidenceScore,
+                      ) || 0
+                    }
                     size={72}
                   />
                 </div>
@@ -1212,19 +1569,23 @@ export default function Analyze() {
                       fontSize: 15,
                       fontWeight: 600,
                       color:
-                        result.riskLevel === "Low"
+                        result.riskLevel ===
+                        "Low"
                           ? "#22c55e"
-                          : result.riskLevel === "High"
+                          : result.riskLevel ===
+                              "High"
                             ? "#ef4444"
                             : "#eab308",
                     }}
                   >
-                    {result.riskLevel || "Moderate"}
+                    {result.riskLevel ||
+                      "Moderate"}
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* AI summary */}
             <div
               style={{
                 background: "#101a30",
@@ -1258,7 +1619,8 @@ export default function Analyze() {
                 }}
               >
                 {result.summary ||
-                  "AI research summary is currently unavailable."}
+                  aiNotice ||
+                  "AI research summary is currently unavailable. Live market information is still available from Yahoo Finance."}
               </p>
 
               <div
@@ -1278,27 +1640,44 @@ export default function Analyze() {
                   gap: 6,
                 }}
               >
-                {(result.keyThemes || []).map((theme, index) => (
+                {result.keyThemes.length >
+                0 ? (
+                  result.keyThemes.map(
+                    (theme, index) => (
+                      <span
+                        key={`${theme}-${index}`}
+                        style={{
+                          fontSize: 12,
+                          padding: "4px 10px",
+                          borderRadius: 6,
+                          background:
+                            "#1e293b",
+                          color: "#93c5fd",
+                        }}
+                      >
+                        {theme}
+                      </span>
+                    ),
+                  )
+                ) : (
                   <span
-                    key={`${theme}-${index}`}
                     style={{
                       fontSize: 12,
-                      padding: "4px 10px",
-                      borderRadius: 6,
-                      background: "#1e293b",
-                      color: "#93c5fd",
+                      color: "#64748b",
                     }}
                   >
-                    {theme}
+                    No AI themes available.
                   </span>
-                ))}
+                )}
               </div>
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                gridTemplateColumns: isMobile
+                  ? "1fr"
+                  : "1fr 1fr",
                 gap: 12,
               }}
             >
@@ -1325,20 +1704,32 @@ export default function Analyze() {
                   Growth drivers
                 </div>
 
-                {(result.growthDrivers || []).map(
-                  (driver, index) => (
-                    <div
-                      key={`${driver}-${index}`}
-                      style={{
-                        fontSize: 12.5,
-                        color: "#86efac",
-                        marginBottom: 6,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      • {driver}
-                    </div>
-                  ),
+                {result.growthDrivers.length >
+                0 ? (
+                  result.growthDrivers.map(
+                    (driver, index) => (
+                      <div
+                        key={`${driver}-${index}`}
+                        style={{
+                          fontSize: 12.5,
+                          color: "#86efac",
+                          marginBottom: 6,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        • {driver}
+                      </div>
+                    ),
+                  )
+                ) : (
+                  <div
+                    style={{
+                      fontSize: 12.5,
+                      color: "#86efac",
+                    }}
+                  >
+                    AI growth drivers are currently unavailable.
+                  </div>
                 )}
               </div>
 
@@ -1365,19 +1756,33 @@ export default function Analyze() {
                   Key risks
                 </div>
 
-                {(result.keyRisks || []).map((risk, index) => (
+                {result.keyRisks.length >
+                0 ? (
+                  result.keyRisks.map(
+                    (risk, index) => (
+                      <div
+                        key={`${risk}-${index}`}
+                        style={{
+                          fontSize: 12.5,
+                          color: "#fdba74",
+                          marginBottom: 6,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        • {risk}
+                      </div>
+                    ),
+                  )
+                ) : (
                   <div
-                    key={`${risk}-${index}`}
                     style={{
                       fontSize: 12.5,
                       color: "#fdba74",
-                      marginBottom: 6,
-                      lineHeight: 1.5,
                     }}
                   >
-                    • {risk}
+                    AI risk analysis is currently unavailable.
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -1390,9 +1795,12 @@ export default function Analyze() {
                 padding: "4px 8px",
               }}
             >
-              Market data source: {result.source || "Yahoo Finance"}.
-              AI analysis is provided for educational research purposes
-              and is not guaranteed financial advice.
+              Market data source:{" "}
+              {result.source ||
+                "Yahoo Finance"}
+              . AI analysis is provided for
+              educational research purposes and
+              is not financial advice.
             </div>
           </div>
         </div>
