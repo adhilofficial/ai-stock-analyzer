@@ -1,96 +1,139 @@
-async function readApiResponse(
-  response
-) {
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL
+    ?.trim()
+    .replace(/\/$/, "") ||
+  (import.meta.env.DEV
+    ? "http://localhost:3001"
+    : "");
+
+async function readResponse(response) {
   const contentType =
-    response.headers.get(
-      "content-type"
-    ) || "";
+    response.headers.get("content-type") || "";
 
-  if (
-    !contentType.includes(
-      "application/json"
-    )
-  ) {
-    const text =
-      await response.text();
+  const rawText = await response.text();
 
-    console.error(
-      "Non-JSON API response:",
-      text
-    );
+  if (!contentType.includes("application/json")) {
+    console.error("Expected JSON but received:", {
+      url: response.url,
+      status: response.status,
+      contentType,
+      response: rawText.slice(0, 300),
+    });
 
     throw new Error(
-      "The server returned an invalid response."
+      `The API returned ${response.status} instead of JSON. Check that the backend is running and that Vercel is not rewriting API requests.`,
     );
   }
 
-  const data = await response.json();
+  let data;
+
+  try {
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch {
+    throw new Error(
+      "The server returned malformed JSON.",
+    );
+  }
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       data?.error?.message ||
         data?.error ||
-        `Request failed with status ${response.status}.`
+        `Request failed with status ${response.status}.`,
     );
+
+    error.status = response.status;
+    error.code = data?.error?.code;
+
+    throw error;
   }
 
   return data;
 }
 
-export async function searchStocks(
-  query
-) {
+export async function searchStocks(query) {
   const response = await fetch(
-    `/api/stock-search?q=${encodeURIComponent(
-      query
-    )}`
+    `${API_BASE_URL}/api/stocks/search?q=${encodeURIComponent(
+      query,
+    )}`,
   );
 
-  const data =
-    await readApiResponse(response);
-
-  return data.stocks || [];
+  return readResponse(response);
 }
 
 export async function getStockData(
   symbol,
-  range = "1y"
+  range = "1d",
 ) {
   const response = await fetch(
-    `/api/stock-data?symbol=${encodeURIComponent(
-      symbol
-    )}&range=${encodeURIComponent(
-      range
-    )}`
+    `${API_BASE_URL}/api/stocks/${encodeURIComponent(
+      symbol,
+    )}?range=${encodeURIComponent(range)}`,
   );
 
-  const data =
-    await readApiResponse(response);
-
-  return data.stock;
+  return readResponse(response);
 }
 
-export async function getAiAnalysis(
-  stockData
-) {
+export async function getAiAnalysis(stockData) {
   const response = await fetch(
-    "/api/analyze",
+    `${API_BASE_URL}/api/analyze`,
     {
       method: "POST",
 
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
 
       body: JSON.stringify({
-        stockData,
+        symbol: stockData.symbol,
+
+        messages: [
+          {
+            content: `Analyze ${
+              stockData.name || stockData.symbol
+            }`,
+          },
+        ],
       }),
-    }
+    },
   );
 
-  const data =
-    await readApiResponse(response);
+  const data = await readResponse(response);
 
-  return data.result;
+  const rawAiText =
+    data?.content?.[0]?.text || "";
+
+  if (!rawAiText) {
+    throw new Error(
+      "The AI summary response was empty.",
+    );
+  }
+
+  const cleanedText = rawAiText
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
+
+  let parsedAnalysis;
+
+  try {
+    parsedAnalysis = JSON.parse(cleanedText);
+  } catch {
+    console.error(
+      "Invalid Gemini response:",
+      cleanedText,
+    );
+
+    throw new Error(
+      "The AI returned an invalid analysis format.",
+    );
+  }
+
+  return {
+    ...parsedAnalysis,
+    aiSummaryCached: Boolean(
+      data.aiSummaryCached,
+    ),
+  };
 }
