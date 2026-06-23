@@ -1,22 +1,15 @@
-let yahooFinancePromise;
+import YahooFinance from "yahoo-finance2";
 
-async function getYahooFinance() {
-  if (!yahooFinancePromise) {
-    yahooFinancePromise = import("yahoo-finance2").then(
-      ({ default: YahooFinance }) => new YahooFinance(),
-    );
-  }
+const yahooFinance = new YahooFinance();
 
-  return yahooFinancePromise;
-}
-
-function getQueryValue(value) {
-  if (Array.isArray(value)) {
-    return value[0] || "";
-  }
-
-  return value || "";
-}
+const VALID_RANGES = new Set([
+  "1d",
+  "1w",
+  "1m",
+  "1y",
+  "5y",
+  "max",
+]);
 
 function daysAgo(days) {
   return new Date(
@@ -27,7 +20,7 @@ function daysAgo(days) {
 function getChartOptions(range = "1y") {
   const now = new Date();
 
-  const options = {
+  const ranges = {
     "1d": {
       period1: daysAgo(5),
       period2: now,
@@ -53,7 +46,7 @@ function getChartOptions(range = "1y") {
     },
 
     "5y": {
-      period1: daysAgo(365 * 5 + 10),
+      period1: daysAgo(365 * 5 + 15),
       period2: now,
       interval: "1wk",
     },
@@ -65,62 +58,107 @@ function getChartOptions(range = "1y") {
     },
   };
 
-  return options[range] || options["1y"];
+  return ranges[range] || ranges["1y"];
 }
 
-function getDomain(url) {
-  if (!url) {
-    return "";
-  }
-
+function getTradingDate(value) {
   try {
-    const completeUrl = url.startsWith("http")
-      ? url
-      : `https://${url}`;
-
-    return new URL(completeUrl).hostname.replace(
-      /^www\./,
-      "",
-    );
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(value));
   } catch {
     return "";
   }
 }
 
+function getQueryValue(req, key) {
+  const directValue = req.query?.[key];
+
+  if (directValue !== undefined) {
+    return directValue;
+  }
+
+  try {
+    const requestUrl = new URL(
+      req.url,
+      "http://localhost",
+    );
+
+    return requestUrl.searchParams.get(key);
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+
     return res.status(405).json({
-      error: "Method not allowed.",
+      error: {
+        code: "METHOD_NOT_ALLOWED",
+        message: "Only GET requests are allowed.",
+      },
     });
   }
 
   try {
     const symbol = String(
-      getQueryValue(req.query?.symbol),
+      getQueryValue(req, "symbol") || "",
     )
       .trim()
       .toUpperCase();
 
-    const range = String(
-      getQueryValue(req.query?.range) || "1y",
+    const requestedRange = String(
+      getQueryValue(req, "range") || "1y",
     ).toLowerCase();
 
     if (!symbol) {
       return res.status(400).json({
-        error: "Stock symbol is required.",
+        error: {
+          code: "SYMBOL_REQUIRED",
+          message: "Stock symbol is required.",
+        },
       });
     }
 
-    const yahooFinance = await getYahooFinance();
+    if (!VALID_RANGES.has(requestedRange)) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_RANGE",
+          message:
+            "Use one of these ranges: 1d, 1w, 1m, 1y, 5y or max.",
+        },
+      });
+    }
 
+    console.log(
+      `Loading Yahoo Finance data for ${symbol}, range ${requestedRange}`,
+    );
+
+    /*
+     * The quote is required.
+     * If this fails, there is no usable stock result.
+     */
     const quote = await yahooFinance.quote(symbol);
 
-    if (!quote) {
+    if (!quote?.symbol) {
       return res.status(404).json({
-        error: "Yahoo Finance did not return stock data.",
+        error: {
+          code: "STOCK_NOT_FOUND",
+          message:
+            "Yahoo Finance could not find this stock symbol.",
+        },
       });
     }
 
+    /*
+     * Profile and chart are optional.
+     * Their failure should not hide the current quote.
+     */
     const [profileResult, chartResult] =
       await Promise.allSettled([
         yahooFinance.quoteSummary(symbol, {
@@ -129,7 +167,7 @@ export default async function handler(req, res) {
 
         yahooFinance.chart(
           symbol,
-          getChartOptions(range),
+          getChartOptions(requestedRange),
         ),
       ]);
 
@@ -139,162 +177,187 @@ export default async function handler(req, res) {
         : {};
 
     if (profileResult.status === "rejected") {
-      console.warn(
-        "Profile request failed:",
+      console.error(
+        "Yahoo profile request failed:",
         profileResult.reason,
       );
     }
 
-    const chart =
-      chartResult.status === "fulfilled"
-        ? (chartResult.value?.quotes || [])
-            .filter(
-              (item) =>
-                item?.date &&
-                item?.close !== null &&
-                item?.close !== undefined,
-            )
-            .map((item) => ({
-              date:
-                item.date instanceof Date
-                  ? item.date.toISOString()
-                  : String(item.date),
+    let chart = [];
 
-              open: item.open ?? null,
-              high: item.high ?? null,
-              low: item.low ?? null,
-              close: item.close ?? null,
-              volume: item.volume ?? null,
-            }))
+    if (chartResult.status === "fulfilled") {
+      const rawQuotes = Array.isArray(
+        chartResult.value?.quotes,
+      )
+        ? chartResult.value.quotes
         : [];
 
-    if (chartResult.status === "rejected") {
-      console.warn(
-        "Chart request failed:",
+      chart = rawQuotes
+        .filter((item) => {
+          return (
+            item?.date &&
+            item?.close !== null &&
+            item?.close !== undefined &&
+            Number.isFinite(Number(item.close))
+          );
+        })
+        .map((item) => ({
+          date: item.date,
+          open: item.open ?? null,
+          high: item.high ?? null,
+          low: item.low ?? null,
+          close: item.close ?? null,
+          volume: item.volume ?? null,
+        }));
+    } else {
+      console.error(
+        "Yahoo chart request failed:",
         chartResult.reason,
       );
     }
 
-    const website =
-      profile.website ||
-      profile.irWebsite ||
-      "";
+    /*
+     * For 1D, Yahoo may include multiple recent sessions.
+     * Keep only the latest trading session.
+     */
+    if (
+      requestedRange === "1d" &&
+      chart.length > 0
+    ) {
+      const latestDate = getTradingDate(
+        chart[chart.length - 1].date,
+      );
 
-    const stock = {
-      symbol:
-        quote.symbol ||
-        symbol,
+      chart = chart.filter(
+        (item) =>
+          getTradingDate(item.date) === latestDate,
+      );
+    }
+
+    /*
+     * Return the stock object directly.
+     *
+     * Do not wrap this as:
+     * { stockData: ... }
+     * { data: ... }
+     *
+     * Analyze.jsx expects response.symbol directly.
+     */
+    return res.status(200).json({
+      symbol: quote.symbol,
 
       name:
         quote.longName ||
         quote.shortName ||
-        quote.symbol ||
-        symbol,
+        quote.symbol,
 
       exchange:
         quote.fullExchangeName ||
         quote.exchange ||
         null,
 
-      currency:
-        quote.currency ||
-        "INR",
+      currency: quote.currency || "INR",
 
       marketState:
-        quote.marketState ||
-        null,
+        quote.marketState || null,
 
       price:
-        quote.regularMarketPrice ??
-        null,
+        quote.regularMarketPrice ?? null,
 
       previousClose:
-        quote.regularMarketPreviousClose ??
-        null,
+        quote.regularMarketPreviousClose ?? null,
 
       change:
-        quote.regularMarketChange ??
-        null,
+        quote.regularMarketChange ?? null,
 
       changePercent:
-        quote.regularMarketChangePercent ??
-        null,
+        quote.regularMarketChangePercent ?? null,
+
+      open:
+        quote.regularMarketOpen ?? null,
+
+      dayHigh:
+        quote.regularMarketDayHigh ?? null,
+
+      dayLow:
+        quote.regularMarketDayLow ?? null,
 
       marketCap:
-        quote.marketCap ??
-        null,
+        quote.marketCap ?? null,
 
       peRatioTTM:
-        quote.trailingPE ??
-        null,
+        quote.trailingPE ?? null,
+
+      forwardPE:
+        quote.forwardPE ?? null,
 
       fiftyTwoWeekLow:
-        quote.fiftyTwoWeekLow ??
-        null,
+        quote.fiftyTwoWeekLow ?? null,
 
       fiftyTwoWeekHigh:
-        quote.fiftyTwoWeekHigh ??
-        null,
+        quote.fiftyTwoWeekHigh ?? null,
 
       volume:
         quote.regularMarketVolume ??
         quote.volume ??
         null,
 
-      dayOpen:
-        quote.regularMarketOpen ??
-        null,
-
-      dayHigh:
-        quote.regularMarketDayHigh ??
-        null,
-
-      dayLow:
-        quote.regularMarketDayLow ??
+      averageVolume:
+        quote.averageDailyVolume3Month ??
         null,
 
       sector:
-        profile.sector ||
-        null,
+        profile.sector || null,
 
       industry:
-        profile.industry ||
-        null,
+        profile.industry || null,
 
       businessSummary:
-        profile.longBusinessSummary ||
-        null,
+        profile.longBusinessSummary || null,
 
-      website,
+      website:
+        profile.website || null,
 
-      logoDomain:
-        getDomain(website),
+      employees:
+        profile.fullTimeEmployees ?? null,
+
+      source: "Yahoo Finance",
 
       lastUpdated:
-        quote.regularMarketTime instanceof Date
-          ? quote.regularMarketTime.toISOString()
-          : quote.regularMarketTime ||
-            new Date().toISOString(),
+        quote.regularMarketTime ||
+        new Date().toISOString(),
 
-      source:
-        "Yahoo Finance",
-
-      range,
+      range: requestedRange,
 
       chart,
-    };
-
-    return res.status(200).json({
-      stock,
     });
   } catch (error) {
-    console.error("Stock-data function error:", error);
+    console.error(
+      "Yahoo Finance stock-data function failed:",
+      error,
+    );
 
-    return res.status(500).json({
-      error:
-        error instanceof Error
-          ? error.message
-          : "Unable to retrieve stock data.",
-    });
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to retrieve stock data.";
+
+    const isNotFound =
+      message.toLowerCase().includes("not found") ||
+      message.toLowerCase().includes("no fundamentals");
+
+    return res
+      .status(isNotFound ? 404 : 500)
+      .json({
+        error: {
+          code: isNotFound
+            ? "STOCK_NOT_FOUND"
+            : "STOCK_DATA_FAILED",
+
+          message: isNotFound
+            ? "The requested stock symbol was not found."
+            : message,
+        },
+      });
   }
 }

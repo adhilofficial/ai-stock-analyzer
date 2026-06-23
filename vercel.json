@@ -1,7 +1,27 @@
 {
   "rewrites": [
     {
-      "source": "/:path((?!api/).*)",
+      "source": "/analyze",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/screener",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/portfolio",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/market-pulse",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/learn",
       "destination": "/index.html"
     }
   ]

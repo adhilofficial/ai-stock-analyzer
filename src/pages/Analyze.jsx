@@ -39,7 +39,7 @@ const SAMPLES = [
   "Tata Motors",
   "Wipro",
   "Asian Paints",
-  "Zomato",
+  // "Zomato",
 ];
 
 const TIMEFRAMES = ["1D", "1W", "1M", "1Y", "5Y", "MAX"];
@@ -646,11 +646,11 @@ export default function Analyze() {
 
         if (isAiLimitError(aiError)) {
           setAiNotice(
-            "The AI summary is temporarily unavailable because the free Gemini usage limit was reached. Live Yahoo Finance prices, metrics and chart data are still available.",
+            "The AI summary is temporarily unavailable because the free Gemini usage limit was reached. Live Finance prices, metrics and chart data are still available.",
           );
         } else {
           setAiNotice(
-            "The AI summary is temporarily unavailable. Live Yahoo Finance prices, metrics and chart data are still available.",
+            "The AI summary is temporarily unavailable. Live Finance prices, metrics and chart data are still available.",
           );
         }
 
@@ -981,7 +981,7 @@ export default function Analyze() {
             fontWeight: 500,
           }}
         >
-          Loading live Yahoo Finance data and AI analysis...
+          Loading AI analysis...
         </div>
       )}
 
