@@ -1,5 +1,14 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
+    {
+      "source": "/api/stocks/search",
+      "destination": "/api/stock-search"
+    },
+    {
+      "source": "/api/stocks/:symbol",
+      "destination": "/api/stock-data?symbol=:symbol"
+    },
     {
       "source": "/analyze",
       "destination": "/index.html"
