@@ -1,8 +1,15 @@
-const API_BASE_URL =
+const configuredApiUrl =
   import.meta.env.VITE_API_BASE_URL
     ?.trim()
-    .replace(/\/$/, "") ||
-  (import.meta.env.DEV
+    .replace(/\/$/, "");
+
+const isLocalBrowser =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+
+const API_BASE_URL =
+  configuredApiUrl ||
+  (isLocalBrowser
     ? "http://localhost:3001"
     : "");
 
