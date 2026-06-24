@@ -1,12 +1,8 @@
-
-/*
- * Local development uses the Express server on port 3001.
- * Vercel production uses the same website domain.
- */
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL
-    ?.trim()
-    .replace(/\/$/, "") || "";
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || ""
+)
+  .trim()
+  .replace(/\/$/, "");
 
 async function readResponse(response) {
   const contentType =
@@ -30,7 +26,9 @@ async function readResponse(response) {
   let data;
 
   try {
-    data = rawText ? JSON.parse(rawText) : {};
+    data = rawText
+      ? JSON.parse(rawText)
+      : {};
   } catch {
     throw new Error(
       "The server returned malformed JSON.",
@@ -48,7 +46,11 @@ async function readResponse(response) {
     const error = new Error(message);
 
     error.status = response.status;
-    error.code = data?.error?.code || "";
+    error.code =
+      data?.error?.code || "";
+
+    error.retryAfter =
+      data?.retryAfter || null;
 
     throw error;
   }
@@ -57,23 +59,24 @@ async function readResponse(response) {
 }
 
 /*
- * Correct deployed function:
+ * Searches stocks through:
  * api/stock-search.js
  */
 export async function searchStocks(query) {
+  const cleanedQuery =
+    String(query || "").trim();
+
+  if (!cleanedQuery) {
+    return [];
+  }
+
   const url =
     `${API_BASE_URL}/api/stock-search` +
-    `?q=${encodeURIComponent(query)}`;
+    `?q=${encodeURIComponent(cleanedQuery)}`;
 
   const response = await fetch(url);
-
   const data = await readResponse(response);
 
-  /*
-   * The new API returns an array directly.
-   * These alternatives also protect against
-   * older wrapped API response formats.
-   */
   if (Array.isArray(data)) {
     return data;
   }
@@ -99,29 +102,39 @@ export async function searchStocks(query) {
 }
 
 /*
- * Correct deployed function:
+ * Loads current price, metrics and chart through:
  * api/stock-data.js
  */
 export async function getStockData(
   symbol,
   range = "1d",
 ) {
+  const cleanedSymbol =
+    String(symbol || "").trim();
+
+  if (!cleanedSymbol) {
+    throw new Error(
+      "A stock symbol is required.",
+    );
+  }
+
+  const cleanedRange =
+    String(range || "1d").trim();
+
   const url =
     `${API_BASE_URL}/api/stock-data` +
-    `?symbol=${encodeURIComponent(symbol)}` +
-    `&range=${encodeURIComponent(range)}`;
+    `?symbol=${encodeURIComponent(cleanedSymbol)}` +
+    `&range=${encodeURIComponent(cleanedRange)}`;
 
   const response = await fetch(url);
   const data = await readResponse(response);
 
-  /*
-   * The corrected API returns the stock object directly.
-   * The other cases support any older response shape.
-   */
+  // Current API format
   if (data?.symbol) {
     return data;
   }
 
+  // Compatibility with older API formats
   if (data?.stockData?.symbol) {
     return data.stockData;
   }
@@ -141,10 +154,21 @@ export async function getStockData(
 }
 
 /*
- * Correct deployed function:
+ * Loads Gemini analysis through:
  * api/analyze.js
  */
-export async function getAiAnalysis(stockData) {
+export async function getAiAnalysis(
+  stockData,
+) {
+  if (
+    !stockData?.symbol ||
+    !stockData?.name
+  ) {
+    throw new Error(
+      "Valid stock data is required for AI analysis.",
+    );
+  }
+
   const response = await fetch(
     `${API_BASE_URL}/api/analyze`,
     {
@@ -155,16 +179,6 @@ export async function getAiAnalysis(stockData) {
       },
 
       body: JSON.stringify({
-        symbol: stockData.symbol,
-
-        messages: [
-          {
-            content: `Analyze ${
-              stockData.name || stockData.symbol
-            }`,
-          },
-        ],
-
         stockData,
       }),
     },
@@ -172,9 +186,6 @@ export async function getAiAnalysis(stockData) {
 
   const data = await readResponse(response);
 
-  /*
-   * Handle a friendly AI-unavailable response.
-   */
   if (data?.aiUnavailable) {
     throw new Error(
       data?.error?.message ||
@@ -184,16 +195,17 @@ export async function getAiAnalysis(stockData) {
 
   /*
    * Format 1:
-   * API returns the analysis object directly.
+   * The result is returned at the top level.
    */
   if (
     data &&
     typeof data === "object" &&
     !Array.isArray(data) &&
-    data.summary
+    typeof data.summary === "string"
   ) {
     return {
       ...data,
+
       aiSummaryCached: Boolean(
         data.aiSummaryCached,
       ),
@@ -202,7 +214,7 @@ export async function getAiAnalysis(stockData) {
 
   /*
    * Format 2:
-   * API returns { analysis: {...} }
+   * { analysis: {...} }
    */
   if (
     data?.analysis &&
@@ -210,6 +222,7 @@ export async function getAiAnalysis(stockData) {
   ) {
     return {
       ...data.analysis,
+
       aiSummaryCached: Boolean(
         data.aiSummaryCached,
       ),
@@ -218,7 +231,7 @@ export async function getAiAnalysis(stockData) {
 
   /*
    * Format 3:
-   * API returns { result: {...} }
+   * { result: {...} }
    */
   if (
     data?.result &&
@@ -226,6 +239,7 @@ export async function getAiAnalysis(stockData) {
   ) {
     return {
       ...data.result,
+
       aiSummaryCached: Boolean(
         data.aiSummaryCached,
       ),
@@ -234,15 +248,16 @@ export async function getAiAnalysis(stockData) {
 
   /*
    * Format 4:
-   * API returns { data: {...} }
+   * { data: {...} }
    */
   if (
     data?.data &&
     typeof data.data === "object" &&
-    data.data.summary
+    typeof data.data.summary === "string"
   ) {
     return {
       ...data.data,
+
       aiSummaryCached: Boolean(
         data.aiSummaryCached,
       ),
@@ -251,14 +266,13 @@ export async function getAiAnalysis(stockData) {
 
   /*
    * Format 5:
-   * Your Express-style response:
-   * { content: [{ type: "text", text: "..." }] }
+   * { content: [{ text: "{...}" }] }
    */
   const rawAiText =
     data?.content?.[0]?.text ||
     data?.text ||
-    data?.candidates?.[0]?.content?.parts?.[0]
-      ?.text ||
+    data?.candidates?.[0]
+      ?.content?.parts?.[0]?.text ||
     "";
 
   if (!rawAiText) {
@@ -273,26 +287,25 @@ export async function getAiAnalysis(stockData) {
     );
   }
 
-  /*
-   * The AI text may already be an object.
-   */
   if (
     typeof rawAiText === "object" &&
     rawAiText !== null
   ) {
     return {
       ...rawAiText,
+
       aiSummaryCached: Boolean(
         data.aiSummaryCached,
       ),
     };
   }
 
-  const cleanedText = String(rawAiText)
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/```$/i, "")
-    .trim();
+  const cleanedText =
+    String(rawAiText)
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
 
   try {
     const parsedAnalysis =
@@ -300,6 +313,7 @@ export async function getAiAnalysis(stockData) {
 
     return {
       ...parsedAnalysis,
+
       aiSummaryCached: Boolean(
         data.aiSummaryCached,
       ),

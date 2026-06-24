@@ -27,3 +27,4 @@ server.cjs
 api.env
 
 .vercel
+.env*
