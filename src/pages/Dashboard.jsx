@@ -14,6 +14,9 @@ import MarketIndexCard from "../components/dashboard/MarketIndexCard";
 import MarketPulse from "../components/dashboard/MarketPulse";
 import MarketBreadth from "../components/dashboard/MarketBreadth";
 import SectorPerformance from "../components/dashboard/SectorPerformance";
+import WatchlistCard from "../components/dashboard/WatchlistCard";
+import MarketMovers from "../components/dashboard/MarketMovers";
+import ImportantAlerts from "../components/dashboard/ImportantAlerts";
 
 import "../styles/dashboard.css";
 
@@ -25,6 +28,13 @@ export default function Dashboard() {
     searchQuery,
     setSearchQuery,
   ] = useState("");
+
+  const [
+    watchlist,
+    setWatchlist,
+  ] = useState(
+    dashboardMockData.watchlist,
+  );
 
   function handleSearch(event) {
     event.preventDefault();
@@ -40,6 +50,34 @@ export default function Dashboard() {
       `/analyze?query=${encodeURIComponent(
         cleanedQuery,
       )}`,
+    );
+  }
+
+  function handleAnalyze(symbol) {
+    if (!symbol) {
+      return;
+    }
+
+    navigate(
+      `/analyze?symbol=${encodeURIComponent(
+        symbol,
+      )}`,
+    );
+  }
+
+  function handleRemoveFromWatchlist(
+    symbol,
+  ) {
+    if (!symbol) {
+      return;
+    }
+
+    setWatchlist(
+      (currentStocks) =>
+        currentStocks.filter(
+          (stock) =>
+            stock.symbol !== symbol,
+        ),
     );
   }
 
@@ -122,7 +160,6 @@ export default function Dashboard() {
         <div className="exa-section-heading">
           <div>
             <p>MARKET OVERVIEW</p>
-
             <h2>Indian indices</h2>
           </div>
 
@@ -170,12 +207,42 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <section className="exa-stage3-grid">
+        <div className="exa-watchlist-grid-item">
+          <WatchlistCard
+            stocks={watchlist}
+            onAnalyze={handleAnalyze}
+            onRemove={
+              handleRemoveFromWatchlist
+            }
+          />
+        </div>
+
+        <div className="exa-alerts-grid-item">
+          <ImportantAlerts
+            alerts={
+              dashboardMockData.alerts
+            }
+            onAnalyze={handleAnalyze}
+          />
+        </div>
+
+        <div className="exa-movers-grid-item">
+          <MarketMovers
+            movers={
+              dashboardMockData.movers
+            }
+            onAnalyze={handleAnalyze}
+          />
+        </div>
+      </section>
+
       <p className="exa-dashboard-note">
         Values displayed during this
         development stage are demonstration
-        data. Live market information will be
-        connected after the dashboard
-        interface is completed.
+        data. Live Yahoo Finance information
+        will be connected after the dashboard
+        interface is verified.
       </p>
     </main>
   );
