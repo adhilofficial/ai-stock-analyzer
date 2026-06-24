@@ -1,4 +1,9 @@
 import {
+  lazy,
+  Suspense,
+} from "react";
+
+import {
   BrowserRouter,
   Navigate,
   Route,
@@ -9,23 +14,53 @@ import {
 import Navbar from
   "./components/Navbar";
 
-import Dashboard from
-  "./pages/Dashboard";
+/*
+ * These pages are loaded only when
+ * their routes are opened.
+ */
+const Dashboard = lazy(() =>
+  import("./pages/Dashboard"),
+);
 
-import Analyze from
-  "./pages/Analyze";
+const Analyze = lazy(() =>
+  import("./pages/Analyze"),
+);
 
-import ComingSoon from
-  "./pages/ComingSoon";
+const ComingSoon = lazy(() =>
+  import("./pages/ComingSoon"),
+);
+
+function PageLoader() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        background: "#050914",
+        color: "#a8b3cf",
+        fontFamily:
+          "Inter, system-ui, sans-serif",
+      }}
+    >
+      Loading EXA...
+    </div>
+  );
+}
 
 function AppRoutes() {
   const location =
     useLocation();
 
   const usesNewDashboardShell =
-    location.pathname ===
-      "/dashboard" ||
-    location.pathname === "/";
+    location.pathname === "/" ||
+    location.pathname.startsWith(
+      "/dashboard",
+    );
 
   return (
     <>
@@ -33,72 +68,76 @@ function AppRoutes() {
         <Navbar />
       )}
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Navigate
-              to="/dashboard"
-              replace
-            />
-          }
-        />
+      <Suspense
+        fallback={<PageLoader />}
+      >
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Navigate
+                to="/dashboard"
+                replace
+              />
+            }
+          />
 
-        <Route
-          path="/dashboard"
-          element={<Dashboard />}
-        />
+          <Route
+            path="/dashboard"
+            element={<Dashboard />}
+          />
 
-        <Route
-          path="/analyze"
-          element={<Analyze />}
-        />
+          <Route
+            path="/analyze"
+            element={<Analyze />}
+          />
 
-        <Route
-          path="/screener"
-          element={<ComingSoon />}
-        />
+          <Route
+            path="/screener"
+            element={<ComingSoon />}
+          />
 
-        <Route
-          path="/portfolio"
-          element={<ComingSoon />}
-        />
+          <Route
+            path="/portfolio"
+            element={<ComingSoon />}
+          />
 
-        <Route
-          path="/market-pulse"
-          element={<ComingSoon />}
-        />
+          <Route
+            path="/market-pulse"
+            element={<ComingSoon />}
+          />
 
-        <Route
-          path="/research"
-          element={<ComingSoon />}
-        />
+          <Route
+            path="/research"
+            element={<ComingSoon />}
+          />
 
-        <Route
-          path="/alerts"
-          element={<ComingSoon />}
-        />
+          <Route
+            path="/alerts"
+            element={<ComingSoon />}
+          />
 
-        <Route
-          path="/learn"
-          element={<ComingSoon />}
-        />
+          <Route
+            path="/learn"
+            element={<ComingSoon />}
+          />
 
-        <Route
-          path="/settings"
-          element={<ComingSoon />}
-        />
+          <Route
+            path="/settings"
+            element={<ComingSoon />}
+          />
 
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to="/dashboard"
-              replace
-            />
-          }
-        />
-      </Routes>
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to="/dashboard"
+                replace
+              />
+            }
+          />
+        </Routes>
+      </Suspense>
     </>
   );
 }
