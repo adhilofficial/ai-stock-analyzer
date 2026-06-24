@@ -12,13 +12,14 @@ import {
   dashboardMockData,
 } from "../data/dashboardMockData";
 
-import {
+import { 
   getDashboardMarketData,
-  getMarketAlerts,
-  getMarketBreadth,
-  getMarketMovers,
-  getWatchlistQuotes,
-} from "../services/dashboardApi";
+   getWatchlistQuotes,
+    getMarketMovers,
+     getMarketBreadth,
+      getMarketAlerts, 
+      getMarketNews, } 
+      from "../services/dashboardApi";
 
 import AppShell from "../components/layout/AppShell";
 
@@ -118,6 +119,10 @@ export default function Dashboard() {
     liveMarketAlerts,
     setLiveMarketAlerts,
   ] = useState(null);
+  const [
+  liveMarketNews,
+  setLiveMarketNews,
+] = useState([]);
 
   const [
     marketLoading,
@@ -173,6 +178,16 @@ export default function Dashboard() {
     alertsError,
     setAlertsError,
   ] = useState("");
+
+  const [
+  newsLoading,
+  setNewsLoading,
+] = useState(true);
+
+const [
+  newsError,
+  setNewsError,
+] = useState("");
 
   const {
     watchlistSymbols = [],
@@ -418,6 +433,57 @@ export default function Dashboard() {
       [],
     );
 
+const loadMarketNewsData =
+  useCallback(
+    async ({
+      refresh = false,
+      signal,
+    } = {}) => {
+      setNewsLoading(true);
+      setNewsError("");
+
+      try {
+        const data =
+          await getMarketNews({
+            refresh,
+            signal,
+          });
+
+        setLiveMarketNews(
+          Array.isArray(data?.articles)
+            ? data.articles
+            : [],
+        );
+      } catch (caughtError) {
+        if (
+          caughtError?.name ===
+          "AbortError"
+        ) {
+          return;
+        }
+
+        console.error(
+          "Market news error:",
+          caughtError,
+        );
+
+        setNewsError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Unable to load live market news.",
+        );
+
+        setLiveMarketNews([]);
+      } finally {
+        if (!signal?.aborted) {
+          setNewsLoading(false);
+        }
+      }
+    },
+    [],
+  );
+
+
   useEffect(() => {
     const controller =
       new AbortController();
@@ -430,6 +496,18 @@ export default function Dashboard() {
       controller.abort();
     };
   }, [loadMarketData]);
+
+  useEffect(() => {
+  const controller =
+    new AbortController();
+
+  loadMarketNewsData({
+    signal: controller.signal,
+  });
+
+  return () =>
+    controller.abort();
+}, [loadMarketNewsData]);
 
   useEffect(() => {
     const controller =
@@ -687,6 +765,10 @@ export default function Dashboard() {
     loadMarketAlertsData({
       refresh: true,
     });
+
+    loadMarketNewsData({
+  refresh: true,
+    });
   }
 
   function getMarketDataLabel() {
@@ -927,6 +1009,17 @@ export default function Dashboard() {
             onViewWatchlist={
               handleOpenWatchlist
             }
+            
+            newsArticles={
+            liveMarketNews
+            }
+            newsLoading={
+            newsLoading
+            }
+            newsError={
+         newsError
+          }
+
           />
         </section>
 

@@ -834,3 +834,135 @@ export async function getMarketAlerts({
         : [],
   };
 }
+
+
+function normalizeMarketNewsArticle(article) {
+  return {
+    id:
+      article?.id ||
+      article?.url ||
+      article?.title ||
+      `news-${Date.now()}`,
+
+    title:
+      String(
+        article?.title ||
+          "Market update",
+      ).trim(),
+
+    summary:
+      String(
+        article?.summary || "",
+      ).trim(),
+
+    source:
+      String(
+        article?.source ||
+          "Yahoo Finance",
+      ).trim(),
+
+    url:
+      String(
+        article?.url || "",
+      ).trim(),
+
+    imageUrl:
+      String(
+        article?.imageUrl || "",
+      ).trim(),
+
+    publishedAt:
+      article?.publishedAt || null,
+
+    relatedTickers:
+      Array.isArray(
+        article?.relatedTickers,
+      )
+        ? article.relatedTickers
+        : [],
+
+    type:
+      String(
+        article?.type ||
+          "STORY",
+      ).trim(),
+  };
+}
+
+export async function getMarketNews({
+  refresh = false,
+  signal,
+} = {}) {
+  const refreshQuery =
+    refresh ? "?refresh=1" : "";
+
+  const response = await fetch(
+    buildApiUrl(
+      `/api/market-news${refreshQuery}`,
+    ),
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      signal,
+    },
+  );
+
+  const data =
+    await readJsonResponse(response);
+
+  if (
+    !response.ok ||
+    data?.success !== true
+  ) {
+    throw new Error(
+      data?.error ||
+        `Unable to load market news. Server returned ${response.status}.`,
+    );
+  }
+
+  return {
+    success: true,
+
+    source:
+      data?.source ||
+      "Yahoo Finance",
+
+    region:
+      data?.region ||
+      "India",
+
+    cached:
+      Boolean(data?.cached),
+
+    fetchedAt:
+      data?.fetchedAt ||
+      new Date().toISOString(),
+
+    articleCount:
+      Number.isFinite(
+        Number(
+          data?.articleCount,
+        ),
+      )
+        ? Number(
+            data.articleCount,
+          )
+        : 0,
+
+    warning:
+      String(
+        data?.warning || "",
+      ).trim(),
+
+    articles:
+      Array.isArray(
+        data?.articles,
+      )
+        ? data.articles.map(
+            normalizeMarketNewsArticle,
+          )
+        : [],
+  };
+}
