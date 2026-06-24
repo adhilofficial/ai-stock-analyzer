@@ -13,9 +13,9 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  NavLink,
-} from "react-router-dom";
+import { NavLink } from "react-router-dom";
+
+import ExaBrandLogo from "./ExaBrandLogo";
 
 const NAVIGATION_ITEMS = [
   {
@@ -24,12 +24,12 @@ const NAVIGATION_ITEMS = [
     icon: LayoutDashboard,
   },
   {
-    label: "Analyze",
+    label: "Stock Analysis",
     path: "/analyze",
     icon: ChartCandlestick,
   },
   {
-    label: "Screener",
+    label: "Stock Screener",
     path: "/screener",
     icon: BarChart3,
   },
@@ -44,7 +44,7 @@ const NAVIGATION_ITEMS = [
     icon: Gauge,
   },
   {
-    label: "Research",
+    label: "AI Research",
     path: "/research",
     icon: Sparkles,
   },
@@ -64,6 +64,12 @@ export default function Sidebar({
   isOpen = false,
   onClose,
 }) {
+  function closeSidebar() {
+    if (typeof onClose === "function") {
+      onClose();
+    }
+  }
+
   return (
     <>
       <button
@@ -74,7 +80,7 @@ export default function Sidebar({
             : "exa-sidebar-overlay"
         }
         aria-label="Close navigation"
-        onClick={onClose}
+        onClick={closeSidebar}
       />
 
       <aside
@@ -88,24 +94,19 @@ export default function Sidebar({
           <NavLink
             to="/dashboard"
             className="exa-brand-link"
-            onClick={onClose}
+            onClick={closeSidebar}
+            aria-label="Open EXA Dashboard"
           >
-            <div className="exa-brand-word">
-              EXA
-            </div>
-
-            <span>
-              AI Stock Analyzer
-            </span>
+            <ExaBrandLogo />
           </NavLink>
 
           <button
             type="button"
             className="exa-sidebar-close"
             aria-label="Close navigation"
-            onClick={onClose}
+            onClick={closeSidebar}
           >
-            <X size={20} />
+            <X size={19} />
           </button>
         </div>
 
@@ -126,17 +127,15 @@ export default function Sidebar({
               <NavLink
                 key={path}
                 to={path}
-                onClick={onClose}
-                className={({
-                  isActive,
-                }) =>
+                onClick={closeSidebar}
+                className={({ isActive }) =>
                   isActive
                     ? "exa-sidebar-link active"
                     : "exa-sidebar-link"
                 }
               >
                 <Icon
-                  size={18}
+                  size={17}
                   strokeWidth={1.8}
                 />
 
@@ -150,10 +149,10 @@ export default function Sidebar({
           <NavLink
             to="/settings"
             className="exa-sidebar-link"
-            onClick={onClose}
+            onClick={closeSidebar}
           >
             <Settings
-              size={18}
+              size={17}
               strokeWidth={1.8}
             />
 
@@ -161,31 +160,28 @@ export default function Sidebar({
           </NavLink>
 
           <div className="exa-upgrade-card">
-            <div className="exa-upgrade-icon">
-              <CircleDollarSign
-                size={20}
-              />
-            </div>
+            <div className="exa-upgrade-heading">
+              <span className="exa-upgrade-icon">
+                <CircleDollarSign size={18} />
+              </span>
 
-            <strong>
-              EXA Pro
-            </strong>
+              <strong>EXA Pro</strong>
+            </div>
 
             <p>
               Unlock advanced AI research,
-              portfolio analytics and
-              premium insights.
+              portfolio analytics and premium
+              market insights.
             </p>
 
             <button type="button">
-              <LineChart size={16} />
+              <LineChart size={15} />
               Explore Pro
             </button>
           </div>
 
           <p className="exa-sidebar-disclaimer">
-            Market intelligence for
-            educational research.
+            Educational market research platform.
           </p>
         </div>
       </aside>

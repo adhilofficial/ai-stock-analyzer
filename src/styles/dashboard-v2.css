@@ -2342,3 +2342,66 @@
     min-height: 390px;
   }
 }
+
+/* =====================================
+   EXA TRANSPARENT VECTOR LOGO
+   ===================================== */
+
+.exa-sidebar-brand {
+  min-height: 82px;
+  padding: 11px 14px 13px;
+  background: transparent;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.exa-brand-link {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  background: transparent;
+}
+
+.exa-brand-lockup {
+  width: 100%;
+  max-width: 158px;
+  min-width: 0;
+  background: transparent;
+}
+
+.exa-brand-svg {
+  display: block;
+  width: 150px;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  background: transparent;
+}
+
+.exa-brand-lockup.compact {
+  max-width: 105px;
+}
+
+.exa-brand-lockup.compact
+  .exa-brand-svg {
+  width: 105px;
+}
+
+.exa-brand-lockup.compact
+  .exa-brand-svg-tagline {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .exa-sidebar-brand {
+    min-height: 78px;
+  }
+
+  .exa-brand-svg {
+    width: 142px;
+  }
+}
