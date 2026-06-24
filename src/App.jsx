@@ -1,41 +1,38 @@
 import {
-BrowserRouter,
-Navigate,
-Route,
-Routes,
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
 } from "react-router-dom";
 
-import Navbar from "./components/Navbar";
-import Dashboard from "./pages/Dashboard";
-import Analyze from "./pages/Analyze";
-import ComingSoon from "./pages/ComingSoon";
+import Navbar from
+  "./components/Navbar";
 
-const appStyles = {
-minHeight: "100vh",
-display: "flex",
-flexDirection: "column",
-background: "#0a0f1c",
-};
+import Dashboard from
+  "./pages/Dashboard";
 
-const contentStyles = {
-flex: 1,
-minWidth: 0,
-};
+import Analyze from
+  "./pages/Analyze";
 
-const footerStyles = {
-padding: "16px 24px",
-borderTop: "1px solid #1e293b",
-color: "#64748b",
-background: "#070d18",
-fontSize: "12px",
-lineHeight: 1.7,
-textAlign: "center",
-};
+import ComingSoon from
+  "./pages/ComingSoon";
 
-export default function App() {
-return ( <BrowserRouter> <div style={appStyles}> <Navbar />
+function AppRoutes() {
+  const location =
+    useLocation();
 
-    <div style={contentStyles}>
+  const usesNewDashboardShell =
+    location.pathname ===
+      "/dashboard" ||
+    location.pathname === "/";
+
+  return (
+    <>
+      {!usesNewDashboardShell && (
+        <Navbar />
+      )}
+
       <Routes>
         <Route
           path="/"
@@ -59,30 +56,37 @@ return ( <BrowserRouter> <div style={appStyles}> <Navbar />
 
         <Route
           path="/screener"
-          element={
-            <ComingSoon title="Smart Stock Screener" />
-          }
+          element={<ComingSoon />}
         />
 
         <Route
           path="/portfolio"
-          element={
-            <ComingSoon title="My Portfolio" />
-          }
+          element={<ComingSoon />}
         />
 
         <Route
           path="/market-pulse"
-          element={
-            <ComingSoon title="Market Pulse" />
-          }
+          element={<ComingSoon />}
+        />
+
+        <Route
+          path="/research"
+          element={<ComingSoon />}
+        />
+
+        <Route
+          path="/alerts"
+          element={<ComingSoon />}
         />
 
         <Route
           path="/learn"
-          element={
-            <ComingSoon title="Learn Investing with EXA" />
-          }
+          element={<ComingSoon />}
+        />
+
+        <Route
+          path="/settings"
+          element={<ComingSoon />}
         />
 
         <Route
@@ -95,18 +99,14 @@ return ( <BrowserRouter> <div style={appStyles}> <Navbar />
           }
         />
       </Routes>
-    </div>
+    </>
+  );
+}
 
-    <footer style={footerStyles}>
-      EXA NEXUS provides AI-assisted market research and
-      insights for educational purposes only. It does not
-      constitute financial advice or a recommendation to
-      buy, sell or hold any securities. Please consult a
-      SEBI-registered advisor before making investment
-      decisions.
-    </footer>
-  </div>
-</BrowserRouter>
-
-);
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }

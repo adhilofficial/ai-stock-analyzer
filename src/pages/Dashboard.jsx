@@ -21,6 +21,9 @@ import {
   getMarketAlerts,
 } from "../services/dashboardApi";
 
+import AppShell from
+  "../components/layout/AppShell";
+
 import useDashboardStorage from
   "../hooks/useDashboardStorage";
 
@@ -36,19 +39,19 @@ import MarketBreadth from
 import SectorPerformance from
   "../components/dashboard/SectorPerformance";
 
-import WatchlistCard from
-  "../components/dashboard/WatchlistCard";
-
 import MarketMovers from
   "../components/dashboard/MarketMovers";
 
-import ImportantAlerts from
-  "../components/dashboard/ImportantAlerts";
-
-import RecentAnalyses from
-  "../components/dashboard/RecentAnalyses";
-
 import "../styles/dashboard.css";
+import "../styles/dashboard-v2.css";
+
+import DashboardStats from
+  "../components/dashboard/DashboardStats";
+  import PremiumMarketOverview from
+  "../components/dashboard/PremiumMarketOverview";
+  import DashboardRightRail from
+  "../components/dashboard/DashboardRightRail";
+
 
 function getAiView(signal) {
   const normalizedSignal =
@@ -88,11 +91,6 @@ function getAiView(signal) {
 export default function Dashboard() {
   const navigate =
     useNavigate();
-
-  const [
-    searchQuery,
-    setSearchQuery,
-  ] = useState("");
 
   const [
     liveMarketData,
@@ -175,12 +173,11 @@ export default function Dashboard() {
   ] = useState("");
 
   const {
-    watchlistSymbols,
-    recentAnalyses,
-    removeSymbol,
-    restoreDefaultWatchlist,
-    clearAnalyses,
-  } = useDashboardStorage();
+  watchlistSymbols,
+  recentAnalyses,
+  removeSymbol,
+  clearAnalyses,
+} = useDashboardStorage();
 
   const loadMarketData =
     useCallback(
@@ -429,10 +426,6 @@ export default function Dashboard() {
               : "Unable to load live market alerts.",
           );
 
-          /*
-           * Null activates the temporary
-           * mock-data fallback.
-           */
           setLiveMarketAlerts(null);
         } finally {
           if (!signal?.aborted) {
@@ -448,13 +441,11 @@ export default function Dashboard() {
       new AbortController();
 
     loadMarketData({
-      signal:
-        controller.signal,
+      signal: controller.signal,
     });
 
-    return () => {
+    return () =>
       controller.abort();
-    };
   }, [loadMarketData]);
 
   useEffect(() => {
@@ -462,13 +453,11 @@ export default function Dashboard() {
       new AbortController();
 
     loadWatchlistData({
-      signal:
-        controller.signal,
+      signal: controller.signal,
     });
 
-    return () => {
+    return () =>
       controller.abort();
-    };
   }, [loadWatchlistData]);
 
   useEffect(() => {
@@ -476,13 +465,11 @@ export default function Dashboard() {
       new AbortController();
 
     loadMarketMoversData({
-      signal:
-        controller.signal,
+      signal: controller.signal,
     });
 
-    return () => {
+    return () =>
       controller.abort();
-    };
   }, [loadMarketMoversData]);
 
   useEffect(() => {
@@ -490,13 +477,11 @@ export default function Dashboard() {
       new AbortController();
 
     loadMarketBreadthData({
-      signal:
-        controller.signal,
+      signal: controller.signal,
     });
 
-    return () => {
+    return () =>
       controller.abort();
-    };
   }, [loadMarketBreadthData]);
 
   useEffect(() => {
@@ -504,13 +489,11 @@ export default function Dashboard() {
       new AbortController();
 
     loadMarketAlertsData({
-      signal:
-        controller.signal,
+      signal: controller.signal,
     });
 
-    return () => {
+    return () =>
       controller.abort();
-    };
   }, [loadMarketAlertsData]);
 
   const watchlist =
@@ -558,14 +541,10 @@ export default function Dashboard() {
               .toUpperCase();
 
           const mockStock =
-            mockStockMap.get(
-              symbol,
-            );
+            mockStockMap.get(symbol);
 
           const liveQuote =
-            liveQuoteMap.get(
-              symbol,
-            );
+            liveQuoteMap.get(symbol);
 
           const savedAnalysis =
             recentAnalysisMap.get(
@@ -606,7 +585,8 @@ export default function Dashboard() {
 
             exaScore:
               savedAnalysis?.score ??
-              savedAnalysis?.confidenceScore ??
+              savedAnalysis
+                ?.confidenceScore ??
               null,
 
             aiView:
@@ -638,55 +618,30 @@ export default function Dashboard() {
 
   const liveMoversAvailable =
     Boolean(
-      Array.isArray(
-        liveMarketMovers?.gainers,
-      ) &&
-        liveMarketMovers.gainers
-          .length > 0,
-    ) ||
-    Boolean(
-      Array.isArray(
-        liveMarketMovers?.losers,
-      ) &&
-        liveMarketMovers.losers
-          .length > 0,
-    ) ||
-    Boolean(
-      Array.isArray(
-        liveMarketMovers?.active,
-      ) &&
-        liveMarketMovers.active
-          .length > 0,
+      liveMarketMovers &&
+        (
+          liveMarketMovers
+            .gainers?.length ||
+          liveMarketMovers
+            .losers?.length ||
+          liveMarketMovers
+            .active?.length
+        ),
     );
 
   const liveBreadthAvailable =
     Boolean(
       liveMarketBreadth &&
-        Number.isFinite(
-          Number(
-            liveMarketBreadth
-              .totalStocks,
-          ),
-        ) &&
         Number(
           liveMarketBreadth
             .totalStocks,
         ) > 0,
     );
 
-  /*
-   * An empty alert array is still a successful
-   * live response. It means no conditions
-   * currently triggered an alert.
-   */
   const liveAlertsAvailable =
     Array.isArray(
       liveMarketAlerts,
     );
-
-  const watchlistLiveAvailable =
-    watchlistSymbols.length === 0 ||
-    liveWatchlistQuotes.length > 0;
 
   const marketStatus =
     liveMarketData?.marketStatus ||
@@ -717,31 +672,6 @@ export default function Dashboard() {
       ? liveMarketAlerts
       : dashboardMockData.alerts;
 
-  const usingCompleteLiveData =
-    liveIndicesAvailable &&
-    liveSectorsAvailable &&
-    liveMoversAvailable &&
-    liveBreadthAvailable &&
-    liveAlertsAvailable &&
-    watchlistLiveAvailable;
-
-  function handleSearch(event) {
-    event.preventDefault();
-
-    const cleanedQuery =
-      searchQuery.trim();
-
-    if (!cleanedQuery) {
-      return;
-    }
-
-    navigate(
-      `/analyze?query=${encodeURIComponent(
-        cleanedQuery,
-      )}`,
-    );
-  }
-
   function handleAnalyze(symbol) {
     if (!symbol) {
       return;
@@ -753,20 +683,9 @@ export default function Dashboard() {
       )}`,
     );
   }
-
-  function handleRemoveFromWatchlist(
-    symbol,
-  ) {
-    if (!symbol) {
-      return;
-    }
-
-    removeSymbol(symbol);
-  }
-
-  function handleRestoreWatchlist() {
-    restoreDefaultWatchlist();
-  }
+  function handleOpenWatchlist() {
+  navigate("/analyze");
+}
 
   function handleRefreshMarketData() {
     if (marketRefreshing) {
@@ -800,12 +719,10 @@ export default function Dashboard() {
     }
 
     if (marketError) {
-      return "Demo fallback";
+      return "Fallback data";
     }
 
-    if (
-      liveMarketData?.cached
-    ) {
+    if (liveMarketData?.cached) {
       return "Live · cached";
     }
 
@@ -813,105 +730,43 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="exa-dashboard-page">
-      <section className="exa-dashboard-header">
-        <div>
-          <p className="exa-dashboard-eyebrow">
-            EXA NEXUS
-          </p>
-
-          <h1>
-            Market Dashboard
-          </h1>
-
-          <p className="exa-dashboard-subtitle">
-            Indian market overview,
-            sentiment and research
-            intelligence.
-          </p>
-        </div>
-
-        <div className="exa-market-status">
-          <span
-            className={
-              marketStatus.isOpen
-                ? "status-dot open"
-                : "status-dot closed"
-            }
-          />
-
+    <AppShell>
+      <main className="exa-dashboard-page exa-dashboard-v2">
+        <section className="exa-dashboard-header">
           <div>
-            <strong>
-              {marketStatus.label}
-            </strong>
-
-            <small>
-              Updated{" "}
-              {marketStatus.lastUpdated}
-            </small>
-          </div>
-        </div>
-      </section>
-
-      <form
-        className="exa-dashboard-search"
-        onSubmit={handleSearch}
-      >
-        <span
-          className="exa-search-icon"
-          aria-hidden="true"
-        >
-          ⌕
-        </span>
-
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={(event) =>
-            setSearchQuery(
-              event.target.value,
-            )
-          }
-          placeholder="Search stocks, sectors or themes..."
-          aria-label="Search stocks, sectors or themes"
-        />
-
-        <button type="submit">
-          Analyze
-        </button>
-      </form>
-
-      {marketError && (
-        <div className="exa-market-api-notice error">
-          <strong>
-            Live data unavailable:
-          </strong>{" "}
-          {marketError} Demo index data is being shown temporarily.
-        </div>
-      )}
-
-      <section className="exa-index-section">
-        <div className="exa-section-heading">
-          <div>
-            <p>
-              MARKET OVERVIEW
+            <p className="exa-dashboard-eyebrow">
+              EXA NEXUS
             </p>
 
-            <h2>
-              Indian indices
-            </h2>
+            <h1>Dashboard</h1>
+
+            <p className="exa-dashboard-subtitle">
+              Your Indian market overview,
+              AI research and investment
+              intelligence.
+            </p>
           </div>
 
-          <div className="exa-market-data-controls">
-            <span
-              className={
-                marketError
-                  ? "exa-market-data-badge fallback"
-                  : "exa-market-data-badge live"
-              }
-            >
-              {getMarketDataLabel()}
-            </span>
+          <div className="exa-v2-heading-actions">
+            {[
+              "1D",
+              "1W",
+              "1M",
+              "3M",
+              "1Y",
+            ].map((period) => (
+              <button
+                key={period}
+                type="button"
+                className={
+                  period === "1D"
+                    ? "exa-v2-timeframe-button active"
+                    : "exa-v2-timeframe-button"
+                }
+              >
+                {period}
+              </button>
+            ))}
 
             <button
               type="button"
@@ -929,157 +784,180 @@ export default function Dashboard() {
                 : "Refresh"}
             </button>
           </div>
+        </section>
+        <DashboardStats
+  marketStatus={marketStatus}
+  indices={indices}
+  breadth={marketBreadth}
+  sectors={sectors}
+  alerts={importantAlerts}
+  loading={
+    marketLoading ||
+    breadthLoading ||
+    alertsLoading
+  }
+/>
+<section className="exa-dashboard-workspace">
+  <div className="exa-dashboard-primary-column">
+    {marketError && (
+      <div className="exa-market-api-notice error">
+        <strong>
+          Live data unavailable:
+        </strong>{" "}
+        {marketError}
+      </div>
+    )}
+
+    <PremiumMarketOverview
+      indices={indices}
+      breadth={marketBreadth}
+      sectors={sectors}
+      alerts={importantAlerts}
+      marketStatus={marketStatus}
+      loading={
+        marketLoading ||
+        breadthLoading
+      }
+      onOpenAnalyze={() =>
+        navigate("/analyze")
+      }
+    />
+
+    <section className="exa-index-section">
+      <div className="exa-section-heading">
+        <div>
+          <p>
+            MARKET OVERVIEW
+          </p>
+
+          <h2>
+            Indian indices
+          </h2>
         </div>
 
-        <div className="exa-index-grid">
-          {indices.map((index) => (
-            <MarketIndexCard
-              key={
-                index.ticker ||
-                index.symbol
-              }
-              index={index}
-            />
-          ))}
-        </div>
-      </section>
+        <span
+          className={
+            marketError
+              ? "exa-market-data-badge fallback"
+              : "exa-market-data-badge live"
+          }
+        >
+          {getMarketDataLabel()}
+        </span>
+      </div>
 
-      <section className="exa-dashboard-main-grid">
-        <div className="exa-pulse-grid-item">
-          <MarketPulse
-            data={
-              dashboardMockData
-                .marketPulse
+      <div className="exa-index-grid">
+        {indices.map((index) => (
+          <MarketIndexCard
+            key={
+              index.ticker ||
+              index.symbol
             }
-            breadth={marketBreadth}
-            indices={indices}
-            sectors={sectors}
-            loading={
-              marketLoading ||
-              breadthLoading
-            }
-            error={
-              marketError ||
-              breadthError
-            }
+            index={index}
           />
-        </div>
+        ))}
+      </div>
+    </section>
 
-        <div className="exa-breadth-grid-item">
-          <MarketBreadth
-            data={marketBreadth}
-          />
+    <section className="exa-dashboard-main-grid">
+      <div className="exa-pulse-grid-item">
+        <MarketPulse
+          data={
+            dashboardMockData
+              .marketPulse
+          }
+          breadth={marketBreadth}
+          indices={indices}
+          sectors={sectors}
+          loading={
+            marketLoading ||
+            breadthLoading
+          }
+          error={
+            marketError ||
+            breadthError
+          }
+        />
+      </div>
 
-          {breadthLoading && (
-            <div className="exa-watchlist-live-status loading">
-              Loading live market breadth...
-            </div>
-          )}
+      <div className="exa-breadth-grid-item">
+        <MarketBreadth
+          data={marketBreadth}
+        />
 
-          {breadthError && (
-            <div className="exa-watchlist-live-status error">
-              Live market breadth could not be loaded. Temporary
-              fallback data is displayed.
-            </div>
-          )}
-        </div>
+        {breadthLoading && (
+          <div className="exa-watchlist-live-status loading">
+            Loading live market breadth...
+          </div>
+        )}
 
-        <div className="exa-sector-grid-item">
-          <SectorPerformance
-            sectors={sectors}
-          />
-        </div>
-      </section>
+        {breadthError && (
+          <div className="exa-watchlist-live-status error">
+            Live market breadth is temporarily unavailable.
+          </div>
+        )}
+      </div>
 
-      <section className="exa-stage3-grid">
-        <div className="exa-watchlist-grid-item">
-          <WatchlistCard
-            stocks={watchlist}
-            onAnalyze={handleAnalyze}
-            onRemove={
-              handleRemoveFromWatchlist
-            }
-          />
+      <div className="exa-sector-grid-item">
+        <SectorPerformance
+          sectors={sectors}
+        />
+      </div>
+    </section>
 
-          {watchlistLoading && (
-            <div className="exa-watchlist-live-status loading">
-              Loading live watchlist prices...
-            </div>
-          )}
+    <section className="exa-main-movers-section">
+      <MarketMovers
+        movers={marketMovers}
+        onAnalyze={handleAnalyze}
+        loading={moversLoading}
+        error={moversError}
+        status={
+          liveMoversAvailable
+            ? "live"
+            : "fallback"
+        }
+      />
+    </section>
+  </div>
 
-          {watchlistError && (
-            <div className="exa-watchlist-live-status error">
-              {watchlistError}
-            </div>
-          )}
+  <DashboardRightRail
+    watchlist={watchlist}
+    alerts={importantAlerts}
+    recentAnalyses={
+      recentAnalyses
+    }
+    watchlistLoading={
+      watchlistLoading
+    }
+    watchlistError={
+      watchlistError
+    }
+    alertsLoading={
+      alertsLoading
+    }
+    alertsError={
+      alertsError
+    }
+    onAnalyze={handleAnalyze}
+    onRemoveStock={
+      removeSymbol
+    }
+    onClearAnalyses={
+      clearAnalyses
+    }
+    onViewWatchlist={
+      handleOpenWatchlist
+    }
+  />
+</section>
 
-          {watchlist.length === 0 && (
-            <button
-              type="button"
-              className="exa-restore-watchlist"
-              onClick={
-                handleRestoreWatchlist
-              }
-            >
-              Restore default watchlist
-            </button>
-          )}
-        </div>
-
-        <div className="exa-alerts-grid-item">
-          <ImportantAlerts
-            alerts={importantAlerts}
-            onAnalyze={handleAnalyze}
-          />
-
-          {alertsLoading && (
-            <p className="exa-alerts-data-status">
-              Generating live market alerts...
-            </p>
-          )}
-
-          {alertsError && (
-            <p className="exa-alerts-data-status error">
-              Live alerts are temporarily unavailable. Fallback alerts
-              are displayed.
-            </p>
-          )}
-        </div>
-
-        <div className="exa-movers-grid-item">
-          <MarketMovers
-            movers={marketMovers}
-            onAnalyze={handleAnalyze}
-            loading={moversLoading}
-            error={moversError}
-            status={
-              liveMoversAvailable
-                ? "live"
-                : "fallback"
-            }
-          />
-        </div>
-
-        <div className="exa-recent-grid-item">
-          <RecentAnalyses
-            analyses={
-              recentAnalyses
-            }
-            onAnalyze={handleAnalyze}
-            onClear={clearAnalyses}
-          />
-        </div>
-      </section>
-
-      <p className="exa-dashboard-note">
-        {usingCompleteLiveData
-          ? "Indian indices, sectors, watchlist prices, Market Movers and Market Breadth are loaded live from Yahoo Finance."
-          : "Some dashboard sections are temporarily using fallback data because live data is unavailable."}{" "}
-        Important Alerts and the EXA Market Pulse are generated from
-        live market data. EXA scores and AI views appear after a
-        successful AI analysis. Recent analyses are stored locally in
-        your browser.
-      </p>
-    </main>
+        <p className="exa-dashboard-note">
+  Live market prices are provided through Yahoo Finance. EXA Market
+  Pulse and Important Alerts are generated from live market data.
+  Information is provided for educational research and does not
+  represent investment advice.
+</p>
+      </main>
+    </AppShell>
   );
 }
