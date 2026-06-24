@@ -17,6 +17,9 @@ import ErrorBoundary from
 import Navbar from
   "./components/Navbar";
 
+import NetworkStatusBanner from
+  "./components/NetworkStatusBanner";
+
 const Dashboard = lazy(() =>
   import("./pages/Dashboard"),
 );
@@ -144,6 +147,8 @@ function AppRoutes() {
 export default function App() {
   return (
     <ErrorBoundary>
+      <NetworkStatusBanner />
+
       <BrowserRouter>
         <AppRoutes />
       </BrowserRouter>
