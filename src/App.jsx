@@ -11,13 +11,12 @@ import {
   useLocation,
 } from "react-router-dom";
 
+import ErrorBoundary from
+  "./components/ErrorBoundary";
+
 import Navbar from
   "./components/Navbar";
 
-/*
- * These pages are loaded only when
- * their routes are opened.
- */
 const Dashboard = lazy(() =>
   import("./pages/Dashboard"),
 );
@@ -144,8 +143,11 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
+
