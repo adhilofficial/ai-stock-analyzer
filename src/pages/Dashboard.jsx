@@ -12,6 +12,8 @@ import {
 
 import MarketIndexCard from "../components/dashboard/MarketIndexCard";
 import MarketPulse from "../components/dashboard/MarketPulse";
+import MarketBreadth from "../components/dashboard/MarketBreadth";
+import SectorPerformance from "../components/dashboard/SectorPerformance";
 
 import "../styles/dashboard.css";
 
@@ -120,6 +122,7 @@ export default function Dashboard() {
         <div className="exa-section-heading">
           <div>
             <p>MARKET OVERVIEW</p>
+
             <h2>Indian indices</h2>
           </div>
 
@@ -148,50 +151,31 @@ export default function Dashboard() {
           />
         </div>
 
-        <article className="exa-dashboard-card exa-next-card">
-          <p className="exa-card-eyebrow">
-            BUILDING NEXT
-          </p>
+        <div className="exa-breadth-grid-item">
+          <MarketBreadth
+            data={
+              dashboardMockData
+                .breadth
+            }
+          />
+        </div>
 
-          <h2>Dashboard Roadmap</h2>
-
-          <div className="exa-roadmap-list">
-            <div>
-              <span>01</span>
-
-              <p>
-                Market breadth and
-                advance-decline ratio
-              </p>
-            </div>
-
-            <div>
-              <span>02</span>
-
-              <p>
-                Sector performance
-                heatmap
-              </p>
-            </div>
-
-            <div>
-              <span>03</span>
-
-              <p>
-                Watchlist and market
-                movers
-              </p>
-            </div>
-          </div>
-        </article>
+        <div className="exa-sector-grid-item">
+          <SectorPerformance
+            sectors={
+              dashboardMockData
+                .sectors
+            }
+          />
+        </div>
       </section>
 
       <p className="exa-dashboard-note">
-        The values displayed during this
+        Values displayed during this
         development stage are demonstration
         data. Live market information will be
-        connected after the interface is
-        completed.
+        connected after the dashboard
+        interface is completed.
       </p>
     </main>
   );
