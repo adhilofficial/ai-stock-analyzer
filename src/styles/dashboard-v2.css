@@ -2405,3 +2405,635 @@
     width: 142px;
   }
 }
+/* =========================================
+   STEP 4A — FINAL DASHBOARD VISUAL POLISH
+   Keep this block at the bottom of the file
+   ========================================= */
+
+:root {
+  --exa-sidebar-width: 220px;
+  --exa-topbar-height: 64px;
+}
+
+/* Prevent accidental horizontal page scrolling */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.exa-app-shell,
+.exa-shell-main,
+.exa-shell-content,
+.exa-dashboard-v2 {
+  min-width: 0;
+}
+
+/* =========================================
+   SIDEBAR
+   ========================================= */
+
+.exa-sidebar {
+  width: var(--exa-sidebar-width);
+  padding: 14px 12px 15px;
+  border-right: 1px solid var(--exa-border);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+
+.exa-sidebar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+}
+
+/* Logo area */
+
+.exa-sidebar-brand {
+  min-height: 86px;
+  padding: 8px 12px 15px;
+  border-bottom: 1px solid var(--exa-border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: visible;
+}
+
+.exa-brand-link {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  background: transparent;
+}
+
+.exa-brand-lockup {
+  width: 100%;
+  max-width: 164px;
+  min-width: 0;
+  background: transparent;
+}
+
+.exa-brand-svg {
+  display: block;
+  width: 158px;
+  max-width: 100%;
+  height: auto;
+  background: transparent;
+  overflow: visible;
+}
+
+/* Navigation spacing */
+
+.exa-sidebar-navigation {
+  padding-top: 18px;
+  gap: 5px;
+}
+
+.exa-sidebar-section-label {
+  margin: 0 11px 9px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.exa-sidebar-link {
+  min-height: 42px;
+  padding: 0 13px;
+  border-radius: 10px;
+  gap: 11px;
+  font-size: 10.5px;
+}
+
+.exa-sidebar-link svg {
+  flex-shrink: 0;
+}
+
+.exa-sidebar-link:hover {
+  transform: none;
+}
+
+.exa-sidebar-link.active {
+  box-shadow:
+    0 8px 22px rgba(37, 99, 235, 0.22);
+}
+
+/* Bottom card */
+
+.exa-sidebar-bottom {
+  margin-top: auto;
+  padding-top: 15px;
+}
+
+.exa-upgrade-card {
+  margin-top: 11px;
+  padding: 14px;
+  border-radius: 13px;
+}
+
+.exa-upgrade-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.exa-upgrade-icon {
+  width: 31px;
+  height: 31px;
+  min-width: 31px;
+  margin: 0;
+}
+
+.exa-upgrade-card p {
+  margin: 10px 0 13px;
+  font-size: 8.5px;
+  line-height: 1.55;
+}
+
+.exa-upgrade-card button {
+  min-height: 34px;
+}
+
+/* =========================================
+   TOPBAR
+   ========================================= */
+
+.exa-topbar {
+  height: var(--exa-topbar-height);
+  padding: 0 20px;
+  gap: 16px;
+}
+
+.exa-topbar-search {
+  width: min(490px, 100%);
+  min-height: 38px;
+  border-radius: 10px;
+}
+
+.exa-topbar-search input {
+  font-size: 10px;
+}
+
+.exa-topbar-actions {
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.exa-ask-ai-button {
+  min-height: 37px;
+  padding: 0 14px;
+}
+
+.exa-topbar-icon-button {
+  width: 37px;
+  height: 37px;
+}
+
+.exa-profile-button {
+  min-height: 39px;
+  padding-right: 5px;
+}
+
+.exa-profile-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+/* =========================================
+   MAIN PAGE SPACING
+   ========================================= */
+
+.exa-shell-content {
+  padding: 21px 22px 32px;
+}
+
+.exa-dashboard-v2 {
+  width: 100%;
+  max-width: 1720px;
+}
+
+.exa-dashboard-v2 .exa-dashboard-header {
+  margin-bottom: 18px;
+}
+
+.exa-dashboard-v2 .exa-dashboard-header h1 {
+  margin: 3px 0 5px;
+  font-size: clamp(24px, 2vw, 31px);
+}
+
+.exa-dashboard-v2 .exa-dashboard-subtitle {
+  font-size: 10px;
+}
+
+/* Timeframe controls */
+
+.exa-v2-heading-actions {
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.exa-v2-timeframe-button,
+.exa-market-refresh-button {
+  min-height: 34px;
+  border-radius: 9px;
+}
+
+/* =========================================
+   SUMMARY CARDS
+   ========================================= */
+
+.exa-dashboard-stats {
+  margin-bottom: 18px;
+  gap: 11px;
+}
+
+.exa-stat-card {
+  min-height: 143px;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.exa-stat-card-top {
+  margin-bottom: 9px;
+}
+
+.exa-stat-card > strong {
+  font-size: clamp(20px, 1.6vw, 27px);
+}
+
+/* =========================================
+   WORKSPACE AND RIGHT RAIL
+   ========================================= */
+
+.exa-dashboard-workspace {
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(295px, 315px);
+  gap: 16px;
+  align-items: start;
+}
+
+.exa-dashboard-primary-column {
+  min-width: 0;
+  gap: 16px;
+}
+
+/* Remove the unnecessary right-rail scrollbar */
+
+.exa-dashboard-workspace
+  > .exa-dashboard-right-rail {
+  position: static !important;
+  top: auto !important;
+  max-height: none !important;
+  height: auto !important;
+  padding-right: 0 !important;
+  overflow: visible !important;
+  scrollbar-width: none;
+}
+
+.exa-dashboard-workspace
+  > .exa-dashboard-right-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.exa-dashboard-right-rail {
+  min-width: 0;
+  gap: 13px;
+}
+
+/* =========================================
+   RIGHT-SIDE WATCHLIST
+   ========================================= */
+
+.exa-compact-watchlist-card {
+  padding: 14px;
+  border-radius: 15px;
+}
+
+.exa-compact-card-header {
+  min-height: 42px;
+  margin-bottom: 4px;
+}
+
+.exa-compact-card-header h2 {
+  font-size: 14px;
+}
+
+.exa-compact-header-actions {
+  gap: 6px;
+}
+
+.exa-compact-header-actions > span,
+.exa-compact-header-actions button {
+  height: 29px;
+  min-width: 29px;
+}
+
+.exa-compact-watchlist-list {
+  margin-top: 7px;
+}
+
+.exa-compact-watchlist-row {
+  min-height: 62px;
+  padding: 9px 25px 9px 0;
+  gap: 8px;
+}
+
+.exa-compact-stock-button {
+  gap: 9px;
+}
+
+.exa-compact-stock-logo {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+}
+
+.exa-compact-stock-logo img {
+  width: 28px;
+  height: 28px;
+}
+
+.exa-compact-stock-copy strong {
+  max-width: 128px;
+  font-size: 9.5px;
+  line-height: 1.3;
+}
+
+.exa-compact-stock-copy small {
+  font-size: 7px;
+}
+
+.exa-compact-stock-price {
+  min-width: 76px;
+}
+
+.exa-compact-stock-price strong {
+  font-size: 9px;
+}
+
+.exa-compact-stock-price span {
+  font-size: 7.5px;
+}
+
+.exa-compact-view-all {
+  min-height: 34px;
+  margin-top: 10px;
+}
+
+/* Display remove button only during hover on desktop */
+
+.exa-compact-remove-button {
+  opacity: 0;
+}
+
+.exa-compact-watchlist-row:hover
+  .exa-compact-remove-button {
+  opacity: 1;
+}
+
+/* =========================================
+   RIGHT-SIDE ALERTS AND RECENT ANALYSES
+   ========================================= */
+
+.exa-dashboard-right-rail
+  .exa-alerts-card,
+.exa-dashboard-right-rail
+  .exa-right-rail-recent
+  .exa-dashboard-card {
+  padding: 14px;
+  border-radius: 15px;
+}
+
+.exa-dashboard-right-rail
+  .exa-alerts-list {
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+.exa-dashboard-right-rail
+  .exa-alert-item {
+  min-height: 61px;
+  padding: 9px;
+  gap: 9px;
+}
+
+.exa-dashboard-right-rail
+  .exa-alert-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+}
+
+.exa-dashboard-right-rail
+  .exa-alert-content {
+  min-width: 0;
+}
+
+.exa-dashboard-right-rail
+  .exa-alert-content p {
+  overflow-wrap: anywhere;
+}
+
+/* =========================================
+   MAIN CARDS
+   ========================================= */
+
+.exa-dashboard-v2 .exa-dashboard-card {
+  border-radius: 15px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.09);
+}
+
+.exa-premium-chart-card,
+.exa-ai-summary-panel {
+  padding: 16px;
+}
+
+.exa-premium-chart-body {
+  height: 255px;
+}
+
+.exa-dashboard-v2 .exa-index-grid {
+  gap: 11px;
+}
+
+.exa-dashboard-v2 .exa-dashboard-main-grid {
+  gap: 14px;
+}
+
+/* =========================================
+   LAPTOP
+   ========================================= */
+
+@media (max-width: 1380px) {
+  :root {
+    --exa-sidebar-width: 205px;
+  }
+
+  .exa-shell-content {
+    padding: 18px 17px 28px;
+  }
+
+  .exa-dashboard-workspace {
+    grid-template-columns:
+      minmax(0, 1fr)
+      290px;
+    gap: 13px;
+  }
+
+  .exa-brand-svg {
+    width: 145px;
+  }
+
+  .exa-compact-stock-copy strong {
+    max-width: 105px;
+  }
+}
+
+/* Move the right rail below the main column */
+
+@media (max-width: 1120px) {
+  .exa-dashboard-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .exa-dashboard-right-rail {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .exa-compact-watchlist-card {
+    grid-row: span 2;
+  }
+
+  .exa-compact-stock-copy strong {
+    max-width: 175px;
+  }
+}
+
+/* =========================================
+   TABLET
+   ========================================= */
+
+@media (max-width: 900px) {
+  :root {
+    --exa-topbar-height: 60px;
+  }
+
+  .exa-shell-content {
+    padding: 16px 14px 26px;
+  }
+
+  .exa-topbar {
+    padding: 0 14px;
+  }
+
+  .exa-sidebar {
+    width: min(285px, 86vw);
+  }
+
+  .exa-sidebar-brand {
+    min-height: 82px;
+  }
+
+  .exa-brand-svg {
+    width: 150px;
+  }
+}
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 720px) {
+  .exa-topbar {
+    gap: 8px;
+  }
+
+  .exa-topbar-search {
+    min-width: 0;
+  }
+
+  .exa-topbar-actions {
+    gap: 6px;
+  }
+
+  .exa-profile-button {
+    display: none;
+  }
+
+  .exa-dashboard-v2
+    .exa-dashboard-header {
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .exa-v2-heading-actions {
+    width: 100%;
+    padding-bottom: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .exa-v2-heading-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .exa-dashboard-right-rail {
+    display: flex;
+  }
+
+  .exa-compact-remove-button {
+    opacity: 1;
+  }
+
+  .exa-compact-stock-copy strong {
+    max-width: 170px;
+  }
+}
+
+@media (max-width: 520px) {
+  .exa-shell-content {
+    padding: 14px 11px 24px;
+  }
+
+  .exa-dashboard-primary-column {
+    gap: 13px;
+  }
+
+  .exa-dashboard-stats {
+    gap: 9px;
+  }
+
+  .exa-stat-card {
+    min-height: 132px;
+  }
+
+  .exa-premium-chart-body {
+    height: 225px;
+  }
+
+  .exa-topbar-icon-button:not(
+      .exa-notification-button
+    ) {
+    display: none;
+  }
+
+  .exa-brand-svg {
+    width: 145px;
+  }
+}
