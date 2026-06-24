@@ -111,7 +111,7 @@
 .exa-dashboard-search {
   display: flex;
   width: 100%;
-  max-width: 1600px;
+  max-width: 900px;
   min-height: 54px;
   align-items: center;
   gap: 10px;
@@ -1765,5 +1765,441 @@
 
   .exa-recent-empty {
     min-height: 150px;
+  }
+}
+
+/*
+ * Live dashboard market data controls
+ */
+
+.exa-market-data-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exa-market-data-badge {
+  display: inline-flex;
+  min-height: 29px;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.exa-market-data-badge.live {
+  color: #86efac;
+  border-color:
+    rgba(34, 197, 94, 0.38);
+  background:
+    rgba(34, 197, 94, 0.1);
+}
+
+.exa-market-data-badge.fallback {
+  color: #fcd34d;
+  border-color:
+    rgba(245, 158, 11, 0.4);
+  background:
+    rgba(245, 158, 11, 0.1);
+}
+
+.exa-market-refresh-button {
+  min-height: 30px;
+  padding: 0 11px;
+  color: #bfdbfe;
+  border: 1px solid #2c5795;
+  border-radius: 8px;
+  background: #102d5d;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.exa-market-refresh-button:hover:not(
+    :disabled
+  ) {
+  background: #1747a5;
+}
+
+.exa-market-refresh-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.exa-market-api-notice {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.exa-market-api-notice.error {
+  color: #fcd34d;
+  border: 1px solid
+    rgba(245, 158, 11, 0.4);
+  background:
+    rgba(120, 53, 15, 0.25);
+}
+
+@media (max-width: 650px) {
+  .exa-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .exa-market-data-controls {
+    width: 100%;
+  }
+
+  .exa-market-refresh-button {
+    flex: 1;
+  }
+}
+
+.exa-watchlist-change.neutral {
+  color: #64748b;
+}
+
+.exa-watchlist-live-status {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.exa-watchlist-live-status.loading {
+  color: #93c5fd;
+  border: 1px solid
+    rgba(59, 130, 246, 0.35);
+  background:
+    rgba(30, 64, 175, 0.12);
+}
+
+.exa-watchlist-live-status.error {
+  color: #fcd34d;
+  border: 1px solid
+    rgba(245, 158, 11, 0.4);
+  background:
+    rgba(120, 53, 15, 0.22);
+}
+
+.exa-demo-label.live {
+  color: #86efac;
+  border-color:
+    rgba(34, 197, 94, 0.4);
+  background:
+    rgba(34, 197, 94, 0.1);
+}
+
+.exa-demo-label.fallback {
+  color: #fcd34d;
+  border-color:
+    rgba(245, 158, 11, 0.4);
+  background:
+    rgba(245, 158, 11, 0.1);
+}
+
+.exa-demo-label.loading {
+  color: #93c5fd;
+  border-color:
+    rgba(59, 130, 246, 0.4);
+  background:
+    rgba(59, 130, 246, 0.1);
+}
+
+.exa-movers-status-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  color: #fcd34d;
+  border: 1px solid
+    rgba(245, 158, 11, 0.35);
+  border-radius: 8px;
+  background:
+    rgba(120, 53, 15, 0.18);
+  font-size: 10px;
+}
+
+.exa-stock-avatar {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 14px;
+  background: #163b7a;
+  border: 1px solid #2855a3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.exa-stock-logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+}
+
+.exa-stock-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dbeafe;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* //// */
+
+.exa-stock-avatar {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border: 1px solid #2855a3;
+  border-radius: 14px;
+  background: #163b7a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.exa-stock-logo {
+  width: 34px;
+  height: 34px;
+  padding: 3px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.exa-stock-fallback {
+  width: 100%;
+  height: 100%;
+  color: #dbeafe;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exa-logo-attribution {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+.exa-logo-attribution:hover {
+  text-decoration: underline;
+}
+
+.exa-alert-icon {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+.exa-alert-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.exa-alert-icon.volume {
+  color: #bfdbfe;
+  background: rgba(37, 99, 235, 0.55);
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.exa-alert-icon.exa-score {
+  color: #ddd6fe;
+  background: rgba(109, 40, 217, 0.45);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.exa-alert-icon.earnings {
+  color: #fde68a;
+  background: rgba(217, 119, 6, 0.35);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.exa-alert-icon.momentum {
+  color: #86efac;
+  background: rgba(22, 163, 74, 0.3);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.exa-alert-icon.risk {
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.3);
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.exa-alert-icon.default {
+  color: #bfdbfe;
+  background: rgba(37, 99, 235, 0.35);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.exa-alert-item.clickable {
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.exa-alert-item.clickable:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(30, 64, 175, 0.08);
+}
+
+.exa-alert-item.clickable:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 3px;
+}
+
+.exa-alerts-empty {
+  min-height: 160px;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.exa-alerts-empty strong {
+  color: #cbd5e1;
+}
+
+.exa-alerts-empty p {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Important Alerts — compact sizing */
+
+.exa-alerts-card .exa-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exa-alerts-card .exa-alert-item {
+  min-height: 76px;
+  padding: 12px 13px;
+  gap: 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+}
+
+/* Smaller alert icon container */
+.exa-alerts-card .exa-alert-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 10px;
+}
+
+/* Smaller icon */
+.exa-alerts-card .exa-alert-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* Allow text to fit properly */
+.exa-alerts-card .exa-alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Alert title and time row */
+.exa-alerts-card .exa-alert-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+/* Smaller alert title */
+.exa-alerts-card .exa-alert-title-row strong {
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+/* Smaller time */
+.exa-alerts-card .exa-alert-title-row time {
+  flex-shrink: 0;
+  font-size: 9px;
+  line-height: 1;
+  color: #64748b;
+}
+
+/* Smaller alert description */
+.exa-alerts-card .exa-alert-content p {
+  margin: 0;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  font-weight: 400 !important;
+  color: #8fa8cf;
+}
+
+/* Smaller footer note */
+.exa-alerts-card .exa-alerts-note {
+  margin-top: 14px;
+  font-size: 9.5px !important;
+  line-height: 1.5 !important;
+  color: #56719b;
+}
+
+/* Alert count */
+.exa-alerts-card .exa-alert-count {
+  width: 34px;
+  height: 34px;
+  font-size: 11px;
+}
+
+/* Tablet and mobile */
+@media (max-width: 768px) {
+  .exa-alerts-card .exa-alert-item {
+    min-height: 70px;
+    padding: 11px;
+    gap: 10px;
+  }
+
+  .exa-alerts-card .exa-alert-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 9px;
+  }
+
+  .exa-alerts-card .exa-alert-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .exa-alerts-card .exa-alert-content p {
+    font-size: 10px !important;
   }
 }

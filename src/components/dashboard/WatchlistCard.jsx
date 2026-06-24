@@ -1,4 +1,17 @@
+import { useEffect, useState } from "react";
+
+const LOGO_DEV_KEY =
+  import.meta.env.VITE_LOGO_DEV_KEY || "";
+
 function formatPrice(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "N/A";
+  }
+
   const number = Number(value);
 
   if (!Number.isFinite(number)) {
@@ -13,6 +26,14 @@ function formatPrice(value) {
 }
 
 function formatPercent(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "N/A";
+  }
+
   const number = Number(value);
 
   if (!Number.isFinite(number)) {
@@ -40,6 +61,104 @@ function getViewClass(view) {
   }
 
   return "neutral";
+}
+
+function getLogoDomain(stock) {
+  const savedDomain = String(
+    stock?.logoDomain || "",
+  ).trim();
+
+  if (savedDomain) {
+    return savedDomain;
+  }
+
+  const symbol = String(
+    stock?.symbol || "",
+  )
+    .trim()
+    .toUpperCase();
+
+  const knownDomains = {
+    "RELIANCE.NS": "ril.com",
+    "INFY.NS": "infosys.com",
+    "HDFCBANK.NS": "hdfcbank.com",
+    "ASIANPAINT.NS": "asianpaints.com",
+    "TCS.NS": "tcs.com",
+    "ICICIBANK.NS": "icicibank.com",
+    "SBIN.NS": "sbi.co.in",
+    "WIPRO.NS": "wipro.com",
+    "TECHM.NS": "techmahindra.com",
+    "BHARTIARTL.NS": "airtel.in",
+    "ITC.NS": "itcportal.com",
+    "MARUTI.NS": "marutisuzuki.com",
+    "SUNPHARMA.NS": "sunpharma.com",
+    "BAJFINANCE.NS": "bajajfinserv.in",
+    "BAJAJFINSV.NS": "bajajfinserv.in",
+    "AXISBANK.NS": "axisbank.com",
+    "KOTAKBANK.NS": "kotak.com",
+    "HINDUNILVR.NS": "hul.co.in",
+    "TITAN.NS": "titancompany.in",
+    "POWERGRID.NS": "powergrid.in",
+    "NTPC.NS": "ntpc.co.in",
+    "ONGC.NS": "ongcindia.com",
+    "TATASTEEL.NS": "tatasteel.com",
+  };
+
+  return knownDomains[symbol] || "";
+}
+
+function getLogoUrl(stock) {
+  if (!LOGO_DEV_KEY) {
+    return "";
+  }
+
+  const domain = getLogoDomain(stock);
+
+  if (!domain) {
+    return "";
+  }
+
+  return (
+    `https://img.logo.dev/${encodeURIComponent(domain)}` +
+    `?token=${encodeURIComponent(LOGO_DEV_KEY)}` +
+    "&size=64&format=png"
+  );
+}
+
+function StockLogo({ stock }) {
+  const [imageFailed, setImageFailed] =
+    useState(false);
+
+  const logoUrl = getLogoUrl(stock);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [logoUrl]);
+
+  const firstLetter =
+    stock?.name
+      ?.charAt(0)
+      ?.toUpperCase() || "S";
+
+  return (
+    <span className="exa-stock-avatar">
+      {logoUrl && !imageFailed ? (
+        <img
+          src={logoUrl}
+          alt={`${stock?.name || "Company"} logo`}
+          className="exa-stock-logo"
+          loading="lazy"
+          onError={() => {
+            setImageFailed(true);
+          }}
+        />
+      ) : (
+        <span className="exa-stock-fallback">
+          {firstLetter}
+        </span>
+      )}
+    </span>
+  );
 }
 
 export default function WatchlistCard({
@@ -70,8 +189,7 @@ export default function WatchlistCard({
           </strong>
 
           <p>
-            Add stocks from the Analyze page to
-            monitor them here.
+            Add stocks from the Analyze page to monitor them here.
           </p>
         </div>
       ) : (
@@ -86,8 +204,21 @@ export default function WatchlistCard({
           </div>
 
           {stocks.map((stock, index) => {
-            const positive =
-              Number(stock?.changePercent) >= 0;
+            const changeNumber = Number(
+              stock?.changePercent,
+            );
+
+            const hasChange =
+              stock?.changePercent !== null &&
+              stock?.changePercent !== undefined &&
+              Number.isFinite(changeNumber);
+
+            const changeClass =
+              !hasChange
+                ? "neutral"
+                : changeNumber >= 0
+                  ? "positive"
+                  : "negative";
 
             return (
               <div
@@ -106,11 +237,7 @@ export default function WatchlistCard({
                     }
                   }}
                 >
-                  <span className="exa-stock-avatar">
-                    {stock?.name
-                      ?.charAt(0)
-                      ?.toUpperCase() || "S"}
-                  </span>
+                  <StockLogo stock={stock} />
 
                   <span>
                     <strong>
@@ -128,11 +255,7 @@ export default function WatchlistCard({
                 </span>
 
                 <span
-                  className={
-                    positive
-                      ? "exa-watchlist-change positive"
-                      : "exa-watchlist-change negative"
-                  }
+                  className={`exa-watchlist-change ${changeClass}`}
                 >
                   {formatPercent(
                     stock?.changePercent,
@@ -162,9 +285,7 @@ export default function WatchlistCard({
                         onAnalyze &&
                         stock?.symbol
                       ) {
-                        onAnalyze(
-                          stock.symbol,
-                        );
+                        onAnalyze(stock.symbol);
                       }
                     }}
                   >
@@ -182,9 +303,7 @@ export default function WatchlistCard({
                         onRemove &&
                         stock?.symbol
                       ) {
-                        onRemove(
-                          stock.symbol,
-                        );
+                        onRemove(stock.symbol);
                       }
                     }}
                   >
@@ -198,9 +317,16 @@ export default function WatchlistCard({
       )}
 
       <p className="exa-watchlist-note">
-        EXA scores and AI views are educational
-        research indicators, not investment
-        recommendations.
+        Prices and daily changes are loaded from Yahoo Finance.
+        EXA scores appear only after a successful AI analysis.{" "}
+        <a
+          href="https://logo.dev"
+          target="_blank"
+          rel="noreferrer"
+          className="exa-logo-attribution"
+        >
+          Logos provided by Logo.dev
+        </a>
       </p>
     </article>
   );

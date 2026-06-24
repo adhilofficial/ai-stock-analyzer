@@ -25,21 +25,26 @@ function formatPrice(value) {
     return "N/A";
   }
 
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  }).format(number);
+  return new Intl.NumberFormat(
+    "en-IN",
+    {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 2,
+    },
+  ).format(number);
 }
 
 function formatPercent(value) {
   const number = Number(value);
 
   if (!Number.isFinite(number)) {
-    return "";
+    return "N/A";
   }
 
-  return `${number >= 0 ? "+" : ""}${number.toFixed(2)}%`;
+  return `${
+    number >= 0 ? "+" : ""
+  }${number.toFixed(2)}%`;
 }
 
 function formatVolume(value) {
@@ -49,31 +54,69 @@ function formatVolume(value) {
     return "N/A";
   }
 
-  return new Intl.NumberFormat("en-IN", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(number);
+  return new Intl.NumberFormat(
+    "en-IN",
+    {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    },
+  ).format(number);
 }
 
 export default function MarketMovers({
   movers = {},
   onAnalyze,
+  status = "fallback",
+  loading = false,
+  error = "",
 }) {
-  const [activeTab, setActiveTab] =
-    useState("gainers");
+  const [
+    activeTab,
+    setActiveTab,
+  ] = useState("gainers");
 
-  const selectedStocks = useMemo(() => {
-    const value = movers?.[activeTab];
+  const selectedStocks =
+    useMemo(() => {
+      const stocks =
+        movers?.[activeTab];
 
-    return Array.isArray(value)
-      ? value
-      : [];
-  }, [movers, activeTab]);
+      return Array.isArray(stocks)
+        ? stocks
+        : [];
+    }, [
+      movers,
+      activeTab,
+    ]);
 
   function handleAnalyze(symbol) {
-    if (onAnalyze && symbol) {
+    if (
+      onAnalyze &&
+      symbol
+    ) {
       onAnalyze(symbol);
     }
+  }
+
+  let badgeText =
+    "Fallback data";
+
+  let badgeClass =
+    "fallback";
+
+  if (loading) {
+    badgeText =
+      "Loading live data";
+
+    badgeClass =
+      "loading";
+  } else if (
+    status === "live"
+  ) {
+    badgeText =
+      "Live data";
+
+    badgeClass =
+      "live";
   }
 
   return (
@@ -84,11 +127,18 @@ export default function MarketMovers({
             MARKET ACTIVITY
           </p>
 
-          <h2>Market Movers</h2>
+          <h2>
+            Market Movers
+          </h2>
         </div>
 
-        <span className="exa-demo-label">
-          Demo data
+        <span
+          className={
+            `exa-demo-label ` +
+            badgeClass
+          }
+        >
+          {badgeText}
         </span>
       </div>
 
@@ -121,7 +171,9 @@ export default function MarketMovers({
 
       {selectedStocks.length === 0 ? (
         <div className="exa-movers-empty">
-          Market mover data is unavailable.
+          {loading
+            ? "Loading live market movers..."
+            : "Market mover data is unavailable."}
         </div>
       ) : (
         <div className="exa-movers-list">
@@ -158,7 +210,10 @@ export default function MarketMovers({
                   <span className="exa-mover-rank">
                     {String(
                       index + 1,
-                    ).padStart(2, "0")}
+                    ).padStart(
+                      2,
+                      "0",
+                    )}
                   </span>
 
                   <span className="exa-mover-company">
@@ -168,7 +223,8 @@ export default function MarketMovers({
                     </strong>
 
                     <small>
-                      {stock?.symbol || "-"}
+                      {stock?.symbol ||
+                        "-"}
                     </small>
                   </span>
 
@@ -178,7 +234,8 @@ export default function MarketMovers({
                     )}
                   </span>
 
-                  {activeTab === "active" ? (
+                  {activeTab ===
+                  "active" ? (
                     <span className="exa-mover-volume">
                       {formatVolume(
                         stock?.volume,
@@ -206,6 +263,14 @@ export default function MarketMovers({
               );
             },
           )}
+        </div>
+      )}
+
+      {error && (
+        <div className="exa-movers-status-note">
+          Live Market Movers could not
+          be loaded. Temporary fallback
+          data is displayed.
         </div>
       )}
     </article>
