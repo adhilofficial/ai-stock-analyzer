@@ -15,9 +15,10 @@ import {
 
 import {
   getDashboardMarketData,
-  getMarketBreadth,
-  getMarketMovers,
   getWatchlistQuotes,
+  getMarketMovers,
+  getMarketBreadth,
+  getMarketAlerts,
 } from "../services/dashboardApi";
 
 import useDashboardStorage from
@@ -85,7 +86,8 @@ function getAiView(signal) {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   const [
     searchQuery,
@@ -110,6 +112,11 @@ export default function Dashboard() {
   const [
     liveMarketBreadth,
     setLiveMarketBreadth,
+  ] = useState(null);
+
+  const [
+    liveMarketAlerts,
+    setLiveMarketAlerts,
   ] = useState(null);
 
   const [
@@ -155,6 +162,16 @@ export default function Dashboard() {
   const [
     breadthError,
     setBreadthError,
+  ] = useState("");
+
+  const [
+    alertsLoading,
+    setAlertsLoading,
+  ] = useState(true);
+
+  const [
+    alertsError,
+    setAlertsError,
   ] = useState("");
 
   const {
@@ -243,7 +260,7 @@ export default function Dashboard() {
             });
 
           setLiveWatchlistQuotes(
-            Array.isArray(data.quotes)
+            Array.isArray(data?.quotes)
               ? data.quotes
               : [],
           );
@@ -372,12 +389,67 @@ export default function Dashboard() {
       [],
     );
 
+  const loadMarketAlertsData =
+    useCallback(
+      async ({
+        refresh = false,
+        signal,
+      } = {}) => {
+        setAlertsLoading(true);
+        setAlertsError("");
+
+        try {
+          const data =
+            await getMarketAlerts({
+              refresh,
+              signal,
+            });
+
+          setLiveMarketAlerts(
+            Array.isArray(data?.alerts)
+              ? data.alerts
+              : [],
+          );
+        } catch (caughtError) {
+          if (
+            caughtError?.name ===
+            "AbortError"
+          ) {
+            return;
+          }
+
+          console.error(
+            "Market alerts error:",
+            caughtError,
+          );
+
+          setAlertsError(
+            caughtError instanceof Error
+              ? caughtError.message
+              : "Unable to load live market alerts.",
+          );
+
+          /*
+           * Null activates the temporary
+           * mock-data fallback.
+           */
+          setLiveMarketAlerts(null);
+        } finally {
+          if (!signal?.aborted) {
+            setAlertsLoading(false);
+          }
+        }
+      },
+      [],
+    );
+
   useEffect(() => {
     const controller =
       new AbortController();
 
     loadMarketData({
-      signal: controller.signal,
+      signal:
+        controller.signal,
     });
 
     return () => {
@@ -390,7 +462,8 @@ export default function Dashboard() {
       new AbortController();
 
     loadWatchlistData({
-      signal: controller.signal,
+      signal:
+        controller.signal,
     });
 
     return () => {
@@ -403,7 +476,8 @@ export default function Dashboard() {
       new AbortController();
 
     loadMarketMoversData({
-      signal: controller.signal,
+      signal:
+        controller.signal,
     });
 
     return () => {
@@ -416,13 +490,28 @@ export default function Dashboard() {
       new AbortController();
 
     loadMarketBreadthData({
-      signal: controller.signal,
+      signal:
+        controller.signal,
     });
 
     return () => {
       controller.abort();
     };
   }, [loadMarketBreadthData]);
+
+  useEffect(() => {
+    const controller =
+      new AbortController();
+
+    loadMarketAlertsData({
+      signal:
+        controller.signal,
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [loadMarketAlertsData]);
 
   const watchlist =
     useMemo(() => {
@@ -488,8 +577,14 @@ export default function Dashboard() {
 
             name:
               liveQuote?.name ||
+              savedAnalysis?.company ||
               mockStock?.name ||
               symbol,
+
+            logoDomain:
+              savedAnalysis?.logoDomain ||
+              mockStock?.logoDomain ||
+              "",
 
             price:
               liveQuote?.price ??
@@ -511,6 +606,7 @@ export default function Dashboard() {
 
             exaScore:
               savedAnalysis?.score ??
+              savedAnalysis?.confidenceScore ??
               null,
 
             aiView:
@@ -568,13 +664,29 @@ export default function Dashboard() {
       liveMarketBreadth &&
         Number.isFinite(
           Number(
-            liveMarketBreadth.totalStocks,
+            liveMarketBreadth
+              .totalStocks,
           ),
         ) &&
         Number(
-          liveMarketBreadth.totalStocks,
+          liveMarketBreadth
+            .totalStocks,
         ) > 0,
     );
+
+  /*
+   * An empty alert array is still a successful
+   * live response. It means no conditions
+   * currently triggered an alert.
+   */
+  const liveAlertsAvailable =
+    Array.isArray(
+      liveMarketAlerts,
+    );
+
+  const watchlistLiveAvailable =
+    watchlistSymbols.length === 0 ||
+    liveWatchlistQuotes.length > 0;
 
   const marketStatus =
     liveMarketData?.marketStatus ||
@@ -600,9 +712,18 @@ export default function Dashboard() {
       ? liveMarketBreadth
       : dashboardMockData.breadth;
 
-  const usingLiveCoreData =
+  const importantAlerts =
+    liveAlertsAvailable
+      ? liveMarketAlerts
+      : dashboardMockData.alerts;
+
+  const usingCompleteLiveData =
     liveIndicesAvailable &&
-    liveSectorsAvailable;
+    liveSectorsAvailable &&
+    liveMoversAvailable &&
+    liveBreadthAvailable &&
+    liveAlertsAvailable &&
+    watchlistLiveAvailable;
 
   function handleSearch(event) {
     event.preventDefault();
@@ -665,6 +786,10 @@ export default function Dashboard() {
     });
 
     loadMarketBreadthData({
+      refresh: true,
+    });
+
+    loadMarketAlertsData({
       refresh: true,
     });
   }
@@ -809,7 +934,10 @@ export default function Dashboard() {
         <div className="exa-index-grid">
           {indices.map((index) => (
             <MarketIndexCard
-              key={index.ticker}
+              key={
+                index.ticker ||
+                index.symbol
+              }
               index={index}
             />
           ))}
@@ -818,21 +946,24 @@ export default function Dashboard() {
 
       <section className="exa-dashboard-main-grid">
         <div className="exa-pulse-grid-item">
-  <MarketPulse
-    data={dashboardMockData.marketPulse}
-    breadth={marketBreadth}
-    indices={indices}
-    sectors={sectors}
-    loading={
-      marketLoading ||
-      breadthLoading
-    }
-    error={
-      marketError ||
-      breadthError
-    }
-  />
-</div>
+          <MarketPulse
+            data={
+              dashboardMockData
+                .marketPulse
+            }
+            breadth={marketBreadth}
+            indices={indices}
+            sectors={sectors}
+            loading={
+              marketLoading ||
+              breadthLoading
+            }
+            error={
+              marketError ||
+              breadthError
+            }
+          />
+        </div>
 
         <div className="exa-breadth-grid-item">
           <MarketBreadth
@@ -847,7 +978,8 @@ export default function Dashboard() {
 
           {breadthError && (
             <div className="exa-watchlist-live-status error">
-              Live market breadth could not be loaded. Temporary fallback data is displayed.
+              Live market breadth could not be loaded. Temporary
+              fallback data is displayed.
             </div>
           )}
         </div>
@@ -896,12 +1028,22 @@ export default function Dashboard() {
 
         <div className="exa-alerts-grid-item">
           <ImportantAlerts
-            alerts={
-              dashboardMockData
-                .alerts
-            }
+            alerts={importantAlerts}
             onAnalyze={handleAnalyze}
           />
+
+          {alertsLoading && (
+            <p className="exa-alerts-data-status">
+              Generating live market alerts...
+            </p>
+          )}
+
+          {alertsError && (
+            <p className="exa-alerts-data-status error">
+              Live alerts are temporarily unavailable. Fallback alerts
+              are displayed.
+            </p>
+          )}
         </div>
 
         <div className="exa-movers-grid-item">
@@ -930,12 +1072,13 @@ export default function Dashboard() {
       </section>
 
       <p className="exa-dashboard-note">
-        {usingLiveCoreData
-          ? "Indian indices and sectors are loaded live from Yahoo Finance."
-          : "Some index or sector values are using fallback data because live data is unavailable."}{" "}
-        Watchlist prices, Market Movers and Market Breadth are requested from Yahoo Finance.
-        Market Pulse and Important Alerts remain development-stage indicators.
-        EXA scores appear only after a successful AI analysis.
+        {usingCompleteLiveData
+          ? "Indian indices, sectors, watchlist prices, Market Movers and Market Breadth are loaded live from Yahoo Finance."
+          : "Some dashboard sections are temporarily using fallback data because live data is unavailable."}{" "}
+        Important Alerts and the EXA Market Pulse are generated from
+        live market data. EXA scores and AI views appear after a
+        successful AI analysis. Recent analyses are stored locally in
+        your browser.
       </p>
     </main>
   );

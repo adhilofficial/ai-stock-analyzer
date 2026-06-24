@@ -714,3 +714,123 @@ export async function getMarketBreadth({
         : [],
   };
 }
+function normalizeMarketAlert(alert) {
+  return {
+    id:
+      alert?.id ||
+      `${alert?.type || "alert"}-${alert?.symbol || Date.now()}`,
+
+    type:
+      alert?.type ||
+      "market-alert",
+
+    title:
+      alert?.title ||
+      "Market Alert",
+
+    message:
+      alert?.message ||
+      alert?.description ||
+      "Unusual market activity has been detected.",
+
+    symbol: String(
+      alert?.symbol || "",
+    ).toUpperCase(),
+
+    time:
+      alert?.time ||
+      "",
+
+    severity:
+      alert?.severity ||
+      "information",
+  };
+}
+
+export async function getMarketAlerts({
+  refresh = false,
+  signal,
+} = {}) {
+  const refreshQuery =
+    refresh ? "?refresh=1" : "";
+
+  const response = await fetch(
+    buildApiUrl(
+      `/api/market-alerts${refreshQuery}`,
+    ),
+    {
+      method: "GET",
+
+      headers: {
+        Accept: "application/json",
+      },
+
+      signal,
+    },
+  );
+
+  const data =
+    await readJsonResponse(response);
+
+  if (
+    !response.ok ||
+    data?.success !== true
+  ) {
+    throw new Error(
+      data?.error ||
+        `Unable to load live market alerts. Server returned ${response.status}.`,
+    );
+  }
+
+  return {
+    success: true,
+
+    source:
+      data?.source ||
+      "Yahoo Finance",
+
+    universe:
+      data?.universe ||
+      "Selected liquid NSE stocks",
+
+    fetchedAt:
+      data?.fetchedAt ||
+      new Date().toISOString(),
+
+    cached:
+      Boolean(data?.cached),
+
+    alerts:
+      Array.isArray(data?.alerts)
+        ? data.alerts.map(
+            normalizeMarketAlert,
+          )
+        : [],
+
+    alertCount:
+      safeNumber(
+        data?.alertCount,
+        0,
+      ),
+
+    candidateCount:
+      safeNumber(
+        data?.candidateCount,
+        0,
+      ),
+
+    summary:
+      data?.summary &&
+      typeof data.summary ===
+        "object"
+        ? data.summary
+        : {},
+
+    unavailableSymbols:
+      Array.isArray(
+        data?.unavailableSymbols,
+      )
+        ? data.unavailableSymbols
+        : [],
+  };
+}

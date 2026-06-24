@@ -111,7 +111,7 @@
 .exa-dashboard-search {
   display: flex;
   width: 100%;
-  max-width: 900px;
+  max-width: 550px;
   min-height: 54px;
   align-items: center;
   gap: 10px;
@@ -2201,5 +2201,286 @@
 
   .exa-alerts-card .exa-alert-content p {
     font-size: 10px !important;
+  }
+}
+
+/* Keep Important Alerts aligned with Watchlist */
+.exa-alerts-grid-item {
+  min-width: 0;
+  min-height: 0;
+}
+
+.exa-alerts-card {
+  height: 100%;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Only the alerts list will scroll */
+.exa-alerts-card .exa-alerts-list {
+  flex: 1;
+  min-height: 0;
+  max-height: 475px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 5px;
+}
+
+/* More compact alert rows */
+.exa-alerts-card .exa-alert-item {
+  min-height: 72px;
+  padding: 11px 12px;
+  gap: 11px;
+  flex-shrink: 0;
+}
+
+/* Keep long messages inside the card */
+.exa-alerts-card .exa-alert-content {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.exa-alerts-card .exa-alert-content p {
+  margin: 0;
+  max-width: 100%;
+  font-size: 10.5px !important;
+  line-height: 1.45 !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* Keep title and time properly aligned */
+.exa-alerts-card .exa-alert-title-row {
+  min-width: 0;
+}
+
+.exa-alerts-card .exa-alert-title-row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exa-alerts-card .exa-alert-title-row time {
+  flex-shrink: 0;
+}
+
+/* Compact footer */
+.exa-alerts-card .exa-alerts-note {
+  flex-shrink: 0;
+  margin: 12px 0 0;
+  padding-top: 2px;
+}
+
+/* Custom scrollbar */
+.exa-alerts-card .exa-alerts-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.exa-alerts-card .exa-alerts-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 10px;
+}
+
+.exa-alerts-card .exa-alerts-list::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.45);
+  border-radius: 10px;
+}
+
+.exa-alerts-card .exa-alerts-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* Mobile: allow natural card height */
+@media (max-width: 768px) {
+  .exa-alerts-card {
+    max-height: none;
+  }
+
+  .exa-alerts-card .exa-alerts-list {
+    max-height: 430px;
+  }
+}
+
+/* =========================================
+   STAGE 3 DASHBOARD — CLEAN ALIGNED LAYOUT
+   ========================================= */
+
+.exa-stage3-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(320px, 1fr);
+  grid-template-areas:
+    "watchlist alerts"
+    "movers recent";
+  gap: 24px;
+  align-items: stretch;
+}
+
+.exa-watchlist-grid-item {
+  grid-area: watchlist;
+}
+
+.exa-alerts-grid-item {
+  grid-area: alerts;
+}
+
+.exa-movers-grid-item {
+  grid-area: movers;
+}
+
+.exa-recent-grid-item {
+  grid-area: recent;
+}
+
+/* Prevent cards from overflowing their columns */
+.exa-watchlist-grid-item,
+.exa-alerts-grid-item,
+.exa-movers-grid-item,
+.exa-recent-grid-item {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Equal height for the first row */
+.exa-watchlist-grid-item,
+.exa-alerts-grid-item {
+  height: 565px;
+}
+
+/* Equal height for the second row */
+.exa-movers-grid-item,
+.exa-recent-grid-item {
+  height: 470px;
+}
+
+/* Make each card fill its grid area */
+.exa-watchlist-grid-item > .exa-dashboard-card,
+.exa-alerts-grid-item > .exa-dashboard-card,
+.exa-movers-grid-item > .exa-dashboard-card,
+.exa-recent-grid-item > .exa-dashboard-card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* Watchlist remains inside its card */
+.exa-watchlist-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.exa-watchlist-card .exa-watchlist-table {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Important Alerts: only alert rows scroll */
+.exa-alerts-card {
+  display: flex;
+  flex-direction: column;
+  max-height: none;
+  overflow: hidden;
+}
+
+.exa-alerts-card .exa-alerts-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 5px;
+}
+
+.exa-alerts-card .exa-alerts-note {
+  flex-shrink: 0;
+  margin-top: 12px;
+}
+
+/* Market Movers fills its complete card */
+.exa-movers-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.exa-movers-card .exa-movers-list {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Recent Analyses remains contained */
+.exa-recent-grid-item > .exa-dashboard-card {
+  overflow: hidden;
+}
+
+/* Smaller, cleaner scrollbar */
+.exa-alerts-card .exa-alerts-list {
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgba(59, 130, 246, 0.55)
+    rgba(15, 23, 42, 0.25);
+}
+
+.exa-alerts-card .exa-alerts-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.exa-alerts-card .exa-alerts-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.25);
+  border-radius: 20px;
+}
+
+.exa-alerts-card .exa-alerts-list::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.55);
+  border-radius: 20px;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .exa-stage3-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "watchlist"
+      "alerts"
+      "movers"
+      "recent";
+  }
+
+  .exa-watchlist-grid-item,
+  .exa-alerts-grid-item,
+  .exa-movers-grid-item,
+  .exa-recent-grid-item {
+    height: auto;
+    min-height: 0;
+  }
+
+  .exa-alerts-card .exa-alerts-list {
+    max-height: 430px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .exa-stage3-grid {
+    gap: 16px;
+  }
+
+  .exa-watchlist-grid-item,
+  .exa-alerts-grid-item,
+  .exa-movers-grid-item,
+  .exa-recent-grid-item {
+    height: auto;
+  }
+
+  .exa-alerts-card .exa-alerts-list {
+    max-height: 390px;
   }
 }
