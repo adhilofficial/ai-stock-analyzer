@@ -654,7 +654,7 @@
 .exa-breadth-main {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 6px;
 }
 
 .exa-breadth-donut {
