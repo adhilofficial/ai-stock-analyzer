@@ -1,3 +1,7 @@
+import {
+  fetchWithTimeout,
+} from "../utils/fetchWithTimeout";
+
 const API_BASE_URL = String(
   import.meta.env.VITE_API_BASE_URL || "",
 ).replace(/\/+$/, "");
@@ -896,7 +900,8 @@ export async function getMarketNews({
   const refreshQuery =
     refresh ? "?refresh=1" : "";
 
-  const response = await fetch(
+  const response =
+   await fetchWithTimeout(
     buildApiUrl(
       `/api/market-news${refreshQuery}`,
     ),
