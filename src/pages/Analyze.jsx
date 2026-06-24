@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import useIsMobile from "../hooks/useIsMobile";
 
 import {
@@ -31,6 +32,10 @@ import {
   getStockData,
   searchStocks,
 } from "../services/financeApi";
+
+import {
+  saveRecentAnalysis,
+} from "../utils/dashboardStorage";
 
 const SAMPLES = [
   "Reliance Industries",
@@ -526,6 +531,8 @@ function CompanyLogo({ domain, name, size = 52 }) {
 
 export default function Analyze() {
   const isMobile = useIsMobile();
+  const location = useLocation();
+  const autoAnalyzeRef = useRef("");
 
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -637,6 +644,12 @@ export default function Analyze() {
         );
 
         setResult(completeResult);
+
+        saveRecentAnalysis({
+          stockData,
+          analysis: completeResult,
+        });
+
         setAiNotice("");
       } catch (aiError) {
         console.error(
@@ -675,6 +688,29 @@ export default function Analyze() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const parameters = new URLSearchParams(
+      location.search,
+    );
+
+    const requestedStock = String(
+      parameters.get("symbol") ||
+        parameters.get("query") ||
+        "",
+    ).trim();
+
+    if (
+      !requestedStock ||
+      autoAnalyzeRef.current === requestedStock
+    ) {
+      return;
+    }
+
+    autoAnalyzeRef.current = requestedStock;
+    setQuery(requestedStock);
+    analyze(requestedStock);
+  }, [location.search]);
 
   async function handleTimeframeChange(
     nextTimeframe,
@@ -1807,4 +1843,4 @@ export default function Analyze() {
       )}
     </div>
   );
-}
+} 

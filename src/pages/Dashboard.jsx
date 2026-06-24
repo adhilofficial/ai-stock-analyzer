@@ -1,4 +1,5 @@
 import {
+  useMemo,
   useState,
 } from "react";
 
@@ -10,13 +11,32 @@ import {
   dashboardMockData,
 } from "../data/dashboardMockData";
 
-import MarketIndexCard from "../components/dashboard/MarketIndexCard";
-import MarketPulse from "../components/dashboard/MarketPulse";
-import MarketBreadth from "../components/dashboard/MarketBreadth";
-import SectorPerformance from "../components/dashboard/SectorPerformance";
-import WatchlistCard from "../components/dashboard/WatchlistCard";
-import MarketMovers from "../components/dashboard/MarketMovers";
-import ImportantAlerts from "../components/dashboard/ImportantAlerts";
+import useDashboardStorage from
+  "../hooks/useDashboardStorage";
+
+import MarketIndexCard from
+  "../components/dashboard/MarketIndexCard";
+
+import MarketPulse from
+  "../components/dashboard/MarketPulse";
+
+import MarketBreadth from
+  "../components/dashboard/MarketBreadth";
+
+import SectorPerformance from
+  "../components/dashboard/SectorPerformance";
+
+import WatchlistCard from
+  "../components/dashboard/WatchlistCard";
+
+import MarketMovers from
+  "../components/dashboard/MarketMovers";
+
+import ImportantAlerts from
+  "../components/dashboard/ImportantAlerts";
+
+import RecentAnalyses from
+  "../components/dashboard/RecentAnalyses";
 
 import "../styles/dashboard.css";
 
@@ -29,12 +49,32 @@ export default function Dashboard() {
     setSearchQuery,
   ] = useState("");
 
-  const [
-    watchlist,
-    setWatchlist,
-  ] = useState(
-    dashboardMockData.watchlist,
-  );
+  const {
+    watchlistSymbols,
+    recentAnalyses,
+    removeSymbol,
+    restoreDefaultWatchlist,
+    clearAnalyses,
+  } = useDashboardStorage();
+
+  const watchlist =
+    useMemo(() => {
+      const stockMap =
+        new Map(
+          dashboardMockData
+            .watchlist
+            .map((stock) => [
+              stock.symbol,
+              stock,
+            ]),
+        );
+
+      return watchlistSymbols
+        .map((symbol) =>
+          stockMap.get(symbol),
+        )
+        .filter(Boolean);
+    }, [watchlistSymbols]);
 
   function handleSearch(event) {
     event.preventDefault();
@@ -72,13 +112,11 @@ export default function Dashboard() {
       return;
     }
 
-    setWatchlist(
-      (currentStocks) =>
-        currentStocks.filter(
-          (stock) =>
-            stock.symbol !== symbol,
-        ),
-    );
+    removeSymbol(symbol);
+  }
+
+  function handleRestoreWatchlist() {
+    restoreDefaultWatchlist();
   }
 
   return (
@@ -216,6 +254,18 @@ export default function Dashboard() {
               handleRemoveFromWatchlist
             }
           />
+
+          {watchlist.length === 0 && (
+            <button
+              type="button"
+              className="exa-restore-watchlist"
+              onClick={
+                handleRestoreWatchlist
+              }
+            >
+              Restore default watchlist
+            </button>
+          )}
         </div>
 
         <div className="exa-alerts-grid-item">
@@ -235,14 +285,21 @@ export default function Dashboard() {
             onAnalyze={handleAnalyze}
           />
         </div>
+
+        <div className="exa-recent-grid-item">
+          <RecentAnalyses
+            analyses={recentAnalyses}
+            onAnalyze={handleAnalyze}
+            onClear={clearAnalyses}
+          />
+        </div>
       </section>
 
       <p className="exa-dashboard-note">
-        Values displayed during this
-        development stage are demonstration
-        data. Live Yahoo Finance information
-        will be connected after the dashboard
-        interface is verified.
+        Market values are demonstration data
+        during this development stage.
+        Watchlist settings and recent analyses
+        are stored locally in your browser.
       </p>
     </main>
   );
