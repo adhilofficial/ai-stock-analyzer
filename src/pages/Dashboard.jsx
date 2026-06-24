@@ -49,6 +49,9 @@ import PremiumMarketOverview from
 import SectorPerformance from
   "../components/dashboard/SectorPerformance";
 
+  import useAutoRefresh from "../hooks/useAutoRefresh";
+
+
 /*
  * Original component styles must load first.
  * Premium V2 overrides must load second.
@@ -770,6 +773,11 @@ const loadMarketNewsData =
   refresh: true,
     });
   }
+
+  useAutoRefresh(
+  handleRefreshMarketData,
+  5 * 60 * 1000,
+);
 
   function getMarketDataLabel() {
     if (marketLoading) {

@@ -1,6 +1,8 @@
+import { useState } from "react";
 
 import {
-  ArrowUpRight,
+  ArrowDown,
+  ArrowUp,
   Clock3,
   Newspaper,
 } from "lucide-react";
@@ -56,12 +58,9 @@ function formatRelativeTime(value) {
   ).format(date);
 }
 
-function NewsThumbnail({
-  article,
-}) {
+function NewsThumbnail({ article }) {
   const title =
-    article?.title ||
-    "Market news";
+    article?.title || "Market news";
 
   if (article?.imageUrl) {
     return (
@@ -117,10 +116,34 @@ export default function NewsInsightsCard({
   onViewAll,
   onOpenArticle,
 }) {
-  const visibleArticles =
+  const [expanded, setExpanded] =
+    useState(false);
+
+  const normalizedArticles =
     Array.isArray(articles)
-      ? articles.slice(0, 4)
+      ? articles
       : [];
+
+  const hasMoreArticles =
+    normalizedArticles.length > 4;
+
+  const visibleArticles = expanded
+    ? normalizedArticles
+    : normalizedArticles.slice(0, 4);
+
+  function handleToggleViewAll() {
+    if (
+      typeof onViewAll === "function"
+    ) {
+      onViewAll();
+      return;
+    }
+
+    setExpanded(
+      (currentValue) =>
+        !currentValue,
+    );
+  }
 
   function handleOpenArticle(article) {
     if (
@@ -154,14 +177,24 @@ export default function NewsInsightsCard({
           <h2>News &amp; Insights</h2>
         </div>
 
-        <button
-          type="button"
-          className="exa-news-view-all-top"
-          onClick={onViewAll}
-        >
-          View all
-          <ArrowUpRight size={13} />
-        </button>
+        {hasMoreArticles && (
+          <button
+            type="button"
+            className="exa-news-view-all-top"
+            onClick={handleToggleViewAll}
+            aria-expanded={expanded}
+          >
+            {expanded
+              ? "Show less"
+              : "View all"}
+
+            {expanded ? (
+              <ArrowUp size={13} />
+            ) : (
+              <ArrowDown size={13} />
+            )}
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -242,9 +275,7 @@ export default function NewsInsightsCard({
                         "EXA Market News"}
                     </span>
 
-                    <span
-                      aria-hidden="true"
-                    >
+                    <span aria-hidden="true">
                       •
                     </span>
 
