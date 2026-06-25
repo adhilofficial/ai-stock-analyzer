@@ -1,0 +1,1236 @@
+/* =========================================
+   EXA ANALYZE PAGE — PREMIUM UI
+   ========================================= */
+
+.exa-analyze-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 18% 0%,
+      rgba(37, 99, 235, 0.12),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 90% 12%,
+      rgba(124, 58, 237, 0.08),
+      transparent 28%
+    ),
+    #07111f;
+}
+
+.exa-analyze-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 28px 30px 60px;
+  box-sizing: border-box;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.exa-analyze-hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 22px;
+  padding: 28px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 25, 47, 0.97),
+      rgba(8, 17, 33, 0.97)
+    );
+  box-shadow:
+    0 24px 65px rgba(0, 0, 0, 0.24);
+}
+
+.exa-analyze-hero::before {
+  content: "";
+  position: absolute;
+  top: -90px;
+  right: -70px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(37, 99, 235, 0.2),
+      transparent 67%
+    );
+  pointer-events: none;
+}
+
+.exa-analyze-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.exa-analyze-eyebrow {
+  margin: 0 0 8px;
+  color: #60a5fa;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.exa-analyze-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.exa-analyze-title {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(26px, 3vw, 39px);
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+
+.exa-analyze-subtitle {
+  max-width: 670px;
+  margin: 11px 0 0;
+  color: #8fa1bd;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.exa-analyze-ai-badge {
+  flex-shrink: 0;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  border-radius: 999px;
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.1);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.exa-analyze-search-form {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.exa-analyze-search-field {
+  position: relative;
+  min-width: 0;
+}
+
+.exa-analyze-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 17px;
+  color: #64748b;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.exa-analyze-search-input {
+  width: 100%;
+  height: 54px;
+  padding: 0 18px 0 49px;
+  border: 1px solid rgba(148, 163, 184, 0.17);
+  border-radius: 13px;
+  outline: none;
+  box-sizing: border-box;
+  color: #f8fafc;
+  background: rgba(7, 17, 31, 0.82);
+  font-family: inherit;
+  font-size: 14px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.exa-analyze-search-input::placeholder {
+  color: #60708a;
+}
+
+.exa-analyze-search-input:focus {
+  border-color: rgba(59, 130, 246, 0.72);
+  background: rgba(8, 20, 39, 0.96);
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.exa-analyze-search-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.exa-analyze-submit-button {
+  min-width: 138px;
+  height: 54px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 13px;
+  color: #ffffff;
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #4f46e5
+    );
+  box-shadow:
+    0 12px 28px rgba(37, 99, 235, 0.25);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.exa-analyze-submit-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 32px rgba(37, 99, 235, 0.34);
+}
+
+.exa-analyze-submit-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.exa-analyze-spinner {
+  animation:
+    exaAnalyzeSpin 0.85s linear infinite;
+}
+
+@keyframes exaAnalyzeSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.exa-analyze-quick-picks {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.exa-analyze-quick-label {
+  margin-right: 3px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.exa-analyze-quick-chip {
+  min-height: 32px;
+  padding: 0 13px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  color: #aebbd0;
+  background: rgba(15, 30, 54, 0.72);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease;
+}
+
+.exa-analyze-quick-chip:hover:not(:disabled) {
+  border-color: rgba(96, 165, 250, 0.42);
+  color: #dbeafe;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.exa-analyze-quick-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.exa-analyze-message {
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.exa-analyze-message.error {
+  border: 1px solid rgba(239, 68, 68, 0.27);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.24);
+}
+
+.exa-analyze-message.notice {
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #bfdbfe;
+  background: rgba(30, 64, 175, 0.16);
+}
+
+.exa-analyze-loading-state {
+  min-height: 270px;
+  margin-top: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 20px;
+  color: #94a3b8;
+  background: rgba(9, 19, 36, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.exa-analyze-loading-state svg {
+  margin-bottom: 14px;
+  color: #60a5fa;
+}
+
+.exa-analyze-loading-state strong {
+  color: #e2e8f0;
+  font-size: 14px;
+}
+
+.exa-analyze-loading-state span {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.exa-analyze-empty-state {
+  min-height: 330px;
+  margin-top: 18px;
+  padding: 38px 28px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 20px;
+  color: #94a3b8;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10, 22, 41, 0.75),
+      rgba(6, 15, 29, 0.78)
+    );
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.exa-analyze-empty-icon {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 17px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 20px;
+  color: #60a5fa;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(37, 99, 235, 0.16),
+      rgba(124, 58, 237, 0.1)
+    );
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exa-analyze-empty-state h2 {
+  margin: 0;
+  color: #f1f5f9;
+  font-size: 20px;
+}
+
+.exa-analyze-empty-state > p {
+  max-width: 540px;
+  margin: 9px auto 0;
+  color: #71819a;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.exa-analyze-feature-grid {
+  width: 100%;
+  max-width: 760px;
+  margin-top: 27px;
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.exa-analyze-feature {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 13px;
+  background: rgba(15, 30, 54, 0.55);
+  text-align: left;
+}
+
+.exa-analyze-feature svg {
+  color: #60a5fa;
+}
+
+.exa-analyze-feature strong {
+  margin-top: 9px;
+  color: #dbeafe;
+  font-size: 11px;
+  display: block;
+}
+
+.exa-analyze-feature span {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 9px;
+  line-height: 1.5;
+  display: block;
+}
+
+@media (max-width: 800px) {
+  .exa-analyze-container {
+    padding: 18px 14px 40px;
+  }
+
+  .exa-analyze-hero {
+    padding: 21px 17px;
+    border-radius: 17px;
+  }
+
+  .exa-analyze-title-row {
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .exa-analyze-search-form {
+    grid-template-columns: 1fr;
+  }
+
+  .exa-analyze-submit-button {
+    width: 100%;
+  }
+
+  .exa-analyze-feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .exa-analyze-empty-state {
+    min-height: auto;
+    padding: 31px 17px;
+  }
+}
+
+/* =========================================
+   ANALYZE PAGE — CLEAN OUTER LAYOUT
+   ========================================= */
+
+.exa-analyze-page {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.exa-analyze-container {
+  width: calc(100% - 48px);
+  max-width: 1600px;
+  margin: 28px auto 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+/* Premium hero card */
+.exa-analyze-hero {
+  margin: 0 0 24px;
+  padding: 30px;
+  border: 1px solid
+    rgba(96, 165, 250, 0.18);
+  border-radius: 24px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 28, 51, 0.97),
+      rgba(7, 18, 35, 0.98)
+    );
+  box-shadow:
+    0 24px 60px
+      rgba(0, 0, 0, 0.22);
+}
+
+/* Premium empty/result area */
+.exa-analyze-empty-state,
+.exa-analyze-loading-state {
+  border-radius: 24px;
+  border: 1px solid
+    rgba(148, 163, 184, 0.13);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10, 22, 41, 0.82),
+      rgba(6, 15, 29, 0.88)
+    );
+}
+
+/* Hide only the global topbar search on Analyze */
+body:has(.exa-analyze-page)
+  .exa-topbar-search,
+body:has(.exa-analyze-page)
+  .exa-topbar-search-form,
+body:has(.exa-analyze-page)
+  .exa-topbar-search-wrapper,
+body:has(.exa-analyze-page)
+  .exa-topbar-search-field {
+  display: none !important;
+}
+
+body:has(.exa-analyze-page)
+  .exa-topbar-actions {
+  margin-left: auto;
+}
+
+@media (max-width: 1100px) {
+  .exa-analyze-container {
+    width: calc(100% - 32px);
+    margin: 20px auto 40px;
+  }
+
+  .exa-analyze-hero {
+    padding: 24px;
+    border-radius: 20px;
+  }
+}
+
+@media (max-width: 700px) {
+  .exa-analyze-container {
+    width: calc(100% - 20px);
+    margin: 12px auto 30px;
+  }
+
+  .exa-analyze-hero {
+    padding: 20px 16px;
+    border-radius: 17px;
+  }
+
+  .exa-analyze-empty-state,
+  .exa-analyze-loading-state {
+    border-radius: 17px;
+  }
+}
+
+
+/* =========================================
+   MATCH DASHBOARD BACKGROUND EXACTLY
+   ========================================= */
+
+/*
+ * The Dashboard classes now control the
+ * complete page background.
+ */
+.exa-dashboard-page.exa-dashboard-v2.exa-analyze-page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  box-sizing: border-box;
+
+  /*
+   * Transparent allows the exact AppShell /
+   * Dashboard background to remain visible.
+   */
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/*
+ * Do not create a second background layer
+ * inside the Analyze page.
+ */
+.exa-analyze-container {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/*
+ * Keep normal Dashboard spacing around the
+ * Analyze cards.
+ */
+.exa-analyze-hero {
+  margin: 0 0 24px !important;
+}
+
+/* Remove previous custom Analyze gradients */
+.exa-analyze-page::before,
+.exa-analyze-page::after,
+.exa-analyze-container::before,
+.exa-analyze-container::after {
+  display: none !important;
+  content: none !important;
+}
+
+@media (max-width: 1100px) {
+  .exa-analyze-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .exa-analyze-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+/* =========================================
+   PREMIUM STOCK OVERVIEW
+   ========================================= */
+
+.exa-stock-overview-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 28, 51, 0.96),
+      rgba(8, 18, 35, 0.98)
+    );
+  box-shadow:
+    0 20px 55px rgba(0, 0, 0, 0.2);
+}
+
+.exa-stock-overview-card::after {
+  content: "";
+  position: absolute;
+  top: -100px;
+  right: -80px;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(37, 99, 235, 0.15),
+      transparent 68%
+    );
+  pointer-events: none;
+}
+
+.exa-stock-overview-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.exa-stock-company {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.exa-stock-company-copy {
+  min-width: 0;
+}
+
+.exa-stock-company-name-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.exa-stock-company-name-row h2 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exa-stock-watch-button {
+  width: 31px;
+  height: 31px;
+  flex-shrink: 0;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 9px;
+  color: #71819a;
+  background: rgba(15, 30, 54, 0.72);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.exa-stock-watch-button:hover {
+  border-color: rgba(250, 204, 21, 0.35);
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.08);
+}
+
+.exa-stock-company-meta {
+  margin-top: 5px;
+  color: #71819a;
+  font-size: 11px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.exa-stock-ticker {
+  color: #60a5fa;
+  font-weight: 750;
+}
+
+.exa-stock-ai-view {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--exa-signal-color) 32%,
+      transparent
+    );
+  border-radius: 999px;
+  color: var(--exa-signal-color);
+  background: var(--exa-signal-bg);
+  font-size: 11px;
+  font-weight: 750;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.exa-stock-price-section {
+  position: relative;
+  z-index: 1;
+  margin-top: 23px;
+  padding-top: 21px;
+  border-top: 1px solid rgba(148, 163, 184, 0.11);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.exa-stock-price-label {
+  margin: 0 0 5px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.exa-stock-price-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.exa-stock-price-row > strong {
+  color: #f8fafc;
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.exa-stock-change {
+  font-size: 13px;
+  font-weight: 750;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.exa-stock-change.positive {
+  color: #34d399;
+}
+
+.exa-stock-change.negative {
+  color: #fb7185;
+}
+
+.exa-stock-change small {
+  color: inherit;
+  font-size: 12px;
+}
+
+.exa-stock-price-caption {
+  margin: 7px 0 0;
+  color: #53627a;
+  font-size: 10px;
+}
+
+.exa-stock-data-status {
+  flex-shrink: 0;
+  padding: 10px 13px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  border-radius: 11px;
+  background: rgba(6, 78, 59, 0.09);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.exa-stock-data-status strong,
+.exa-stock-data-status small {
+  display: block;
+}
+
+.exa-stock-data-status strong {
+  color: #a7f3d0;
+  font-size: 10px;
+}
+
+.exa-stock-data-status small {
+  margin-top: 2px;
+  color: #5f7c76;
+  font-size: 9px;
+}
+
+.exa-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow:
+    0 0 0 4px rgba(52, 211, 153, 0.09);
+}
+
+.exa-stock-metrics-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.exa-stock-metric-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 15px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 28, 51, 0.9),
+      rgba(8, 18, 35, 0.92)
+    );
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.exa-stock-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(96, 165, 250, 0.24);
+}
+
+.exa-stock-metric-icon {
+  width: 37px;
+  height: 37px;
+  flex-shrink: 0;
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  border-radius: 10px;
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.09);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exa-stock-metric-card div {
+  min-width: 0;
+}
+
+.exa-stock-metric-card p {
+  margin: 0;
+  color: #65758d;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.exa-stock-metric-card strong {
+  margin-top: 4px;
+  overflow: hidden;
+  color: #e5edf9;
+  font-size: 14px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.exa-stock-metric-card small {
+  margin-top: 3px;
+  color: #475569;
+  font-size: 8px;
+  line-height: 1.4;
+  display: block;
+}
+
+.exa-stock-range-value {
+  font-size: 12px !important;
+}
+
+.exa-stock-range-value span {
+  margin: 0 4px;
+  color: #475569;
+}
+
+@media (max-width: 1200px) {
+  .exa-stock-metrics-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .exa-stock-overview-card {
+    padding: 18px 15px;
+    border-radius: 17px;
+  }
+
+  .exa-stock-overview-top {
+    flex-direction: column;
+  }
+
+  .exa-stock-company {
+    width: 100%;
+  }
+
+  .exa-stock-company-name-row h2 {
+    font-size: 17px;
+  }
+
+  .exa-stock-ai-view {
+    align-self: flex-start;
+  }
+
+  .exa-stock-price-section {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .exa-stock-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}   
+
+
+/* =========================================
+   PREMIUM STOCK PRICE CHART
+   ========================================= */
+
+.exa-price-chart-card {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid
+    rgba(148, 163, 184, 0.13);
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(13, 27, 49, 0.95),
+      rgba(7, 17, 32, 0.97)
+    );
+  box-shadow:
+    0 20px 55px
+      rgba(0, 0, 0, 0.18);
+}
+
+.exa-price-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.exa-price-chart-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.exa-price-chart-icon {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 1px solid
+    rgba(96, 165, 250, 0.16);
+  border-radius: 11px;
+  color: #60a5fa;
+  background:
+    rgba(37, 99, 235, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exa-price-chart-heading p {
+  margin: 0 0 3px;
+  color: #60a5fa;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.exa-price-chart-heading h3 {
+  margin: 0;
+  color: #eaf1fb;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.exa-price-chart-summary {
+  margin-top: 16px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.exa-price-chart-summary strong {
+  color: #f8fafc;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.exa-price-chart-summary span {
+  font-size: 11px;
+  font-weight: 750;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.exa-price-chart-summary span.positive {
+  color: #34d399;
+}
+
+.exa-price-chart-summary span.negative {
+  color: #fb7185;
+}
+
+.exa-chart-live-status {
+  min-height: 31px;
+  padding: 0 11px;
+  border: 1px solid
+    rgba(52, 211, 153, 0.15);
+  border-radius: 999px;
+  color: #85d8bd;
+  background:
+    rgba(6, 78, 59, 0.1);
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.exa-chart-live-status span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow:
+    0 0 0 4px
+      rgba(52, 211, 153, 0.08);
+}
+
+.exa-chart-timeframes {
+  margin-top: 20px;
+  padding: 4px;
+  border: 1px solid
+    rgba(148, 163, 184, 0.11);
+  border-radius: 11px;
+  background:
+    rgba(5, 14, 28, 0.58);
+  overflow-x: auto;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.exa-chart-timeframe {
+  min-width: 46px;
+  height: 31px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 8px;
+  color: #6f8099;
+  background: transparent;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.exa-chart-timeframe:hover:not(:disabled) {
+  color: #bfdbfe;
+  background:
+    rgba(37, 99, 235, 0.08);
+}
+
+.exa-chart-timeframe.active {
+  color: #ffffff;
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #4f46e5
+    );
+  box-shadow:
+    0 7px 18px
+      rgba(37, 99, 235, 0.2);
+}
+
+.exa-chart-timeframe:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.exa-price-chart-area {
+  width: 100%;
+  height: 310px;
+  margin-top: 16px;
+  position: relative;
+}
+
+.exa-chart-state {
+  height: 100%;
+  min-height: 240px;
+  color: #64748b;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.exa-chart-state svg {
+  margin-bottom: 11px;
+  color: #60a5fa;
+}
+
+.exa-chart-state strong {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.exa-chart-state span {
+  max-width: 330px;
+  margin-top: 5px;
+  color: #53627a;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.exa-price-chart-footer {
+  margin-top: 12px;
+  padding-top: 13px;
+  border-top: 1px solid
+    rgba(148, 163, 184, 0.09);
+  color: #4e5d73;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+@media (max-width: 700px) {
+  .exa-price-chart-card {
+    padding: 17px 13px;
+    border-radius: 17px;
+  }
+
+  .exa-price-chart-header {
+    flex-direction: column;
+  }
+
+  .exa-chart-live-status {
+    align-self: flex-start;
+  }
+
+  .exa-price-chart-area {
+    height: 270px;
+  }
+
+  .exa-price-chart-summary strong {
+    font-size: 23px;
+  }
+
+  .exa-price-chart-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -8,17 +8,16 @@ import {
   Navigate,
   Route,
   Routes,
-  useLocation,
 } from "react-router-dom";
 
 import ErrorBoundary from
   "./components/ErrorBoundary";
 
-import Navbar from
-  "./components/Navbar";
-
 import NetworkStatusBanner from
   "./components/NetworkStatusBanner";
+
+import AppShell from
+  "./components/layout/AppShell";
 
 const Dashboard = lazy(() =>
   import("./pages/Dashboard"),
@@ -54,93 +53,104 @@ function PageLoader() {
   );
 }
 
-function AppRoutes() {
-  const location =
-    useLocation();
-
-  const usesNewDashboardShell =
-    location.pathname === "/" ||
-    location.pathname.startsWith(
-      "/dashboard",
-    );
-
+/*
+ * All unfinished routes use the same
+ * premium sidebar and topbar as Dashboard.
+ */
+function PremiumComingSoon() {
   return (
-    <>
-      {!usesNewDashboardShell && (
-        <Navbar />
-      )}
+    <AppShell>
+      <ComingSoon />
+    </AppShell>
+  );
+}
 
-      <Suspense
-        fallback={<PageLoader />}
-      >
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Navigate
-                to="/dashboard"
-                replace
-              />
-            }
-          />
+function AppRoutes() {
+  return (
+    <Suspense
+      fallback={<PageLoader />}
+    >
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
 
-          <Route
-            path="/dashboard"
-            element={<Dashboard />}
-          />
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
 
-          <Route
-            path="/analyze"
-            element={<Analyze />}
-          />
+        <Route
+          path="/analyze"
+          element={<Analyze />}
+        />
 
-          <Route
-            path="/screener"
-            element={<ComingSoon />}
-          />
+        <Route
+          path="/screener"
+          element={
+            <PremiumComingSoon />
+          }
+        />
 
-          <Route
-            path="/portfolio"
-            element={<ComingSoon />}
-          />
+        <Route
+          path="/portfolio"
+          element={
+            <PremiumComingSoon />
+          }
+        />
 
-          <Route
-            path="/market-pulse"
-            element={<ComingSoon />}
-          />
+        <Route
+          path="/market-pulse"
+          element={
+            <PremiumComingSoon />
+          }
+        />
 
-          <Route
-            path="/research"
-            element={<ComingSoon />}
-          />
+        <Route
+          path="/research"
+          element={
+            <PremiumComingSoon />
+          }
+        />
 
-          <Route
-            path="/alerts"
-            element={<ComingSoon />}
-          />
+        <Route
+          path="/alerts"
+          element={
+            <PremiumComingSoon />
+          }
+        />
 
-          <Route
-            path="/learn"
-            element={<ComingSoon />}
-          />
+        <Route
+          path="/learn"
+          element={
+            <PremiumComingSoon />
+          }
+        />
 
-          <Route
-            path="/settings"
-            element={<ComingSoon />}
-          />
+        <Route
+          path="/settings"
+          element={
+            <PremiumComingSoon />
+          }
+        />
 
-          <Route
-            path="*"
-            element={
-              <Navigate
-                to="/dashboard"
-                replace
-              />
-            }
-          />
-        </Routes>
-      </Suspense>
-    </>
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
+      </Routes>
+    </Suspense>
   );
 }
 
@@ -155,4 +165,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import useIsMobile from "../hooks/useIsMobile";
-
 import {
   Area,
   AreaChart,
@@ -11,31 +10,34 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
 import {
   AlertTriangle,
   ArrowUpDown,
   BarChart3,
   Building2,
   Database,
+  LoaderCircle,
+  Search,
   ShieldCheck,
   Sparkles,
   Star,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-
 import ScoreGauge from "../components/ScoreGauge";
-
+import AppShell from "../components/layout/AppShell";
+import PremiumAiResearchPanel from "../components/analyze/PremiumAiResearchPanel";
+import StockNewsPanel from "../components/analyze/StockNewsPanel";
+import "../styles/dashboard.css";
+import "../styles/dashboard-v2.css";
+import "../styles/analyze-v2.css";
+import "../styles/stock-news.css";
 import {
   getAiAnalysis,
   getStockData,
   searchStocks,
 } from "../services/financeApi";
-
-import {
-  saveRecentAnalysis,
-} from "../utils/dashboardStorage";
+import { saveRecentAnalysis } from "../utils/dashboardStorage";
 
 const SAMPLES = [
   "Reliance Industries",
@@ -44,7 +46,6 @@ const SAMPLES = [
   "Tata Motors",
   "Wipro",
   "Asian Paints",
-  // "Zomato",
 ];
 
 const TIMEFRAMES = ["1D", "1W", "1M", "1Y", "5Y", "MAX"];
@@ -81,12 +82,375 @@ const SIGNAL_STYLE = {
   },
 };
 
+const ANALYZE_LAYOUT_STYLES = `
+  /* ---------------------------------------------------------
+     Analyze page search and results layout
+     --------------------------------------------------------- */
+
+  .exa-analyze-home-search {
+    position: relative;
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 16px;
+    box-sizing: border-box;
+    border: 1px solid rgba(96, 165, 250, 0.16);
+    border-radius: 18px;
+    background:
+      linear-gradient(
+        145deg,
+        rgba(14, 28, 51, 0.98),
+        rgba(7, 18, 35, 0.99)
+      );
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+  }
+
+  .exa-search-with-icon-button {
+    width: 100%;
+    margin: 0;
+  }
+
+  .exa-search-with-icon-button .exa-analyze-search-field {
+    position: relative;
+    width: 100%;
+  }
+
+  .exa-search-with-icon-button .exa-analyze-search-input {
+    padding-right: 58px;
+  }
+
+  .exa-analyze-lens-button {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    width: 39px;
+    height: 39px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(96, 165, 250, 0.18);
+    border-radius: 11px;
+    color: #bfdbfe;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(37, 99, 235, 0.9),
+        rgba(79, 70, 229, 0.9)
+      );
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .exa-analyze-lens-button:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  .exa-analyze-lens-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  /* Compact search displayed inside the desktop top navigation. */
+  .exa-analyze-floating-search {
+    position: fixed;
+    top: 0;
+    left: 260px;
+    right: 430px;
+    z-index: 250;
+    height: 76px;
+    margin: 0;
+    padding: 14px 18px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    pointer-events: none;
+    animation: exaNavSearchIn 0.2s ease;
+  }
+
+  .exa-analyze-nav-search-form {
+    width: 100%;
+    height: 48px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    pointer-events: auto;
+  }
+
+  .exa-analyze-nav-search-field {
+    position: relative;
+    width: 100%;
+    height: 48px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: 1px solid rgba(96, 165, 250, 0.17);
+    border-radius: 13px;
+    background: rgba(7, 17, 31, 0.92);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .exa-analyze-nav-search-field:focus-within {
+    border-color: rgba(96, 165, 250, 0.48);
+    box-shadow:
+      0 0 0 3px rgba(37, 99, 235, 0.1),
+      0 12px 34px rgba(0, 0, 0, 0.2);
+  }
+
+  .exa-analyze-nav-search-input {
+    width: 100%;
+    height: 46px;
+    min-width: 0;
+    margin: 0;
+    padding: 0 52px 0 18px;
+    box-sizing: border-box;
+    border: 0;
+    outline: 0;
+    color: #e5edf9;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    line-height: normal;
+  }
+
+  .exa-analyze-nav-search-input::placeholder {
+    color: #61718a;
+  }
+
+  .exa-analyze-nav-search-input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .exa-analyze-nav-lens-button {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: 1px solid rgba(96, 165, 250, 0.16);
+    border-radius: 10px;
+    color: #93c5fd;
+    background: rgba(37, 99, 235, 0.1);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .exa-analyze-nav-lens-button:hover:not(:disabled) {
+    color: #ffffff;
+    border-color: rgba(96, 165, 250, 0.36);
+    background: rgba(37, 99, 235, 0.22);
+  }
+
+  .exa-analyze-nav-lens-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  @keyframes exaNavSearchIn {
+    from {
+      opacity: 0;
+      transform: translateY(-7px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .exa-analyze-results-layout {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(340px, 430px);
+    align-items: start;
+    gap: 16px;
+  }
+
+  .exa-analyze-main-column {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .exa-analyze-right-rail {
+    position: sticky;
+    top: 92px;
+    min-width: 0;
+    height: calc(100vh - 108px);
+    align-self: start;
+    overflow: hidden;
+  }
+
+  .exa-analyze-right-scroll {
+    width: 100%;
+    height: 100%;
+    padding-right: 7px;
+    padding-bottom: 18px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color:
+      rgba(96, 165, 250, 0.36)
+      rgba(15, 30, 54, 0.5);
+  }
+
+  .exa-analyze-right-scroll::-webkit-scrollbar {
+    width: 7px;
+  }
+
+  .exa-analyze-right-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(15, 30, 54, 0.5);
+  }
+
+  .exa-analyze-right-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(96, 165, 250, 0.36);
+  }
+
+  .exa-analyze-right-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(96, 165, 250, 0.58);
+  }
+
+  .exa-analyze-right-scroll .exa-stock-news-list {
+    max-height: none !important;
+    overflow: visible !important;
+    padding-right: 0 !important;
+  }
+
+  .exa-analyze-right-scroll .exa-premium-ai-panel,
+  .exa-analyze-right-scroll .exa-stock-news-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .exa-analyze-results-layout > * {
+    align-self: start;
+  }
+
+  @media (min-width: 1400px) {
+    .exa-analyze-results-layout {
+      grid-template-columns: minmax(0, 2.1fr) minmax(360px, 450px);
+    }
+  }
+
+  @media (max-width: 1350px) {
+    .exa-analyze-floating-search {
+      right: 390px;
+    }
+  }
+
+  @media (max-width: 1150px) {
+    .exa-analyze-floating-search {
+      left: 78px;
+      right: 350px;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .exa-analyze-results-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .exa-analyze-right-rail {
+      position: static;
+      top: auto;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .exa-analyze-right-scroll {
+      height: auto;
+      max-height: none;
+      padding-right: 0;
+      overflow: visible;
+    }
+
+    .exa-analyze-right-scroll .exa-stock-news-list {
+      max-height: 520px !important;
+      overflow-y: auto !important;
+      padding-right: 5px !important;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .exa-analyze-floating-search {
+      left: 68px;
+      right: 270px;
+      padding-right: 10px;
+      padding-left: 10px;
+    }
+
+    .exa-analyze-nav-search-input {
+      font-size: 12px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .exa-analyze-home-search {
+      margin-bottom: 14px;
+      padding: 12px;
+      border-radius: 15px;
+    }
+
+    .exa-analyze-floating-search {
+      top: 62px;
+      right: 0;
+      left: 0;
+      height: 62px;
+      padding: 8px 10px;
+      background: rgba(7, 17, 31, 0.97);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .exa-analyze-nav-search-form,
+    .exa-analyze-nav-search-field {
+      height: 46px;
+    }
+
+    .exa-analyze-nav-search-input {
+      height: 44px;
+    }
+
+    .exa-analyze-quick-picks {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 3px;
+    }
+
+    .exa-analyze-quick-chip {
+      flex-shrink: 0;
+    }
+  }
+`;
 function formatPrice(value) {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
+  if (value === null || value === undefined || value === "") {
     return "N/A";
   }
 
@@ -103,11 +467,7 @@ function formatPrice(value) {
 }
 
 function formatMetric(value, maximumFractionDigits = 2) {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
+  if (value === null || value === undefined || value === "") {
     return "N/A";
   }
 
@@ -122,12 +482,82 @@ function formatMetric(value, maximumFractionDigits = 2) {
   }).format(number);
 }
 
-function formatIndianLargeNumber(value) {
+function normalizeDateValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  let normalizedValue = value;
+
   if (
-    value === null ||
-    value === undefined ||
-    value === ""
+    typeof normalizedValue === "number" &&
+    normalizedValue < 1_000_000_000_000
   ) {
+    normalizedValue *= 1000;
+  }
+
+  const date = new Date(normalizedValue);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatChartDate(value, selectedTimeframe) {
+  const date = normalizeDateValue(value);
+
+  if (!date) {
+    return "";
+  }
+
+  if (selectedTimeframe === "1D" || selectedTimeframe === "1W") {
+    return new Intl.DateTimeFormat("en-IN", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  }
+
+  if (selectedTimeframe === "MAX") {
+    return new Intl.DateTimeFormat("en-IN", {
+      year: "numeric",
+    }).format(date);
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
+function formatChartTooltipDate(value) {
+  const date = normalizeDateValue(value);
+
+  if (!date) {
+    return "Market price";
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatUpdatedTime(value) {
+  const date = normalizeDateValue(value);
+
+  if (!date) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatIndianLargeNumber(value) {
+  if (value === null || value === undefined || value === "") {
     return "N/A";
   }
 
@@ -138,9 +568,7 @@ function formatIndianLargeNumber(value) {
   }
 
   if (number >= 1_000_000_000_000) {
-    return `${(
-      number / 1_000_000_000_000
-    ).toFixed(2)} Lakh Cr`;
+    return `${(number / 1_000_000_000_000).toFixed(2)} Lakh Cr`;
   }
 
   if (number >= 10_000_000) {
@@ -168,9 +596,7 @@ function getCompanyDomain(website) {
 
 function isAiLimitError(error) {
   const message = String(
-    error instanceof Error
-      ? error.message
-      : error || "",
+    error instanceof Error ? error.message : error || "",
   ).toLowerCase();
 
   return (
@@ -186,72 +612,44 @@ function isAiLimitError(error) {
 function createLiveResult(stockData, selectedStock) {
   return {
     symbol: stockData.symbol,
-
     ticker: stockData.symbol,
-
     company:
       stockData.name ||
       selectedStock?.name ||
       stockData.symbol,
-
     sector: stockData.sector || "N/A",
-
     industry: stockData.industry || "N/A",
-
     price: stockData.price ?? null,
-
     changeAbs: stockData.change ?? 0,
-
     changePercent: stockData.changePercent ?? 0,
-
     marketCap: stockData.marketCap ?? null,
-
     peRatio: stockData.peRatioTTM ?? null,
-
     week52Low: stockData.fiftyTwoWeekLow ?? null,
-
     week52High: stockData.fiftyTwoWeekHigh ?? null,
-
     volume: stockData.volume ?? null,
-
     chart: Array.isArray(stockData.chart)
       ? stockData.chart
       : [],
-
     source: stockData.source || "Yahoo Finance",
-
     lastUpdated: stockData.lastUpdated || null,
-
     logoDomain:
       stockData.logoDomain ||
       getCompanyDomain(stockData.website),
-
     signal: "WATCH",
-
     summary: "",
-
     keyThemes: [],
-
     growthDrivers: [],
-
     keyRisks: [],
-
     confidenceScore: 0,
-
     riskLevel: "Moderate",
-
     fundamentalScore: 0,
     fundamentalLabel: "AI unavailable",
-
     momentumScore: 0,
     momentumLabel: "AI unavailable",
-
     valuationScore: 0,
     valuationLabel: "AI unavailable",
-
     sentimentScore: 0,
     sentimentLabel: "AI unavailable",
-
     aiAvailable: false,
     aiSummaryCached: false,
   };
@@ -269,29 +667,11 @@ function mergeAiAnalysis(liveResult, aiAnalysis) {
   return {
     ...liveResult,
     ...aiAnalysis,
-
     symbol: liveResult.symbol,
-
-    ticker:
-      aiAnalysis?.ticker ||
-      liveResult.ticker,
-
-    company:
-      aiAnalysis?.company ||
-      liveResult.company,
-
-    sector:
-      aiAnalysis?.sector ||
-      liveResult.sector,
-
-    industry:
-      aiAnalysis?.industry ||
-      liveResult.industry,
-
-    /*
-     * Always retain live Yahoo Finance values.
-     * Gemini cannot replace these fields.
-     */
+    ticker: aiAnalysis?.ticker || liveResult.ticker,
+    company: aiAnalysis?.company || liveResult.company,
+    sector: aiAnalysis?.sector || liveResult.sector,
+    industry: aiAnalysis?.industry || liveResult.industry,
     price: liveResult.price,
     changeAbs: liveResult.changeAbs,
     changePercent: liveResult.changePercent,
@@ -303,128 +683,55 @@ function mergeAiAnalysis(liveResult, aiAnalysis) {
     chart: liveResult.chart,
     source: liveResult.source,
     lastUpdated: liveResult.lastUpdated,
-
     logoDomain:
       aiAnalysis?.logoDomain ||
       liveResult.logoDomain,
-
     signal: String(
       aiAnalysis?.signal || "NEUTRAL",
     ).toUpperCase(),
 
-    summary:
-      aiAnalysis?.summary || "",
-
+    summary: aiAnalysis?.summary || "",
     keyThemes: Array.isArray(aiAnalysis?.keyThemes)
       ? aiAnalysis.keyThemes
       : [],
-
-    growthDrivers: Array.isArray(
-      aiAnalysis?.growthDrivers,
-    )
+    growthDrivers: Array.isArray(aiAnalysis?.growthDrivers)
       ? aiAnalysis.growthDrivers
       : Array.isArray(aiAnalysis?.positives)
         ? aiAnalysis.positives
         : [],
-
     keyRisks: Array.isArray(aiAnalysis?.keyRisks)
       ? aiAnalysis.keyRisks
       : Array.isArray(aiAnalysis?.risks)
         ? aiAnalysis.risks
         : [],
-
     confidenceScore,
-
     riskLevel:
       aiAnalysis?.riskLevel ||
       liveResult.riskLevel,
-
     fundamentalScore:
       aiAnalysis?.fundamentalScore ?? 0,
-
     fundamentalLabel:
       aiAnalysis?.fundamentalLabel ||
       "Not provided",
-
     momentumScore:
       aiAnalysis?.momentumScore ?? 0,
-
     momentumLabel:
       aiAnalysis?.momentumLabel ||
       "Not provided",
-
     valuationScore:
       aiAnalysis?.valuationScore ?? 0,
-
     valuationLabel:
       aiAnalysis?.valuationLabel ||
       "Not provided",
-
     sentimentScore:
       aiAnalysis?.sentimentScore ?? 0,
-
     sentimentLabel:
       aiAnalysis?.sentimentLabel ||
       "Not provided",
-
     aiAvailable: true,
-
     aiSummaryCached:
       Boolean(aiAnalysis?.aiSummaryCached),
   };
-}
-
-function MetricCard({ icon: Icon, label, value }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        background: "#101a30",
-        border: "1px solid #1e293b",
-        borderRadius: 10,
-        padding: "14px 16px",
-      }}
-    >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 8,
-          background: "#1e293b",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon size={17} color="#93c5fd" />
-      </div>
-
-      <div>
-        <div
-          style={{
-            fontSize: 12,
-            color: "#64748b",
-          }}
-        >
-          {label}
-        </div>
-
-        <div
-          style={{
-            fontSize: 15,
-            fontWeight: 600,
-            color: "#fff",
-            marginTop: 2,
-          }}
-        >
-          {value}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function ScoreCard({ title, score, scoreLabel }) {
@@ -459,7 +766,10 @@ function ScoreCard({ title, score, scoreLabel }) {
         {title}
       </div>
 
-      <ScoreGauge score={numericScore} size={64} />
+      <ScoreGauge
+        score={numericScore}
+        size={64}
+      />
 
       <div
         style={{
@@ -493,6 +803,8 @@ function CompanyLogo({ domain, name, size = 52 }) {
     <div
       style={{
         width: size,
+
+
         height: size,
         borderRadius: "50%",
         background: showImage ? "#fff" : "#1e293b",
@@ -537,13 +849,49 @@ export default function Analyze() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
-
   const [error, setError] = useState("");
   const [aiNotice, setAiNotice] = useState("");
-
   const [result, setResult] = useState(null);
   const [timeframe, setTimeframe] = useState("1D");
   const [activeTab, setActiveTab] = useState("Overview");
+
+const searchSectionRef = useRef(null);
+
+const [
+  showFloatingSearch,
+  setShowFloatingSearch,
+] = useState(false);
+
+useEffect(() => {
+  const searchElement =
+    searchSectionRef.current;
+
+  if (!searchElement) {
+    return undefined;
+  }
+
+  const observer =
+    new IntersectionObserver(
+      ([entry]) => {
+        setShowFloatingSearch(
+          !entry.isIntersecting,
+        );
+      },
+      {
+        root: null,
+        threshold: 0,
+        rootMargin:
+          "-76px 0px 0px 0px",
+      },
+    );
+
+  observer.observe(searchElement);
+
+  return () => {
+    observer.disconnect();
+  };
+}, []);
+
 
   async function analyze(stock) {
     const q = String(stock || query).trim();
@@ -558,9 +906,6 @@ export default function Analyze() {
     setResult(null);
 
     try {
-      /*
-       * Step 1: Find the Yahoo Finance symbol.
-       */
       const searchResults = await searchStocks(q);
 
       if (
@@ -595,9 +940,6 @@ export default function Analyze() {
         );
       }
 
-      /*
-       * Step 2: Fetch live Yahoo Finance data.
-       */
       const stockData = await getStockData(
         selectedStock.symbol,
         RANGE_MAP[timeframe],
@@ -609,10 +951,6 @@ export default function Analyze() {
         );
       }
 
-      /*
-       * Immediately save the live market result.
-       * The dashboard continues working even if Gemini fails.
-       */
       const liveResult = createLiveResult(
         stockData,
         selectedStock,
@@ -621,9 +959,6 @@ export default function Analyze() {
       setResult(liveResult);
       setQuery("");
 
-      /*
-       * Step 3: Request the optional AI summary.
-       */
       try {
         const aiAnalysis = await getAiAnalysis(
           stockData,
@@ -667,10 +1002,6 @@ export default function Analyze() {
           );
         }
 
-        /*
-         * Do not call setError here.
-         * The Yahoo Finance result remains visible.
-         */
         setResult(liveResult);
       }
     } catch (caughtError) {
@@ -712,9 +1043,7 @@ export default function Analyze() {
     analyze(requestedStock);
   }, [location.search]);
 
-  async function handleTimeframeChange(
-    nextTimeframe,
-  ) {
+  async function handleTimeframeChange(nextTimeframe) {
     if (
       !TIMEFRAMES.includes(nextTimeframe) ||
       chartLoading ||
@@ -735,15 +1064,10 @@ export default function Analyze() {
     setError("");
 
     try {
-      /*
-       * This calls only Yahoo Finance.
-       * Gemini is not called when changing chart range.
-       */
-      const updatedStockData =
-        await getStockData(
-          result.symbol,
-          RANGE_MAP[nextTimeframe],
-        );
+      const updatedStockData = await getStockData(
+        result.symbol,
+        RANGE_MAP[nextTimeframe],
+      );
 
       setResult((currentResult) => {
         if (!currentResult) {
@@ -752,49 +1076,38 @@ export default function Analyze() {
 
         return {
           ...currentResult,
-
           chart: Array.isArray(
             updatedStockData?.chart,
           )
             ? updatedStockData.chart
             : [],
-
           price:
             updatedStockData?.price ??
             currentResult.price,
-
           changeAbs:
             updatedStockData?.change ??
             currentResult.changeAbs,
-
           changePercent:
             updatedStockData?.changePercent ??
             currentResult.changePercent,
-
           marketCap:
             updatedStockData?.marketCap ??
             currentResult.marketCap,
-
           peRatio:
             updatedStockData?.peRatioTTM ??
             currentResult.peRatio,
-
           week52Low:
             updatedStockData?.fiftyTwoWeekLow ??
             currentResult.week52Low,
-
           week52High:
             updatedStockData?.fiftyTwoWeekHigh ??
             currentResult.week52High,
-
           volume:
             updatedStockData?.volume ??
             currentResult.volume,
-
           lastUpdated:
             updatedStockData?.lastUpdated ??
             currentResult.lastUpdated,
-
           source:
             updatedStockData?.source ??
             currentResult.source,
@@ -855,992 +1168,866 @@ export default function Analyze() {
   const changeAbs =
     Number(result?.changeAbs) || 0;
 
+  const updatedTime =
+    formatUpdatedTime(result?.lastUpdated);
+
   return (
-    <div
-      style={{
-        width: "100%",
-        padding: isMobile
-          ? "16px"
-          : "20px 32px",
-        boxSizing: "border-box",
-        fontFamily: "Arial, sans-serif",
+    <AppShell>
+      <style>{ANALYZE_LAYOUT_STYLES}</style>
+
+      <main className="exa-dashboard-page exa-dashboard-v2 exa-analyze-page">
+        <div className="exa-analyze-container">
+        
+{/* Full search card at the top of the page */}
+<section
+  ref={searchSectionRef}
+  className="exa-analyze-home-search"
+>
+
+<form
+  className="exa-analyze-search-form exa-search-with-icon-button"
+  onSubmit={(event) => {
+    event.preventDefault();
+    analyze();
+  }}
+>
+  <div className="exa-analyze-search-field">
+    <input
+      type="search"
+      value={query}
+      onChange={(event) =>
+        setQuery(event.target.value)
+      }
+      placeholder="Search Reliance, Infosys, HDFC Bank or NSE ticker..."
+      disabled={loading}
+      className="exa-analyze-search-input"
+      autoComplete="off"
+      aria-label="Search Indian stocks"
+    />
+
+    <button
+      type="submit"
+      className="exa-analyze-lens-button"
+      disabled={loading || !query.trim()}
+      aria-label="Analyze stock"
+      title="Analyze stock"
+    >
+      {loading ? (
+        <LoaderCircle
+          size={18}
+          className="exa-analyze-spinner"
+        />
+      ) : (
+        <Search size={19} />
+      )}
+    </button>
+  </div>
+</form>
+
+  {/* Show popular stocks only before analysis */}
+  {!result && !loading && (
+    <div className="exa-analyze-quick-picks">
+      <span className="exa-analyze-quick-label">
+        Popular
+      </span>
+
+      {SAMPLES.map((sample) => (
+        <button
+          type="button"
+          key={sample}
+          className="exa-analyze-quick-chip"
+          onClick={() =>
+            analyze(sample)
+          }
+        >
+          {sample}
+        </button>
+      ))}
+    </div>
+  )}
+</section>
+
+{/* Compact search appears only after scrolling */}
+
+{result && showFloatingSearch && (
+  <section
+    className="exa-analyze-floating-search"
+    aria-label="Quick stock search"
+  >
+    <form
+      className="exa-analyze-nav-search-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        analyze();
       }}
     >
-      {/* Search row */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: isMobile
-            ? "column"
-            : "row",
-          gap: 10,
-          marginBottom: 14,
-        }}
-      >
+      <div className="exa-analyze-nav-search-field">
         <input
-          type="text"
+          type="search"
           value={query}
           onChange={(event) =>
             setQuery(event.target.value)
           }
-          onKeyDown={(event) => {
-            if (
-              event.key === "Enter" &&
-              !loading
-            ) {
-              analyze();
-            }
-          }}
-          placeholder="Search stocks, sectors or themes..."
+          placeholder="Analyze another stock..."
           disabled={loading}
-          style={{
-            flex: 1,
-            width: isMobile ? "100%" : "50%",
-            boxSizing: "border-box",
-            padding: "12px 16px",
-            borderRadius: 10,
-            fontSize: 15,
-            border: "1px solid #1e293b",
-            background: "#101a30",
-            color: "#fff",
-            outline: "none",
-            opacity: loading ? 0.7 : 1,
-          }}
+          className="exa-analyze-nav-search-input"
+          autoComplete="off"
+          aria-label="Analyze another stock"
         />
 
         <button
-          type="button"
-          onClick={() => analyze()}
-          disabled={
-            loading ||
-            !query.trim()
-          }
-          style={{
-            padding: "12px 24px",
-            borderRadius: 10,
-            fontWeight: 600,
-            fontSize: 15,
-            background: "#1d4ed8",
-            color: "#fff",
-            border: "none",
-            cursor:
-              loading || !query.trim()
-                ? "not-allowed"
-                : "pointer",
-            whiteSpace: "nowrap",
-            opacity:
-              loading || !query.trim()
-                ? 0.65
-                : 1,
-          }}
+          type="submit"
+          className="exa-analyze-nav-lens-button"
+          disabled={loading || !query.trim()}
+          aria-label="Analyze stock"
+          title="Analyze stock"
         >
-          {loading
-            ? "Analyzing..."
-            : "Analyze"}
+          {loading ? (
+            <LoaderCircle
+              size={17}
+              className="exa-analyze-spinner"
+            />
+          ) : (
+            <Search size={18} />
+          )}
         </button>
       </div>
+    </form>
+  </section>
+)}
 
-      {/* Sample chips */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 8,
-          marginBottom: 24,
-        }}
-      >
-        {SAMPLES.map((sample) => (
-          <button
-            type="button"
-            key={sample}
-            onClick={() => analyze(sample)}
-            disabled={loading}
-            style={{
-              padding: "8px 16px",
-              borderRadius: 20,
-              fontSize: 14,
-              background: "#101a30",
-              border: "1px solid #1e293b",
-              color: "#cbd5e1",
-              cursor: loading
-                ? "not-allowed"
-                : "pointer",
-              opacity: loading ? 0.6 : 1,
-            }}
-          >
-            {sample}
-          </button>
-        ))}
-      </div>
 
-      {error && (
-        <div
-          style={{
-            padding: 14,
-            background: "#450a0a",
-            border: "1px solid #7f1d1d",
-            borderRadius: 10,
-            color: "#fca5a5",
-            marginBottom: 20,
-            fontSize: 14,
-          }}
-        >
-          {error}
-        </div>
-      )}
 
-      {aiNotice && (
-        <div
-          style={{
-            padding: 14,
-            background: "#10233d",
-            border: "1px solid #365a84",
-            borderRadius: 10,
-            color: "#93c5fd",
-            marginBottom: 20,
-            fontSize: 14,
-            lineHeight: 1.6,
-          }}
-        >
-          <strong>AI notice: </strong>
-          {aiNotice}
-        </div>
-      )}
+          <section className="exa-analyze-hero">
+            <div className="exa-analyze-hero-content">
+              <div className="exa-analyze-title-row">
+                <div>
+                  <p className="exa-analyze-eyebrow">
+                    EXA AI RESEARCH
+                  </p>
 
-      {loading && !result && (
-        <div
-          style={{
-            textAlign: "center",
-            color: "#94a3b8",
-            padding: 60,
-            fontSize: 15,
-            fontWeight: 500,
-          }}
-        >
-          Loading AI analysis...
-        </div>
-      )}
+                  <h1 className="exa-analyze-title">
+                    Analyze Indian stocks with live market intelligence
+                  </h1>
 
-      {!result &&
-        !loading &&
-        !error && (
-          <div
-            style={{
-              textAlign: "center",
-              color: "#475569",
-              padding: 60,
-              fontSize: 14,
-            }}
-          >
-            Search for a stock or select one above to view live
-            market data and AI-powered research.
-          </div>
-        )}
-
-      {result && sig && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "1fr"
-              : "2fr 1fr",
-            gap: 16,
-          }}
-        >
-          {/* Left column */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              minWidth: 0,
-            }}
-          >
-            {/* Stock header */}
-            <div
-              style={{
-                background: "#101a30",
-                border: "1px solid #1e293b",
-                borderRadius: 12,
-                padding: 20,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: isMobile
-                    ? "column"
-                    : "row",
-                  justifyContent: "space-between",
-                  alignItems: isMobile
-                    ? "stretch"
-                    : "flex-start",
-                  gap: 14,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 14,
-                    minWidth: 0,
-                  }}
-                >
-                  <CompanyLogo
-                    domain={result.logoDomain}
-                    name={result.company}
-                    size={52}
-                  />
-
-                  <div style={{ minWidth: 0 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 19,
-                          fontWeight: 600,
-                          color: "#fff",
-                        }}
-                      >
-                        {result.company}
-                      </span>
-
-                      <Star
-                        size={16}
-                        color="#64748b"
-                      />
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "#60a5fa",
-                        marginTop: 2,
-                      }}
-                    >
-                      {result.ticker}
-
-                      <span
-                        style={{
-                          color: "#64748b",
-                        }}
-                      >
-                        {" "}
-                        · {result.sector || "N/A"}
-                      </span>
-                    </div>
-                  </div>
+                  <p className="exa-analyze-subtitle">
+                    Search an NSE or BSE company to view live prices,
+                    market metrics, charts, AI research signals,
+                    opportunities and key risks.
+                  </p>
                 </div>
 
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    padding: "6px 14px",
-                    borderRadius: 8,
-                    background: sig.bg,
-                    color: sig.color,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {changePercent >= 0 ? (
-                    <TrendingUp size={14} />
-                  ) : (
-                    <TrendingDown size={14} />
-                  )}
-
-                  {result.aiAvailable
-                    ? `AI View: ${sig.label}`
-                    : "AI View: Unavailable"}
-                </span>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "baseline",
-                  gap: 10,
-                  marginTop: 16,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 30,
-                    fontWeight: 700,
-                    color: "#fff",
-                  }}
-                >
-                  ₹{formatPrice(result.price)}
-                </span>
-
-                <span
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color:
-                      changePercent >= 0
-                        ? "#22c55e"
-                        : "#ef4444",
-                  }}
-                >
-                  {changePercent >= 0
-                    ? "▲"
-                    : "▼"}{" "}
-                  {formatMetric(
-                    Math.abs(changeAbs),
-                  )}{" "}
-                  (
-                  {formatMetric(
-                    Math.abs(changePercent),
-                  )}
-                  %)
-                </span>
-
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: "#64748b",
-                  }}
-                >
-                  Today
+                <span className="exa-analyze-ai-badge">
+                  <Sparkles size={14} />
+                  AI-assisted research
                 </span>
               </div>
             </div>
+          </section>
 
-            {/* Metric cards */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile
-                  ? "repeat(2, minmax(0, 1fr))"
-                  : "repeat(4, minmax(0, 1fr))",
-                gap: 12,
-              }}
-            >
-              <MetricCard
-                icon={Building2}
-                label="Market cap"
-                value={formatIndianLargeNumber(
-                  result.marketCap,
-                )}
+          {error && (
+            <div className="exa-analyze-message error">
+              <AlertTriangle
+                size={16}
+                aria-hidden="true"
               />
 
-              <MetricCard
-                icon={BarChart3}
-                label="P/E ratio (TTM)"
-                value={formatMetric(
-                  result.peRatio,
-                )}
-              />
+              <div>
+                <strong>
+                  Analysis unavailable
+                </strong>
 
-              <MetricCard
-                icon={ArrowUpDown}
-                label="52W range"
-                value={`${formatMetric(
-                  result.week52Low,
-                )} - ${formatMetric(
-                  result.week52High,
-                )}`}
-              />
-
-              <MetricCard
-                icon={Database}
-                label="Volume"
-                value={formatIndianLargeNumber(
-                  result.volume,
-                )}
-              />
-            </div>
-
-            {/* Chart */}
-            <div
-              style={{
-                background: "#101a30",
-                border: "1px solid #1e293b",
-                borderRadius: 12,
-                padding: 16,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  gap: 6,
-                  marginBottom: 12,
-                  overflowX: "auto",
-                }}
-              >
-                {TIMEFRAMES.map((tf) => (
-                  <button
-                    type="button"
-                    key={tf}
-                    onClick={() =>
-                      handleTimeframeChange(tf)
-                    }
-                    disabled={chartLoading}
-                    style={{
-                      padding: "5px 12px",
-                      borderRadius: 6,
-                      fontSize: 13,
-                      cursor: chartLoading
-                        ? "not-allowed"
-                        : "pointer",
-                      border: "none",
-                      background:
-                        timeframe === tf
-                          ? "#1d4ed8"
-                          : "transparent",
-                      color:
-                        timeframe === tf
-                          ? "#fff"
-                          : "#64748b",
-                      opacity: chartLoading
-                        ? 0.7
-                        : 1,
-                    }}
-                  >
-                    {chartLoading &&
-                    timeframe === tf
-                      ? "..."
-                      : tf}
-                  </button>
-                ))}
+                <div>{error}</div>
               </div>
+            </div>
+          )}
 
-              <div
-                style={{
-                  height: 240,
-                  position: "relative",
-                }}
-              >
-                {chartLoading ? (
-                  <div
-                    style={{
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#64748b",
-                      fontSize: 14,
-                    }}
-                  >
-                    Updating chart...
+          {aiNotice && (
+            <div className="exa-analyze-message notice">
+              <Sparkles
+                size={16}
+                aria-hidden="true"
+              />
+
+              <div>
+                <strong>AI notice</strong>
+                <div>{aiNotice}</div>
+              </div>
+            </div>
+          )}
+
+          {loading && !result && (
+            <div className="exa-analyze-loading-state">
+              <LoaderCircle
+                size={30}
+                className="exa-analyze-spinner"
+              />
+
+              <strong>
+                Building your stock research report
+              </strong>
+
+              <span>
+                Loading live prices, metrics and AI insights…
+              </span>
+            </div>
+          )}
+
+          {!result &&
+            !loading &&
+            !error && (
+              <section className="exa-analyze-empty-state">
+                <div className="exa-analyze-empty-icon">
+                  <Search size={27} />
+                </div>
+
+                <h2>
+                  Start your stock research
+                </h2>
+
+                <p>
+                  Enter a company name or select a popular stock above.
+                  EXA will combine live Yahoo Finance data with
+                  AI-assisted educational research.
+                </p>
+
+                <div className="exa-analyze-feature-grid">
+                  <div className="exa-analyze-feature">
+                    <BarChart3 size={19} />
+
+                    <strong>
+                      Live market metrics
+                    </strong>
+
+                    <span>
+                      Price, market cap, valuation, volume and
+                      52-week range.
+                    </span>
                   </div>
-                ) : chartData.length > 0 ? (
-                  <ResponsiveContainer
-                    width="100%"
-                    height="100%"
-                  >
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient
-                          id="priceFill"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor="#3b82f6"
-                            stopOpacity={0.35}
-                          />
 
-                          <stop
-                            offset="100%"
-                            stopColor="#3b82f6"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
+                  <div className="exa-analyze-feature">
+                    <Sparkles size={19} />
 
-                      <CartesianGrid
-                        stroke="#1e293b"
-                        vertical={false}
-                      />
+                    <strong>
+                      AI research signals
+                    </strong>
 
-                      <XAxis
-                        dataKey="i"
-                        hide
-                      />
-
-                      <YAxis
-                        domain={[
-                          "auto",
-                          "auto",
-                        ]}
-                        tick={{
-                          fill: "#64748b",
-                          fontSize: 11,
-                        }}
-                        width={60}
-                        tickFormatter={(value) =>
-                          formatMetric(
-                            value,
-                            0,
-                          )
-                        }
-                      />
-
-                      <Tooltip
-                        contentStyle={{
-                          background: "#0f172a",
-                          border:
-                            "1px solid #1e293b",
-                          borderRadius: 8,
-                          color: "#fff",
-                        }}
-                        labelStyle={{
-                          display: "none",
-                        }}
-                        formatter={(value) => [
-                          `₹${formatPrice(value)}`,
-                          "Price",
-                        ]}
-                      />
-
-                      <Area
-                        type="monotone"
-                        dataKey="price"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        fill="url(#priceFill)"
-                        isAnimationActive={false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div
-                    style={{
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#64748b",
-                      fontSize: 14,
-                    }}
-                  >
-                    Chart data is currently unavailable.
+                    <span>
+                      Structured summaries, themes, growth drivers
+                      and risk factors.
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Tab bar */}
-            <div
-              style={{
-                display: "flex",
-                gap: 4,
-                borderBottom:
-                  "1px solid #1e293b",
-                overflowX: "auto",
-              }}
-            >
-              {[
-                "Overview",
-                "Fundamentals",
-                "Technicals",
-                "News",
-                "Risks",
-                "Financials",
-              ].map((tab) => (
-                <button
-                  type="button"
-                  key={tab}
-                  onClick={() =>
-                    setActiveTab(tab)
-                  }
-                  style={{
-                    padding: "10px 16px",
-                    fontSize: 14,
-                    cursor: "pointer",
-                    border: "none",
-                    background: "transparent",
-                    color:
-                      activeTab === tab
-                        ? "#fff"
-                        : "#64748b",
-                    borderBottom:
-                      activeTab === tab
-                        ? "2px solid #2563eb"
-                        : "2px solid transparent",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+                  <div className="exa-analyze-feature">
+                    <ShieldCheck size={19} />
 
-            {activeTab === "Overview" ? (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile
-                    ? "repeat(2, minmax(0, 1fr))"
-                    : "repeat(4, minmax(0, 1fr))",
-                  gap: 12,
-                }}
-              >
-                <ScoreCard
-                  title="Fundamental score"
-                  score={
-                    result.fundamentalScore
-                  }
-                  scoreLabel={
-                    result.fundamentalLabel
-                  }
-                />
+                    <strong>
+                      Risk-aware insights
+                    </strong>
 
-                <ScoreCard
-                  title="Momentum score"
-                  score={result.momentumScore}
-                  scoreLabel={
-                    result.momentumLabel
-                  }
-                />
-
-                <ScoreCard
-                  title="Valuation score"
-                  score={
-                    result.valuationScore
-                  }
-                  scoreLabel={
-                    result.valuationLabel
-                  }
-                />
-
-                <ScoreCard
-                  title="Sentiment score"
-                  score={
-                    result.sentimentScore
-                  }
-                  scoreLabel={
-                    result.sentimentLabel
-                  }
-                />
-              </div>
-            ) : (
-              <div
-                style={{
-                  padding: 24,
-                  textAlign: "center",
-                  color: "#475569",
-                  fontSize: 14,
-                }}
-              >
-                This tab is part of the EXA NEXUS roadmap and will
-                be added in a later phase.
-              </div>
+                    <span>
+                      Educational research indicators, not
+                      personalized financial advice.
+                    </span>
+                  </div>
+                </div>
+              </section>
             )}
-          </div>
 
-          {/* Right column */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              minWidth: 0,
-            }}
-          >
-            <div
-              style={{
-                background: "#101a30",
-                border: "1px solid #1e293b",
-                borderRadius: 12,
-                padding: 18,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    "space-between",
-                  gap: 20,
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#64748b",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Confidence score
+          {result && sig && (
+            <section className="exa-analyze-results-layout">
+              <div className="exa-analyze-main-column">
+                <section className="exa-stock-overview-card">
+                  <div className="exa-stock-overview-top">
+                    <div className="exa-stock-company">
+                      <CompanyLogo
+                        domain={result.logoDomain}
+                        name={result.company}
+                        size={58}
+                      />
+
+                      <div className="exa-stock-company-copy">
+                        <div className="exa-stock-company-name-row">
+                          <h2>{result.company}</h2>
+
+                          <button
+                            type="button"
+                            className="exa-stock-watch-button"
+                            aria-label={`Add ${result.company} to watchlist`}
+                          >
+                            <Star size={16} />
+                          </button>
+                        </div>
+
+                        <div className="exa-stock-company-meta">
+                          <span className="exa-stock-ticker">
+                            {result.ticker}
+                          </span>
+
+                          <span aria-hidden="true">•</span>
+
+                          <span>
+                            {result.sector || "Sector unavailable"}
+                          </span>
+
+                          {result.industry &&
+                            result.industry !== "N/A" && (
+                              <>
+                                <span aria-hidden="true">•</span>
+                                <span>{result.industry}</span>
+                              </>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      className="exa-stock-ai-view"
+                      style={{
+                        "--exa-signal-color": sig.color,
+                        "--exa-signal-bg": sig.bg,
+                      }}
+                    >
+                      {changePercent >= 0 ? (
+                        <TrendingUp size={15} />
+                      ) : (
+                        <TrendingDown size={15} />
+
+                        
+                      )}
+
+                      <span>
+                        {result.aiAvailable
+                          ? `AI view: ${sig.label}`
+                          : "AI view unavailable"}
+                      </span>
+                    </div>
                   </div>
 
-                  <ScoreGauge
-                    score={
-                      Number(
-                        result.confidenceScore,
-                      ) || 0
-                    }
-                    size={72}
+                  <div className="exa-stock-price-section">
+                    <div>
+                      <p className="exa-stock-price-label">
+                        Current market price
+                      </p>
+
+                      <div className="exa-stock-price-row">
+                        <strong>
+                          ₹{formatPrice(result.price)}
+                        </strong>
+
+                        <span
+                          className={
+                            changePercent >= 0
+                              ? "exa-stock-change positive"
+                              : "exa-stock-change negative"
+                          }
+                        >
+                          {changePercent >= 0 ? "▲" : "▼"}
+
+                          {formatMetric(
+                            Math.abs(changeAbs),
+                          )}
+
+                          <small>
+                            (
+                            {formatMetric(
+                              Math.abs(changePercent),
+                            )}
+                            %)
+                          </small>
+                        </span>
+                      </div>
+
+                      <p className="exa-stock-price-caption">
+                        Today · Live market data
+                      </p>
+                    </div>
+
+                    <div className="exa-stock-data-status">
+                      <span className="exa-live-dot" />
+
+                      <div>
+                        <strong>Live data</strong>
+
+                        <small>
+                          {result.source || "Yahoo Finance"}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="exa-stock-metrics-grid">
+                  <article className="exa-stock-metric-card">
+                    <span className="exa-stock-metric-icon">
+                      <Building2 size={18} />
+                    </span>
+
+                    <div>
+                      <p>Market cap</p>
+
+                      <strong>
+                        {formatIndianLargeNumber(
+                          result.marketCap,
+                        )}
+                      </strong>
+
+                      <small>Company valuation</small>
+                    </div>
+                  </article>
+
+                  <article className="exa-stock-metric-card">
+                    <span className="exa-stock-metric-icon">
+                      <BarChart3 size={18} />
+                    </span>
+
+                    <div>
+                      <p>P/E ratio</p>
+
+                      <strong>
+                        {formatMetric(result.peRatio)}
+                      </strong>
+
+                      <small>Trailing twelve months</small>
+                    </div>
+                  </article>
+
+                  <article className="exa-stock-metric-card">
+                    <span className="exa-stock-metric-icon">
+                      <ArrowUpDown size={18} />
+                    </span>
+
+                    <div>
+                      <p>52-week range</p>
+
+                      <strong className="exa-stock-range-value">
+                        ₹{formatMetric(result.week52Low)}
+                        <span>—</span>
+                        ₹{formatMetric(result.week52High)}
+                      </strong>
+
+                      <small>Annual price range</small>
+                    </div>
+                  </article>
+
+                  <article className="exa-stock-metric-card">
+                    <span className="exa-stock-metric-icon">
+                      <Database size={18} />
+                    </span>
+
+                    <div>
+                      <p>Volume</p>
+
+                      <strong>
+                        {formatIndianLargeNumber(
+                          result.volume,
+                        )}
+                      </strong>
+
+                      <small>Latest traded quantity</small>
+                    </div>
+                  </article>
+                </section>
+
+                <section className="exa-price-chart-card">
+                  <div className="exa-price-chart-header">
+                    <div>
+                      <div className="exa-price-chart-heading">
+                        <span className="exa-price-chart-icon">
+                          <BarChart3 size={17} />
+                        </span>
+
+                        <div>
+                          <p>PRICE PERFORMANCE</p>
+
+                          <h3>
+                            {result.company} market chart
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="exa-price-chart-summary">
+                        <strong>
+                          ₹{formatPrice(result.price)}
+                        </strong>
+
+                        <span
+                          className={
+                            changePercent >= 0
+                              ? "positive"
+                              : "negative"
+                          }
+                        >
+                          {changePercent >= 0 ? (
+                            <TrendingUp size={14} />
+                          ) : (
+                            <TrendingDown size={14} />
+                          )}
+
+                          {changePercent >= 0 ? "+" : "-"}
+                          {formatMetric(
+                            Math.abs(changePercent),
+                          )}
+                          %
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="exa-chart-live-status">
+                      <span />
+                      Live market data
+                    </div>
+                  </div>
+
+                  <div className="exa-chart-timeframes">
+                    {TIMEFRAMES.map((tf) => (
+                      <button
+                        type="button"
+                        key={tf}
+                        onClick={() =>
+                          handleTimeframeChange(tf)
+                        }
+                        disabled={chartLoading}
+                        className={
+                          timeframe === tf
+                            ? "exa-chart-timeframe active"
+                            : "exa-chart-timeframe"
+                        }
+                        aria-pressed={timeframe === tf}
+                      >
+                        {chartLoading &&
+                        timeframe === tf
+                          ? "..."
+                          : tf}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="exa-price-chart-area">
+                    {chartLoading ? (
+                      <div className="exa-chart-state">
+                        <LoaderCircle
+                          size={27}
+                          className="exa-analyze-spinner"
+                        />
+
+                        <strong>
+                          Updating market chart
+                        </strong>
+
+                        <span>
+                          Loading the selected price range…
+                        </span>
+                      </div>
+                    ) : chartData.length > 0 ? (
+                      <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                      >
+                        <AreaChart
+                          data={chartData}
+                          margin={{
+                            top: 12,
+                            right: 10,
+                            bottom: 4,
+                            left: 0,
+                          }}
+                        >
+                          <defs>
+                            <linearGradient
+                              id="exaPremiumPriceFill"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="0%"
+                                stopColor={
+                                  changePercent >= 0
+                                    ? "#3b82f6"
+                                    : "#f43f5e"
+                                }
+                                stopOpacity={0.34}
+                              />
+
+                              <stop
+                                offset="70%"
+                                stopColor={
+                                  changePercent >= 0
+                                    ? "#3b82f6"
+                                    : "#f43f5e"
+                                }
+                                stopOpacity={0.06}
+                              />
+
+                              <stop
+                                offset="100%"
+                                stopColor={
+                                  changePercent >= 0
+                                    ? "#3b82f6"
+                                    : "#f43f5e"
+                                }
+                                stopOpacity={0}
+                              />
+                            </linearGradient>
+                          </defs>
+
+                          <CartesianGrid
+                            stroke="rgba(148, 163, 184, 0.10)"
+                            strokeDasharray="4 5"
+                            vertical={false}
+                          />
+
+                          <XAxis
+                            dataKey="date"
+                            axisLine={false}
+                            tickLine={false}
+                            minTickGap={34}
+                            tick={{
+                              fill: "#64748b",
+                              fontSize: 10,
+                            }}
+                            tickFormatter={(value) =>
+                              formatChartDate(
+                                value,
+                                timeframe,
+                              )
+                            }
+                          />
+
+                          <YAxis
+                            domain={[
+                              "dataMin",
+                              "dataMax",
+                            ]}
+                            axisLine={false}
+                            tickLine={false}
+                            width={62}
+                            tick={{
+                              fill: "#64748b",
+                              fontSize: 10,
+                            }}
+                            tickFormatter={(value) =>
+                              `₹${formatMetric(
+                                value,
+                                0,
+                              )}`
+                            }
+                          />
+
+                          <Tooltip
+                            cursor={{
+                              stroke:
+                                "rgba(96, 165, 250, 0.4)",
+                              strokeWidth: 1,
+                              strokeDasharray: "4 4",
+                            }}
+                            contentStyle={{
+                              padding: "11px 13px",
+                              border:
+                                "1px solid rgba(148, 163, 184, 0.18)",
+                              borderRadius: 12,
+                              background:
+                                "rgba(7, 17, 31, 0.96)",
+                              boxShadow:
+                                "0 18px 45px rgba(0, 0, 0, 0.34)",
+                              color: "#f8fafc",
+                            }}
+                            labelStyle={{
+                              marginBottom: 5,
+                              color: "#94a3b8",
+                              fontSize: 10,
+                            }}
+                            itemStyle={{
+                              color: "#dbeafe",
+                              fontSize: 12,
+                              fontWeight: 700,
+                            }}
+                            labelFormatter={(value) =>
+                              formatChartTooltipDate(
+                                value,
+                              )
+                            }
+                            formatter={(value) => [
+                              `₹${formatPrice(value)}`,
+                              "Closing price",
+                            ]}
+                          />
+
+                          <Area
+                            type="monotone"
+                            dataKey="price"
+                            stroke={
+                              changePercent >= 0
+                                ? "#60a5fa"
+                                : "#fb7185"
+                            }
+                            strokeWidth={2.4}
+                            fill="url(#exaPremiumPriceFill)"
+                            activeDot={{
+                              r: 5,
+                              strokeWidth: 3,
+                              stroke: "#07111f",
+                              fill:
+                                changePercent >= 0
+                                  ? "#60a5fa"
+                                  : "#fb7185",
+                            }}
+                            isAnimationActive
+                            animationDuration={650}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="exa-chart-state">
+                        <BarChart3 size={28} />
+
+                        <strong>
+                          Chart data unavailable
+                        </strong>
+
+                        <span>
+                          Live price information is still
+                          available above.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="exa-price-chart-footer">
+                    <span>
+                      Source:{" "}
+                      {result.source ||
+                        "Yahoo Finance"}
+                    </span>
+
+                    <span>
+                      Range: {timeframe}
+                    </span>
+
+                    {updatedTime && (
+                      <span>
+                        Updated {updatedTime}
+                      </span>
+                    )}
+                  </div>
+                </section>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 4,
+                    borderBottom:
+                      "1px solid #1e293b",
+                    overflowX: "auto",
+                  }}
+                >
+                  {[
+                    "Overview",
+                    "Fundamentals",
+                    "Technicals",
+                    "News",
+                    "Risks",
+                    "Financials",
+                  ].map((tab) => (
+                    <button
+                      type="button"
+                      key={tab}
+                      onClick={() =>
+                        setActiveTab(tab)
+                      }
+                      style={{
+                        padding: "10px 16px",
+                        fontSize: 14,
+                        cursor: "pointer",
+                        border: "none",
+                        background: "transparent",
+                        color:
+                          activeTab === tab
+                            ? "#fff"
+                            : "#64748b",
+                        borderBottom:
+                          activeTab === tab
+                            ? "2px solid #2563eb"
+                            : "2px solid transparent",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+
+                {activeTab === "Overview" ? (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: isMobile
+                        ? "repeat(2, minmax(0, 1fr))"
+                        : "repeat(4, minmax(0, 1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    <ScoreCard
+                      title="Fundamental score"
+                      score={result.fundamentalScore}
+                      scoreLabel={result.fundamentalLabel}
+                    />
+
+                    <ScoreCard
+                      title="Momentum score"
+                      score={result.momentumScore}
+                      scoreLabel={result.momentumLabel}
+                    />
+
+                    <ScoreCard
+                      title="Valuation score"
+                      score={result.valuationScore}
+                      scoreLabel={result.valuationLabel}
+                    />
+
+                    <ScoreCard
+                      title="Sentiment score"
+                      score={result.sentimentScore}
+                      scoreLabel={result.sentimentLabel}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      padding: 24,
+                      textAlign: "center",
+                      color: "#475569",
+                      fontSize: 14,
+                    }}
+                  >
+                    This tab is part of the EXA NEXUS roadmap and
+                    will be added in a later phase.
+                  </div>
+                )}
+              </div>
+
+              <aside className="exa-analyze-right-rail">
+                <div className="exa-analyze-right-scroll">
+                  <PremiumAiResearchPanel
+                    result={result}
+                    aiNotice={aiNotice}
+                  />
+
+                  <StockNewsPanel
+                    symbol={result.symbol}
+                    company={result.company}
                   />
                 </div>
-
-                <div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "#64748b",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Risk level
-                  </div>
-
-                  <div
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color:
-                        result.riskLevel ===
-                        "Low"
-                          ? "#22c55e"
-                          : result.riskLevel ===
-                              "High"
-                            ? "#ef4444"
-                            : "#eab308",
-                    }}
-                  >
-                    {result.riskLevel ||
-                      "Moderate"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* AI summary */}
-            <div
-              style={{
-                background: "#101a30",
-                border: "1px solid #1e293b",
-                borderRadius: 12,
-                padding: 18,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "#60a5fa",
-                  marginBottom: 10,
-                }}
-              >
-                <Sparkles size={15} />
-                AI research summary
-              </div>
-
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "#cbd5e1",
-                  lineHeight: 1.7,
-                  marginTop: 0,
-                  marginBottom: 12,
-                }}
-              >
-                {result.summary ||
-                  aiNotice ||
-                  "AI research summary is currently unavailable. Live market information is still available from Yahoo Finance."}
-              </p>
-
-              <div
-                style={{
-                  fontSize: 12,
-                  color: "#64748b",
-                  marginBottom: 6,
-                }}
-              >
-                Key themes
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 6,
-                }}
-              >
-                {result.keyThemes.length >
-                0 ? (
-                  result.keyThemes.map(
-                    (theme, index) => (
-                      <span
-                        key={`${theme}-${index}`}
-                        style={{
-                          fontSize: 12,
-                          padding: "4px 10px",
-                          borderRadius: 6,
-                          background:
-                            "#1e293b",
-                          color: "#93c5fd",
-                        }}
-                      >
-                        {theme}
-                      </span>
-                    ),
-                  )
-                ) : (
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: "#64748b",
-                    }}
-                  >
-                    No AI themes available.
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile
-                  ? "1fr"
-                  : "1fr 1fr",
-                gap: 12,
-              }}
-            >
-              <div
-                style={{
-                  background: "#052e16",
-                  border: "1px solid #166534",
-                  borderRadius: 12,
-                  padding: 14,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#4ade80",
-                    marginBottom: 8,
-                  }}
-                >
-                  <ShieldCheck size={14} />
-                  Growth drivers
-                </div>
-
-                {result.growthDrivers.length >
-                0 ? (
-                  result.growthDrivers.map(
-                    (driver, index) => (
-                      <div
-                        key={`${driver}-${index}`}
-                        style={{
-                          fontSize: 12.5,
-                          color: "#86efac",
-                          marginBottom: 6,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        • {driver}
-                      </div>
-                    ),
-                  )
-                ) : (
-                  <div
-                    style={{
-                      fontSize: 12.5,
-                      color: "#86efac",
-                    }}
-                  >
-                    AI growth drivers are currently unavailable.
-                  </div>
-                )}
-              </div>
-
-              <div
-                style={{
-                  background: "#431407",
-                  border: "1px solid #9a3412",
-                  borderRadius: 12,
-                  padding: 14,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#fb923c",
-                    marginBottom: 8,
-                  }}
-                >
-                  <AlertTriangle size={14} />
-                  Key risks
-                </div>
-
-                {result.keyRisks.length >
-                0 ? (
-                  result.keyRisks.map(
-                    (risk, index) => (
-                      <div
-                        key={`${risk}-${index}`}
-                        style={{
-                          fontSize: 12.5,
-                          color: "#fdba74",
-                          marginBottom: 6,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        • {risk}
-                      </div>
-                    ),
-                  )
-                ) : (
-                  <div
-                    style={{
-                      fontSize: 12.5,
-                      color: "#fdba74",
-                    }}
-                  >
-                    AI risk analysis is currently unavailable.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div
-              style={{
-                fontSize: 11,
-                color: "#475569",
-                lineHeight: 1.6,
-                textAlign: "center",
-                padding: "4px 8px",
-              }}
-            >
-              Market data source:{" "}
-              {result.source ||
-                "Yahoo Finance"}
-              . AI analysis is provided for
-              educational research purposes and
-              is not financial advice.
-            </div>
-          </div>
+              </aside>
+            </section>
+          )}
         </div>
-      )}
-    </div>
+      </main>
+    </AppShell>
   );
-} 
+}
+
+
+  
