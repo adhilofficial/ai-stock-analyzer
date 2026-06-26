@@ -1,9 +1,6 @@
 import YahooFinance from "yahoo-finance2";
 
-const yahooFinance = new YahooFinance({
-  suppressNotices: ["yahooSurvey"],
-});
-
+import yahooFinance from "./_lib/yahooFinance.js";
 /*
  * Selected universe of liquid NSE companies.
  *

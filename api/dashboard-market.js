@@ -1,6 +1,6 @@
 import YahooFinance from "yahoo-finance2";
 
-const yahooFinance = new YahooFinance();
+import yahooFinance from "./_lib/yahooFinance.js";
 
 /*
  * Indexes displayed at the top of the dashboard.

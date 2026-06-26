@@ -1,11 +1,7 @@
 import YahooFinance from "yahoo-finance2";
 
-const yahooFinance =
-  typeof YahooFinance === "function"
-    ? new YahooFinance({
-        suppressNotices: ["yahooSurvey"],
-      })
-    : YahooFinance;
+import yahooFinance from "./_lib/yahooFinance.js";
+    
 
 const NEWS_QUERIES = [
   "NIFTY 50",

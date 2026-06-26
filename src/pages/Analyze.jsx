@@ -28,6 +28,7 @@ import ScoreGauge from "../components/ScoreGauge";
 import AppShell from "../components/layout/AppShell";
 import PremiumAiResearchPanel from "../components/analyze/PremiumAiResearchPanel";
 import StockNewsPanel from "../components/analyze/StockNewsPanel";
+import FundamentalsTab from "../components/analyze/FundamentalsTab";
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
 import "../styles/analyze-v2.css";
@@ -609,48 +610,211 @@ function isAiLimitError(error) {
   );
 }
 
-function createLiveResult(stockData, selectedStock) {
+function createLiveResult(
+  stockData,
+  selectedStock,
+) {
   return {
     symbol: stockData.symbol,
+
     ticker: stockData.symbol,
+
     company:
       stockData.name ||
       selectedStock?.name ||
       stockData.symbol,
-    sector: stockData.sector || "N/A",
-    industry: stockData.industry || "N/A",
-    price: stockData.price ?? null,
-    changeAbs: stockData.change ?? 0,
-    changePercent: stockData.changePercent ?? 0,
-    marketCap: stockData.marketCap ?? null,
-    peRatio: stockData.peRatioTTM ?? null,
-    week52Low: stockData.fiftyTwoWeekLow ?? null,
-    week52High: stockData.fiftyTwoWeekHigh ?? null,
-    volume: stockData.volume ?? null,
-    chart: Array.isArray(stockData.chart)
-      ? stockData.chart
-      : [],
-    source: stockData.source || "Yahoo Finance",
-    lastUpdated: stockData.lastUpdated || null,
+
+    exchange:
+      stockData.exchange ||
+      "N/A",
+
+    currency:
+      stockData.currency ||
+      "INR",
+
+    marketState:
+      stockData.marketState ||
+      null,
+
+    sector:
+      stockData.sector ||
+      "N/A",
+
+    industry:
+      stockData.industry ||
+      "N/A",
+
+    businessSummary:
+      stockData.businessSummary ||
+      "",
+
+    website:
+      stockData.website ||
+      "",
+
+    employees:
+      stockData.employees ??
+      null,
+
+    price:
+      stockData.price ??
+      null,
+
+    changeAbs:
+      stockData.change ??
+      0,
+
+    changePercent:
+      stockData.changePercent ??
+      0,
+
+    marketCap:
+      stockData.marketCap ??
+      null,
+
+    peRatio:
+      stockData.peRatioTTM ??
+      null,
+
+    week52Low:
+      stockData.fiftyTwoWeekLow ??
+      null,
+
+    week52High:
+      stockData.fiftyTwoWeekHigh ??
+      null,
+
+    volume:
+      stockData.volume ??
+      null,
+
+    fundamentals: {
+      enterpriseValue:
+        stockData.enterpriseValue ??
+        null,
+
+      forwardPE:
+        stockData.forwardPE ??
+        null,
+
+      priceToBook:
+        stockData.priceToBook ??
+        null,
+
+      pegRatio:
+        stockData.pegRatio ??
+        null,
+
+      trailingEps:
+        stockData.trailingEps ??
+        null,
+
+      forwardEps:
+        stockData.forwardEps ??
+        null,
+
+      totalRevenue:
+        stockData.totalRevenue ??
+        null,
+
+      revenueGrowth:
+        stockData.revenueGrowth ??
+        null,
+
+      earningsGrowth:
+        stockData.earningsGrowth ??
+        null,
+
+      profitMargins:
+        stockData.profitMargins ??
+        null,
+
+      returnOnEquity:
+        stockData.returnOnEquity ??
+        null,
+
+      totalCash:
+        stockData.totalCash ??
+        null,
+
+      totalDebt:
+        stockData.totalDebt ??
+        null,
+
+      debtToEquity:
+        stockData.debtToEquity ??
+        null,
+
+      currentRatio:
+        stockData.currentRatio ??
+        null,
+
+      freeCashflow:
+        stockData.freeCashflow ??
+        null,
+
+      dividendYield:
+        stockData.dividendYield ??
+        null,
+    },
+
+    chart:
+      Array.isArray(
+        stockData.chart,
+      )
+        ? stockData.chart
+        : [],
+
+    source:
+      stockData.source ||
+      "Yahoo Finance",
+
+    lastUpdated:
+      stockData.lastUpdated ||
+      null,
+
     logoDomain:
       stockData.logoDomain ||
-      getCompanyDomain(stockData.website),
+      getCompanyDomain(
+        stockData.website,
+      ),
+
     signal: "WATCH",
+
     summary: "",
+
     keyThemes: [],
+
     growthDrivers: [],
+
     keyRisks: [],
+
     confidenceScore: 0,
+
     riskLevel: "Moderate",
+
     fundamentalScore: 0,
-    fundamentalLabel: "AI unavailable",
+
+    fundamentalLabel:
+      "AI unavailable",
+
     momentumScore: 0,
-    momentumLabel: "AI unavailable",
+
+    momentumLabel:
+      "AI unavailable",
+
     valuationScore: 0,
-    valuationLabel: "AI unavailable",
+
+    valuationLabel:
+      "AI unavailable",
+
     sentimentScore: 0,
-    sentimentLabel: "AI unavailable",
+
+    sentimentLabel:
+      "AI unavailable",
+
     aiAvailable: false,
+
     aiSummaryCached: false,
   };
 }
@@ -667,6 +831,26 @@ function mergeAiAnalysis(liveResult, aiAnalysis) {
   return {
     ...liveResult,
     ...aiAnalysis,
+    exchange:
+  liveResult.exchange,
+
+currency:
+  liveResult.currency,
+
+marketState:
+  liveResult.marketState,
+
+businessSummary:
+  liveResult.businessSummary,
+
+website:
+  liveResult.website,
+
+employees:
+  liveResult.employees,
+
+fundamentals:
+  liveResult.fundamentals,
     symbol: liveResult.symbol,
     ticker: aiAnalysis?.ticker || liveResult.ticker,
     company: aiAnalysis?.company || liveResult.company,
@@ -1959,53 +2143,85 @@ useEffect(() => {
                   ))}
                 </div>
 
-                {activeTab === "Overview" ? (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: isMobile
-                        ? "repeat(2, minmax(0, 1fr))"
-                        : "repeat(4, minmax(0, 1fr))",
-                      gap: 12,
-                    }}
-                  >
-                    <ScoreCard
-                      title="Fundamental score"
-                      score={result.fundamentalScore}
-                      scoreLabel={result.fundamentalLabel}
-                    />
+                {activeTab === "Overview" && (
+  <div
+    style={{
+      display: "grid",
 
-                    <ScoreCard
-                      title="Momentum score"
-                      score={result.momentumScore}
-                      scoreLabel={result.momentumLabel}
-                    />
+      gridTemplateColumns:
+        isMobile
+          ? "repeat(2, minmax(0, 1fr))"
+          : "repeat(4, minmax(0, 1fr))",
 
-                    <ScoreCard
-                      title="Valuation score"
-                      score={result.valuationScore}
-                      scoreLabel={result.valuationLabel}
-                    />
+      gap: 12,
+    }}
+  >
+    <ScoreCard
+      title="Fundamental score"
+      score={
+        result.fundamentalScore
+      }
+      scoreLabel={
+        result.fundamentalLabel
+      }
+    />
 
-                    <ScoreCard
-                      title="Sentiment score"
-                      score={result.sentimentScore}
-                      scoreLabel={result.sentimentLabel}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      padding: 24,
-                      textAlign: "center",
-                      color: "#475569",
-                      fontSize: 14,
-                    }}
-                  >
-                    This tab is part of the EXA NEXUS roadmap and
-                    will be added in a later phase.
-                  </div>
-                )}
+    <ScoreCard
+      title="Momentum score"
+      score={
+        result.momentumScore
+      }
+      scoreLabel={
+        result.momentumLabel
+      }
+    />
+
+    <ScoreCard
+      title="Valuation score"
+      score={
+        result.valuationScore
+      }
+      scoreLabel={
+        result.valuationLabel
+      }
+    />
+
+    <ScoreCard
+      title="Sentiment score"
+      score={
+        result.sentimentScore
+      }
+      scoreLabel={
+        result.sentimentLabel
+      }
+    />
+  </div>
+)}
+
+{activeTab ===
+  "Fundamentals" && (
+  <FundamentalsTab
+    result={result}
+  />
+)}
+
+{![
+  "Overview",
+  "Fundamentals",
+].includes(activeTab) && (
+  <div
+    style={{
+      padding: 24,
+      textAlign: "center",
+      color: "#475569",
+      fontSize: 14,
+    }}
+  >
+    This tab is part of the EXA
+    NEXUS roadmap and will be
+    added in a later phase.
+  </div>
+)}
               </div>
 
               <aside className="exa-analyze-right-rail">
