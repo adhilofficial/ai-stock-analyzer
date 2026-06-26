@@ -1,5 +1,3 @@
-import YahooFinance from "yahoo-finance2";
-
 import yahooFinance from "./_lib/yahooFinance.js";
 
 const CACHE_DURATION_MS = 30 * 1000;
