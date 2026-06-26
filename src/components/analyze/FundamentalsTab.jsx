@@ -1,19 +1,42 @@
 import {
-  Activity,
+  Banknote,
   BarChart3,
+  BookOpen,
   Building2,
-  Database,
-  ExternalLink,
-  Gauge,
+  CircleDollarSign,
+  Coins,
+  Landmark,
   Percent,
   Scale,
   ShieldCheck,
   TrendingUp,
+  WalletCards,
 } from "lucide-react";
 
-import "../../styles/fundamentals-tab.css";
+const COLORS = {
+  card: "#101A30",
+  cardSecondary: "#0D1B2A",
+  border: "#1E293B",
+  white: "#F8FAFC",
+  text: "#CBD5E1",
+  muted: "#64748B",
+  blue: "#2F80ED",
+  cyan: "#22D3EE",
+  green: "#22C55E",
+  yellow: "#EAB308",
+  red: "#EF4444",
+  purple: "#8B5CF6",
+};
 
-function numberValue(value) {
+function safeNumber(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
   const number = Number(value);
 
   return Number.isFinite(number)
@@ -23,32 +46,82 @@ function numberValue(value) {
 
 function formatNumber(
   value,
-  digits = 2,
+  maximumFractionDigits = 2,
 ) {
-  const number =
-    numberValue(value);
+  const number = safeNumber(value);
 
   if (number === null) {
     return "N/A";
   }
 
-  return new Intl.NumberFormat(
-    "en-IN",
-    {
-      maximumFractionDigits:
-        digits,
-    },
-  ).format(number);
+  return new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits,
+  }).format(number);
 }
 
-function formatPercent(value) {
-  const number =
-    numberValue(value);
+function formatCurrency(
+  value,
+  currency = "INR",
+) {
+  const number = safeNumber(value);
 
   if (number === null) {
     return "N/A";
   }
 
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: currency || "INR",
+      maximumFractionDigits: 2,
+    }).format(number);
+  } catch {
+    return formatNumber(number, 2);
+  }
+}
+
+function formatLargeNumber(value) {
+  const number = safeNumber(value);
+
+  if (number === null) {
+    return "N/A";
+  }
+
+  if (Math.abs(number) >= 1_00_00_00_00_000) {
+    return `${formatNumber(
+      number / 1_00_00_00_00_000,
+      2,
+    )} Lakh Cr`;
+  }
+
+  if (Math.abs(number) >= 1_00_00_000) {
+    return `${formatNumber(
+      number / 1_00_00_000,
+      2,
+    )} Cr`;
+  }
+
+  if (Math.abs(number) >= 1_00_000) {
+    return `${formatNumber(
+      number / 1_00_000,
+      2,
+    )} Lakh`;
+  }
+
+  return formatNumber(number, 0);
+}
+
+function formatPercentage(value) {
+  const number = safeNumber(value);
+
+  if (number === null) {
+    return "N/A";
+  }
+
+  /*
+   * Yahoo usually returns ratios such as
+   * 0.18 for 18%.
+   */
   const percentage =
     Math.abs(number) <= 2
       ? number * 100
@@ -56,127 +129,322 @@ function formatPercent(value) {
 
   return `${formatNumber(
     percentage,
+    2,
   )}%`;
 }
 
-function formatRatio(value) {
-  const number =
-    numberValue(value);
+function getMetricStatus(
+  type,
+  value,
+) {
+  const number = safeNumber(value);
 
   if (number === null) {
-    return "N/A";
+    return {
+      label: "Unavailable",
+      color: COLORS.muted,
+      background:
+        "rgba(100, 116, 139, 0.10)",
+    };
   }
 
-  return `${formatNumber(
-    number,
-  )}x`;
+  if (type === "revenueGrowth") {
+    if (number > 0.15) {
+      return {
+        label: "Strong growth",
+        color: COLORS.green,
+        background:
+          "rgba(34, 197, 94, 0.10)",
+      };
+    }
+
+    if (number > 0) {
+      return {
+        label: "Positive",
+        color: COLORS.cyan,
+        background:
+          "rgba(34, 211, 238, 0.10)",
+      };
+    }
+
+    return {
+      label: "Declining",
+      color: COLORS.red,
+      background:
+        "rgba(239, 68, 68, 0.10)",
+    };
+  }
+
+  if (type === "profitMargin") {
+    if (number >= 0.2) {
+      return {
+        label: "High margin",
+        color: COLORS.green,
+        background:
+          "rgba(34, 197, 94, 0.10)",
+      };
+    }
+
+    if (number > 0) {
+      return {
+        label: "Positive",
+        color: COLORS.yellow,
+        background:
+          "rgba(234, 179, 8, 0.10)",
+      };
+    }
+
+    return {
+      label: "Negative",
+      color: COLORS.red,
+      background:
+        "rgba(239, 68, 68, 0.10)",
+    };
+  }
+
+  if (type === "roe") {
+    if (number >= 0.2) {
+      return {
+        label: "Strong",
+        color: COLORS.green,
+        background:
+          "rgba(34, 197, 94, 0.10)",
+      };
+    }
+
+    if (number >= 0.1) {
+      return {
+        label: "Moderate",
+        color: COLORS.yellow,
+        background:
+          "rgba(234, 179, 8, 0.10)",
+      };
+    }
+
+    return {
+      label: "Low",
+      color: COLORS.red,
+      background:
+        "rgba(239, 68, 68, 0.10)",
+    };
+  }
+
+  if (type === "debtToEquity") {
+    if (number <= 50) {
+      return {
+        label: "Low debt",
+        color: COLORS.green,
+        background:
+          "rgba(34, 197, 94, 0.10)",
+      };
+    }
+
+    if (number <= 150) {
+      return {
+        label: "Moderate",
+        color: COLORS.yellow,
+        background:
+          "rgba(234, 179, 8, 0.10)",
+      };
+    }
+
+    return {
+      label: "High debt",
+      color: COLORS.red,
+      background:
+        "rgba(239, 68, 68, 0.10)",
+    };
+  }
+
+  if (type === "currentRatio") {
+    if (number >= 1.5) {
+      return {
+        label: "Healthy",
+        color: COLORS.green,
+        background:
+          "rgba(34, 197, 94, 0.10)",
+      };
+    }
+
+    if (number >= 1) {
+      return {
+        label: "Adequate",
+        color: COLORS.yellow,
+        background:
+          "rgba(234, 179, 8, 0.10)",
+      };
+    }
+
+    return {
+      label: "Weak",
+      color: COLORS.red,
+      background:
+        "rgba(239, 68, 68, 0.10)",
+    };
+  }
+
+  return {
+    label: "Reported",
+    color: COLORS.blue,
+    background:
+      "rgba(47, 128, 237, 0.10)",
+  };
 }
 
-function formatLarge(
-  value,
-  currency = "INR",
-) {
-  const number =
-    numberValue(value);
-
-  if (number === null) {
-    return "N/A";
-  }
-
-  const absolute =
-    Math.abs(number);
-
-  const sign =
-    number < 0 ? "-" : "";
-
-  const prefix =
-    currency === "INR"
-      ? "₹"
-      : `${currency} `;
-
-  if (
-    absolute >=
-    1_000_000_000_000
-  ) {
-    return `${sign}${prefix}${formatNumber(
-      absolute /
-        1_000_000_000_000,
-    )} Lakh Cr`;
-  }
-
-  if (absolute >= 10_000_000) {
-    return `${sign}${prefix}${formatNumber(
-      absolute / 10_000_000,
-    )} Cr`;
-  }
-
-  if (absolute >= 100_000) {
-    return `${sign}${prefix}${formatNumber(
-      absolute / 100_000,
-    )} Lakh`;
-  }
-
-  return `${sign}${prefix}${formatNumber(
-    absolute,
-    0,
-  )}`;
+function StatusBadge({
+  label,
+  color,
+  background,
+}) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "5px 9px",
+        borderRadius: 999,
+        fontSize: 11,
+        fontWeight: 700,
+        color,
+        background,
+        border: `1px solid ${color}33`,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
+    </span>
+  );
 }
 
 function MetricCard({
-  icon,
-  label,
+  icon: Icon,
+  title,
   value,
-  caption,
+  description,
+  statusType,
+  statusValue,
+  accent = COLORS.blue,
 }) {
+  const status = getMetricStatus(
+    statusType,
+    statusValue,
+  );
+
   return (
-    <article className="exa-fundamental-metric">
-      <span>
-        {icon}
-      </span>
+    <article
+      style={{
+        minWidth: 0,
+        padding: 16,
+        borderRadius: 14,
+        border: `1px solid ${COLORS.border}`,
+        background:
+          "linear-gradient(145deg, #101A30 0%, #0D1B2A 100%)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 12,
+          marginBottom: 14,
+        }}
+      >
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 10,
+            color: accent,
+            background: `${accent}15`,
+            border: `1px solid ${accent}2E`,
+          }}
+        >
+          <Icon size={18} />
+        </div>
 
-      <div>
-        <p>{label}</p>
-
-        <strong>
-          {value}
-        </strong>
-
-        <small>
-          {caption}
-        </small>
+        <StatusBadge
+          label={status.label}
+          color={status.color}
+          background={status.background}
+        />
       </div>
+
+      <div
+        style={{
+          color: COLORS.muted,
+          fontSize: 12,
+          fontWeight: 600,
+          marginBottom: 6,
+        }}
+      >
+        {title}
+      </div>
+
+      <div
+        style={{
+          color: COLORS.white,
+          fontSize: 21,
+          fontWeight: 750,
+          overflowWrap: "anywhere",
+        }}
+      >
+        {value}
+      </div>
+
+      <p
+        style={{
+          margin: "9px 0 0",
+          color: COLORS.text,
+          fontSize: 12,
+          lineHeight: 1.55,
+        }}
+      >
+        {description}
+      </p>
     </article>
   );
 }
 
-function MetricSection({
-  eyebrow,
-  title,
-  icon,
-  items,
+function DetailRow({
+  label,
+  value,
 }) {
   return (
-    <article className="exa-fundamental-section">
-      <header>
-        <span>
-          {icon}
-        </span>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 18,
+        padding: "11px 0",
+        borderBottom:
+          "1px solid rgba(30, 41, 59, 0.75)",
+      }}
+    >
+      <span
+        style={{
+          color: COLORS.muted,
+          fontSize: 13,
+        }}
+      >
+        {label}
+      </span>
 
-        <div>
-          <p>{eyebrow}</p>
-          <h3>{title}</h3>
-        </div>
-      </header>
-
-      <div className="exa-fundamental-grid">
-        {items.map((item) => (
-          <MetricCard
-            key={item.label}
-            {...item}
-          />
-        ))}
-      </div>
-    </article>
+      <span
+        style={{
+          color: COLORS.white,
+          fontSize: 13,
+          fontWeight: 700,
+          textAlign: "right",
+        }}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
@@ -187,368 +455,420 @@ export default function FundamentalsTab({
     return null;
   }
 
-  const fundamentals =
-    result.fundamentals ||
-    result;
-
   const currency =
     result.currency || "INR";
 
-  const valuationItems = [
-    {
-      icon: (
-        <Building2 size={18} />
-      ),
-      label: "Market cap",
-      value: formatLarge(
-        result.marketCap,
-        currency,
-      ),
-      caption:
-        "Equity market value",
-    },
-    {
-      icon: (
-        <Database size={18} />
-      ),
-      label: "Enterprise value",
-      value: formatLarge(
-        fundamentals
-          .enterpriseValue,
-        currency,
-      ),
-      caption:
-        "Equity plus net debt",
-    },
-    {
-      icon: (
-        <BarChart3 size={18} />
-      ),
-      label: "Trailing P/E",
-      value: formatRatio(
-        result.peRatio,
-      ),
-      caption:
-        "Price versus trailing earnings",
-    },
-    {
-      icon: (
-        <TrendingUp size={18} />
-      ),
-      label: "Forward P/E",
-      value: formatRatio(
-        fundamentals.forwardPE,
-      ),
-      caption:
-        "Price versus forecast earnings",
-    },
-    {
-      icon: (
-        <Scale size={18} />
-      ),
-      label: "Price to book",
-      value: formatRatio(
-        fundamentals.priceToBook,
-      ),
-      caption:
-        "Price versus book value",
-    },
-    {
-      icon: (
-        <Gauge size={18} />
-      ),
-      label: "PEG ratio",
-      value: formatRatio(
-        fundamentals.pegRatio,
-      ),
-      caption:
-        "P/E adjusted for growth",
-    },
-  ];
-
-  const performanceItems = [
-    {
-      icon: (
-        <Database size={18} />
-      ),
-      label: "Revenue",
-      value: formatLarge(
-        fundamentals.totalRevenue,
-        currency,
-      ),
-      caption:
-        "Trailing twelve months",
-    },
-    {
-      icon: (
-        <TrendingUp size={18} />
-      ),
-      label: "Revenue growth",
-      value: formatPercent(
-        fundamentals.revenueGrowth,
-      ),
-      caption:
-        "Latest reported growth",
-    },
-    {
-      icon: (
-        <Activity size={18} />
-      ),
-      label: "Earnings growth",
-      value: formatPercent(
-        fundamentals.earningsGrowth,
-      ),
-      caption:
-        "Latest reported growth",
-    },
-    {
-      icon: (
-        <Percent size={18} />
-      ),
-      label: "Net margin",
-      value: formatPercent(
-        fundamentals.profitMargins,
-      ),
-      caption:
-        "Net profit percentage",
-    },
-    {
-      icon: (
-        <Gauge size={18} />
-      ),
-      label: "Return on equity",
-      value: formatPercent(
-        fundamentals.returnOnEquity,
-      ),
-      caption:
-        "Return generated on equity",
-    },
-    {
-      icon: (
-        <BarChart3 size={18} />
-      ),
-      label: "Trailing EPS",
-      value: formatNumber(
-        fundamentals.trailingEps,
-      ),
-      caption:
-        "Earnings per share",
-    },
-  ];
-
-  const healthItems = [
-    {
-      icon: (
-        <Database size={18} />
-      ),
-      label: "Total cash",
-      value: formatLarge(
-        fundamentals.totalCash,
-        currency,
-      ),
-      caption:
-        "Cash and equivalents",
-    },
-    {
-      icon: (
-        <Scale size={18} />
-      ),
-      label: "Total debt",
-      value: formatLarge(
-        fundamentals.totalDebt,
-        currency,
-      ),
-      caption:
-        "Reported borrowings",
-    },
-    {
-      icon: (
-        <Gauge size={18} />
-      ),
-      label: "Debt to equity",
-      value: formatNumber(
-        fundamentals.debtToEquity,
-      ),
-      caption:
-        "Debt relative to equity",
-    },
-    {
-      icon: (
-        <ShieldCheck size={18} />
-      ),
-      label: "Current ratio",
-      value: formatNumber(
-        fundamentals.currentRatio,
-      ),
-      caption:
-        "Short-term liquidity",
-    },
-    {
-      icon: (
-        <TrendingUp size={18} />
-      ),
-      label: "Free cash flow",
-      value: formatLarge(
-        fundamentals.freeCashflow,
-        currency,
-      ),
-      caption:
-        "Cash after capital spending",
-    },
-    {
-      icon: (
-        <Percent size={18} />
-      ),
-      label: "Dividend yield",
-      value: formatPercent(
-        fundamentals.dividendYield,
-      ),
-      caption:
-        "Annual dividend yield",
-    },
-  ];
+  const hasFundamentalData = [
+    result.totalRevenue,
+    result.revenueGrowth,
+    result.profitMargins,
+    result.returnOnEquity,
+    result.totalCash,
+    result.totalDebt,
+    result.enterpriseValue,
+    result.priceToBook,
+  ].some(
+    (value) =>
+      value !== null &&
+      value !== undefined,
+  );
 
   return (
-    <section className="exa-fundamentals-tab">
-      <article className="exa-fundamental-profile">
-        <div>
-          <p>
-            COMPANY FUNDAMENTALS
-          </p>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
+    >
+      {!hasFundamentalData && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 10,
+            padding: "13px 15px",
+            color: COLORS.yellow,
+            background:
+              "rgba(234, 179, 8, 0.08)",
+            border:
+              "1px solid rgba(234, 179, 8, 0.22)",
+            borderRadius: 12,
+            fontSize: 12,
+            lineHeight: 1.6,
+          }}
+        >
+          <ShieldCheck
+            size={17}
+            style={{
+              flexShrink: 0,
+              marginTop: 1,
+            }}
+          />
 
-          <h2>
-            {result.company}
-          </h2>
+          <span>
+            Some fundamental information is not available from
+            Yahoo Finance for this company.
+          </span>
+        </div>
+      )}
 
-          <div>
-            <span>
-              {result.sector ||
-                "Sector unavailable"}
-            </span>
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(190px, 1fr))",
+          gap: 12,
+        }}
+      >
+        <MetricCard
+          icon={CircleDollarSign}
+          title="Market capitalisation"
+          value={formatLargeNumber(
+            result.marketCap,
+          )}
+          statusType="reported"
+          statusValue={result.marketCap}
+          description="The total market value of the company's outstanding shares."
+          accent={COLORS.blue}
+        />
 
-            <i>•</i>
+        <MetricCard
+          icon={Landmark}
+          title="Enterprise value"
+          value={formatLargeNumber(
+            result.enterpriseValue,
+          )}
+          statusType="reported"
+          statusValue={
+            result.enterpriseValue
+          }
+          description="Company value after considering market capitalisation, debt and cash."
+          accent={COLORS.purple}
+        />
 
-            <span>
-              {result.industry ||
-                "Industry unavailable"}
-            </span>
+        <MetricCard
+          icon={BarChart3}
+          title="Total revenue"
+          value={formatLargeNumber(
+            result.totalRevenue,
+          )}
+          statusType="reported"
+          statusValue={
+            result.totalRevenue
+          }
+          description="The latest reported total sales generated by the business."
+          accent={COLORS.cyan}
+        />
 
-            {result.employees && (
-              <>
-                <i>•</i>
+        <MetricCard
+          icon={TrendingUp}
+          title="Revenue growth"
+          value={formatPercentage(
+            result.revenueGrowth,
+          )}
+          statusType="revenueGrowth"
+          statusValue={
+            result.revenueGrowth
+          }
+          description="The latest reported rate of increase or decrease in revenue."
+          accent={COLORS.green}
+        />
 
-                <span>
-                  {formatNumber(
-                    result.employees,
-                    0,
-                  )}{" "}
-                  employees
-                </span>
-              </>
+        <MetricCard
+          icon={Percent}
+          title="Profit margin"
+          value={formatPercentage(
+            result.profitMargins,
+          )}
+          statusType="profitMargin"
+          statusValue={
+            result.profitMargins
+          }
+          description="The percentage of revenue retained as profit."
+          accent={COLORS.green}
+        />
+
+        <MetricCard
+          icon={Scale}
+          title="Return on equity"
+          value={formatPercentage(
+            result.returnOnEquity,
+          )}
+          statusType="roe"
+          statusValue={
+            result.returnOnEquity
+          }
+          description="Measures profit generated relative to shareholders' equity."
+          accent={COLORS.blue}
+        />
+
+        <MetricCard
+          icon={WalletCards}
+          title="Total cash"
+          value={formatLargeNumber(
+            result.totalCash,
+          )}
+          statusType="reported"
+          statusValue={result.totalCash}
+          description="Cash and liquid resources reported by the company."
+          accent={COLORS.cyan}
+        />
+
+        <MetricCard
+          icon={Banknote}
+          title="Total debt"
+          value={formatLargeNumber(
+            result.totalDebt,
+          )}
+          statusType="reported"
+          statusValue={result.totalDebt}
+          description="The company's reported short-term and long-term borrowings."
+          accent={COLORS.red}
+        />
+
+        <MetricCard
+          icon={Scale}
+          title="Debt-to-equity"
+          value={formatNumber(
+            result.debtToEquity,
+            2,
+          )}
+          statusType="debtToEquity"
+          statusValue={
+            result.debtToEquity
+          }
+          description="Compares the company's debt with shareholders' equity."
+          accent={COLORS.yellow}
+        />
+
+        <MetricCard
+          icon={Coins}
+          title="Free cash flow"
+          value={formatLargeNumber(
+            result.freeCashflow,
+          )}
+          statusType="reported"
+          statusValue={
+            result.freeCashflow
+          }
+          description="Cash remaining after operating expenses and capital expenditure."
+          accent={COLORS.green}
+        />
+
+        <MetricCard
+          icon={Building2}
+          title="Current ratio"
+          value={formatNumber(
+            result.currentRatio,
+            2,
+          )}
+          statusType="currentRatio"
+          statusValue={
+            result.currentRatio
+          }
+          description="Measures the ability to meet short-term financial obligations."
+          accent={COLORS.blue}
+        />
+
+        <MetricCard
+          icon={Percent}
+          title="Dividend yield"
+          value={formatPercentage(
+            result.dividendYield,
+          )}
+          statusType="reported"
+          statusValue={
+            result.dividendYield
+          }
+          description="Annual dividend income relative to the current share price."
+          accent={COLORS.purple}
+        />
+      </section>
+
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            padding: 17,
+            borderRadius: 14,
+            border:
+              `1px solid ${COLORS.border}`,
+            background: COLORS.card,
+          }}
+        >
+          <h3
+            style={{
+              margin: "0 0 5px",
+              color: COLORS.white,
+              fontSize: 15,
+            }}
+          >
+            Valuation metrics
+          </h3>
+
+          <DetailRow
+            label="Trailing P/E"
+            value={formatNumber(
+              result.peRatio,
+              2,
             )}
-          </div>
+          />
+
+          <DetailRow
+            label="Forward P/E"
+            value={formatNumber(
+              result.forwardPE,
+              2,
+            )}
+          />
+
+          <DetailRow
+            label="Price-to-book"
+            value={formatNumber(
+              result.priceToBook,
+              2,
+            )}
+          />
+
+          <DetailRow
+            label="PEG ratio"
+            value={formatNumber(
+              result.pegRatio,
+              2,
+            )}
+          />
+
+          <DetailRow
+            label="Trailing EPS"
+            value={formatCurrency(
+              result.trailingEps,
+              currency,
+            )}
+          />
+
+          <DetailRow
+            label="Forward EPS"
+            value={formatCurrency(
+              result.forwardEps,
+              currency,
+            )}
+          />
         </div>
 
-        {result.website && (
-          <a
-            href={result.website}
-            target="_blank"
-            rel="noopener noreferrer"
+        <div
+          style={{
+            padding: 17,
+            borderRadius: 14,
+            border:
+              `1px solid ${COLORS.border}`,
+            background: COLORS.card,
+          }}
+        >
+          <h3
+            style={{
+              margin: "0 0 5px",
+              color: COLORS.white,
+              fontSize: 15,
+            }}
           >
-            Company website
-            <ExternalLink
-              size={13}
-            />
-          </a>
-        )}
+            Company profile
+          </h3>
 
-        <p>
-          {result.businessSummary ||
-            "A detailed company description is not currently available from Yahoo Finance."}
-        </p>
-      </article>
-
-      <MetricSection
-        eyebrow="VALUATION"
-        title="Market valuation"
-        icon={
-          <Scale size={18} />
-        }
-        items={valuationItems}
-      />
-
-      <MetricSection
-        eyebrow="GROWTH & PROFITABILITY"
-        title="Operating performance"
-        icon={
-          <TrendingUp
-            size={18}
+          <DetailRow
+            label="Sector"
+            value={result.sector || "N/A"}
           />
-        }
-        items={performanceItems}
-      />
 
-      <MetricSection
-        eyebrow="FINANCIAL HEALTH"
-        title="Balance sheet and cash flow"
-        icon={
-          <ShieldCheck
-            size={18}
+          <DetailRow
+            label="Industry"
+            value={result.industry || "N/A"}
           />
-        }
-        items={healthItems}
-      />
 
-      <article className="exa-fundamental-reading">
-        <header>
-          <span>
-            <ShieldCheck
-              size={18}
-            />
-          </span>
-
-          <div>
-            <p>
-              EXA FUNDAMENTAL SCORE
-            </p>
-
-            <h3>
-              Fundamental interpretation
-            </h3>
-          </div>
-        </header>
-
-        <div>
-          <strong>
-            {formatNumber(
-              result.fundamentalScore,
+          <DetailRow
+            label="Employees"
+            value={formatNumber(
+              result.employees,
               0,
             )}
-            /100
-          </strong>
+          />
 
-          <span>
-            {result.fundamentalLabel ||
-              "Score unavailable"}
-          </span>
+          <DetailRow
+            label="Earnings growth"
+            value={formatPercentage(
+              result.earningsGrowth,
+            )}
+          />
         </div>
+      </section>
 
-        <p>
-          This score combines the
-          available Yahoo Finance
-          metrics with AI-assisted
-          research. Missing values
-          are displayed as N/A and
-          are not estimated.
-        </p>
-      </article>
+      {result.businessSummary && (
+        <section
+          style={{
+            padding: 17,
+            borderRadius: 14,
+            border:
+              `1px solid ${COLORS.border}`,
+            background: COLORS.card,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+              marginBottom: 10,
+              color: COLORS.white,
+            }}
+          >
+            <BookOpen size={18} />
 
-      <p className="exa-fundamental-disclaimer">
-        Fundamental metrics are for
-        educational research and are
-        not personalized investment
-        advice.
-      </p>
-    </section>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 15,
+              }}
+            >
+              Business overview
+            </h3>
+          </div>
+
+          <p
+            style={{
+              margin: 0,
+              color: COLORS.text,
+              fontSize: 13,
+              lineHeight: 1.7,
+            }}
+          >
+            {result.businessSummary}
+          </p>
+        </section>
+      )}
+
+      <div
+        style={{
+          padding: "13px 15px",
+          color: COLORS.muted,
+          background:
+            "rgba(47, 128, 237, 0.06)",
+          border:
+            "1px solid rgba(47, 128, 237, 0.18)",
+          borderRadius: 12,
+          fontSize: 11,
+          lineHeight: 1.65,
+        }}
+      >
+        Fundamental figures are supplied by Yahoo Finance and may
+        reflect different reporting periods. They are provided for
+        educational research and not personalised investment advice.
+      </div>
+    </div>
   );
 }

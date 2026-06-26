@@ -1,5 +1,9 @@
 import yahooFinance from "./_lib/yahooFinance.js";
 
+import withRetry, {
+  isRetryableError,
+} from "./_lib/withRetry.js";
+
 const VALID_RANGES = new Set([
   "1d",
   "1w",
@@ -11,7 +15,8 @@ const VALID_RANGES = new Set([
 
 function daysAgo(days) {
   return new Date(
-    Date.now() - days * 24 * 60 * 60 * 1000,
+    Date.now() -
+      days * 24 * 60 * 60 * 1000,
   );
 }
 
@@ -26,7 +31,7 @@ function getChartOptions(range = "1y") {
     },
 
     "1w": {
-      period1: daysAgo(10),
+      period1: daysAgo(14),
       period2: now,
       interval: "30m",
     },
@@ -44,13 +49,17 @@ function getChartOptions(range = "1y") {
     },
 
     "5y": {
-      period1: daysAgo(365 * 5 + 15),
+      period1: daysAgo(
+        365 * 5 + 15,
+      ),
       period2: now,
       interval: "1wk",
     },
 
     max: {
-      period1: new Date("1980-01-01"),
+      period1: new Date(
+        "1980-01-01T00:00:00.000Z",
+      ),
       period2: now,
       interval: "1mo",
     },
@@ -61,31 +70,59 @@ function getChartOptions(range = "1y") {
 
 function getTradingDate(value) {
   try {
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Kolkata",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date(value));
+    const date = new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime(),
+      )
+    ) {
+      return "";
+    }
+
+    return new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      },
+    ).format(date);
   } catch {
     return "";
   }
 }
 
-function getQueryValue(req, key) {
-  const directValue = req.query?.[key];
+function getQueryValue(
+  request,
+  key,
+) {
+  const directValue =
+    request.query?.[key];
 
-  if (directValue !== undefined) {
+  if (
+    Array.isArray(directValue)
+  ) {
+    return directValue[0];
+  }
+
+  if (
+    directValue !== undefined &&
+    directValue !== null
+  ) {
     return directValue;
   }
 
   try {
     const requestUrl = new URL(
-      req.url,
+      request.url,
       "http://localhost",
     );
 
-    return requestUrl.searchParams.get(key);
+    return requestUrl.searchParams.get(
+      key,
+    );
   } catch {
     return null;
   }
@@ -105,11 +142,29 @@ function unwrapValue(value) {
 
 function numberOrNull(...values) {
   for (const value of values) {
+    const unwrappedValue =
+      unwrapValue(value);
+
+    /*
+     * Important:
+     * Number(null) returns 0.
+     * Null and empty values must be skipped.
+     */
+    if (
+      unwrappedValue === null ||
+      unwrappedValue === undefined ||
+      unwrappedValue === ""
+    ) {
+      continue;
+    }
+
     const number = Number(
-      unwrapValue(value),
+      unwrappedValue,
     );
 
-    if (Number.isFinite(number)) {
+    if (
+      Number.isFinite(number)
+    ) {
       return number;
     }
   }
@@ -117,42 +172,141 @@ function numberOrNull(...values) {
   return null;
 }
 
-export default async function handler(req, res) {
+function normalizeDate(value) {
+  if (!value) {
+    return new Date().toISOString();
+  }
+
+  const date =
+    value instanceof Date
+      ? value
+      : new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime(),
+    )
+  ) {
+    return new Date().toISOString();
+  }
+
+  return date.toISOString();
+}
+
+async function fetchQuote(symbol) {
+  return withRetry(
+    () =>
+      yahooFinance.quote(
+        symbol,
+      ),
+    {
+      attempts: 3,
+      delayMs: 700,
+      label: `Quote ${symbol}`,
+    },
+  );
+}
+
+async function fetchSummary(symbol) {
+  return withRetry(
+    () =>
+      yahooFinance.quoteSummary(
+        symbol,
+        {
+          modules: [
+            "assetProfile",
+            "financialData",
+            "defaultKeyStatistics",
+            "summaryDetail",
+          ],
+        },
+      ),
+    {
+      attempts: 2,
+      delayMs: 800,
+      label:
+        `Fundamentals ${symbol}`,
+    },
+  );
+}
+
+async function fetchChart(
+  symbol,
+  range,
+) {
+  return withRetry(
+    () =>
+      yahooFinance.chart(
+        symbol,
+        getChartOptions(range),
+      ),
+    {
+      attempts: 2,
+      delayMs: 800,
+      label:
+        `Chart ${symbol}`,
+    },
+  );
+}
+
+export default async function handler(
+  req,
+  res,
+) {
   if (req.method !== "GET") {
-    res.setHeader("Allow", "GET");
+    res.setHeader(
+      "Allow",
+      "GET",
+    );
 
     return res.status(405).json({
       error: {
-        code: "METHOD_NOT_ALLOWED",
-        message: "Only GET requests are allowed.",
+        code:
+          "METHOD_NOT_ALLOWED",
+        message:
+          "Only GET requests are allowed.",
       },
     });
   }
 
   try {
     const symbol = String(
-      getQueryValue(req, "symbol") || "",
+      getQueryValue(
+        req,
+        "symbol",
+      ) || "",
     )
       .trim()
       .toUpperCase();
 
-    const requestedRange = String(
-      getQueryValue(req, "range") || "1y",
-    ).toLowerCase();
+    const requestedRange =
+      String(
+        getQueryValue(
+          req,
+          "range",
+        ) || "1y",
+      ).toLowerCase();
 
     if (!symbol) {
       return res.status(400).json({
         error: {
-          code: "SYMBOL_REQUIRED",
-          message: "Stock symbol is required.",
+          code:
+            "SYMBOL_REQUIRED",
+          message:
+            "Stock symbol is required.",
         },
       });
     }
 
-    if (!VALID_RANGES.has(requestedRange)) {
+    if (
+      !VALID_RANGES.has(
+        requestedRange,
+      )
+    ) {
       return res.status(400).json({
         error: {
-          code: "INVALID_RANGE",
+          code:
+            "INVALID_RANGE",
           message:
             "Use one of these ranges: 1d, 1w, 1m, 1y, 5y or max.",
         },
@@ -164,15 +318,16 @@ export default async function handler(req, res) {
     );
 
     /*
-     * The quote is required.
-     * If this fails, there is no usable stock result.
+     * Quote is mandatory.
      */
-    const quote = await yahooFinance.quote(symbol);
+    const quote =
+      await fetchQuote(symbol);
 
     if (!quote?.symbol) {
       return res.status(404).json({
         error: {
-          code: "STOCK_NOT_FOUND",
+          code:
+            "STOCK_NOT_FOUND",
           message:
             "Yahoo Finance could not find this stock symbol.",
         },
@@ -180,116 +335,161 @@ export default async function handler(req, res) {
     }
 
     /*
-     * Profile and chart are optional.
-     * Their failure should not hide the current quote.
+     * Fundamentals and chart are optional.
+     * A failure in either request must not
+     * remove the current quote.
      */
-    const [summaryResult, chartResult] =
-  await Promise.allSettled([
-    yahooFinance.quoteSummary(symbol, {
-      modules: [
-        "assetProfile",
-        "financialData",
-        "defaultKeyStatistics",
-        "summaryDetail",
-      ],
-    }),
+    const [
+      summaryResult,
+      chartResult,
+    ] =
+      await Promise.allSettled([
+        fetchSummary(symbol),
+        fetchChart(
+          symbol,
+          requestedRange,
+        ),
+      ]);
 
-    yahooFinance.chart(
-      symbol,
-      getChartOptions(requestedRange),
-    ),
-  ]);
+    const summary =
+      summaryResult.status ===
+      "fulfilled"
+        ? summaryResult.value || {}
+        : {};
 
-const summary =
-  summaryResult.status === "fulfilled"
-    ? summaryResult.value || {}
-    : {};
+    const profile =
+      summary.assetProfile || {};
 
-const profile =
-  summary.assetProfile || {};
+    const financialData =
+      summary.financialData || {};
 
-const financialData =
-  summary.financialData || {};
+    const keyStatistics =
+      summary
+        .defaultKeyStatistics ||
+      {};
 
-const keyStatistics =
-  summary.defaultKeyStatistics || {};
+    const summaryDetail =
+      summary.summaryDetail || {};
 
-const summaryDetail =
-  summary.summaryDetail || {};
-
-if (summaryResult.status === "rejected") {
-  console.error(
-    "Yahoo fundamentals request failed:",
-    summaryResult.reason,
-  );
-}
+    if (
+      summaryResult.status ===
+      "rejected"
+    ) {
+      console.warn(
+        "Yahoo fundamentals request failed:",
+        summaryResult.reason,
+      );
+    }
 
     let chart = [];
 
-    if (chartResult.status === "fulfilled") {
-      const rawQuotes = Array.isArray(
-        chartResult.value?.quotes,
-      )
-        ? chartResult.value.quotes
-        : [];
+    if (
+      chartResult.status ===
+      "fulfilled"
+    ) {
+      const returnedChart =
+        chartResult.value;
+
+      const rawQuotes =
+        Array.isArray(
+          returnedChart,
+        )
+          ? returnedChart
+          : Array.isArray(
+                returnedChart?.quotes,
+              )
+            ? returnedChart.quotes
+            : [];
 
       chart = rawQuotes
         .filter((item) => {
           return (
             item?.date &&
             item?.close !== null &&
-            item?.close !== undefined &&
-            Number.isFinite(Number(item.close))
+            item?.close !==
+              undefined &&
+            Number.isFinite(
+              Number(item.close),
+            )
           );
         })
         .map((item) => ({
-          date: item.date,
-          open: item.open ?? null,
-          high: item.high ?? null,
-          low: item.low ?? null,
-          close: item.close ?? null,
-          volume: item.volume ?? null,
+          date:
+            normalizeDate(
+              item.date,
+            ),
+
+          open:
+            numberOrNull(
+              item.open,
+            ),
+
+          high:
+            numberOrNull(
+              item.high,
+            ),
+
+          low:
+            numberOrNull(
+              item.low,
+            ),
+
+          close:
+            numberOrNull(
+              item.close,
+            ),
+
+          volume:
+            numberOrNull(
+              item.volume,
+            ),
         }));
     } else {
-      console.error(
+      console.warn(
         "Yahoo chart request failed:",
         chartResult.reason,
       );
     }
 
     /*
-     * For 1D, Yahoo may include multiple recent sessions.
-     * Keep only the latest trading session.
+     * Yahoo can include multiple recent
+     * sessions in the 1D result.
      */
     if (
       requestedRange === "1d" &&
       chart.length > 0
     ) {
-      const latestDate = getTradingDate(
-        chart[chart.length - 1].date,
-      );
+      const latestDate =
+        getTradingDate(
+          chart[
+            chart.length - 1
+          ].date,
+        );
 
       chart = chart.filter(
         (item) =>
-          getTradingDate(item.date) === latestDate,
+          getTradingDate(
+            item.date,
+          ) === latestDate,
       );
     }
 
-    /*
-     * Return the stock object directly.
-     *
-     * Do not wrap this as:
-     * { stockData: ... }
-     * { data: ... }
-     *
-     * Analyze.jsx expects response.symbol directly.
-     */
-    return res.status(200).json({
-      symbol: quote.symbol,
+    const responseData = {
+      success: true,
+
+      symbol:
+        quote.symbol,
 
       name:
         quote.longName ||
         quote.shortName ||
+        quote.displayName ||
+        quote.symbol,
+
+      company:
+        quote.longName ||
+        quote.shortName ||
+        quote.displayName ||
         quote.symbol,
 
       exchange:
@@ -297,163 +497,278 @@ if (summaryResult.status === "rejected") {
         quote.exchange ||
         null,
 
-      currency: quote.currency || "INR",
+      currency:
+        quote.currency ||
+        "INR",
 
       marketState:
-        quote.marketState || null,
+        quote.marketState ||
+        null,
 
       price:
-        quote.regularMarketPrice ?? null,
+        numberOrNull(
+          quote.regularMarketPrice,
+        ),
 
       previousClose:
-        quote.regularMarketPreviousClose ?? null,
+        numberOrNull(
+          quote
+            .regularMarketPreviousClose,
+        ),
 
       change:
-        quote.regularMarketChange ?? null,
+        numberOrNull(
+          quote
+            .regularMarketChange,
+        ),
+
+      changeAbs:
+        numberOrNull(
+          quote
+            .regularMarketChange,
+        ),
 
       changePercent:
-        quote.regularMarketChangePercent ?? null,
+        numberOrNull(
+          quote
+            .regularMarketChangePercent,
+        ),
 
       open:
-        quote.regularMarketOpen ?? null,
+        numberOrNull(
+          quote
+            .regularMarketOpen,
+        ),
 
       dayHigh:
-        quote.regularMarketDayHigh ?? null,
+        numberOrNull(
+          quote
+            .regularMarketDayHigh,
+        ),
 
       dayLow:
-        quote.regularMarketDayLow ?? null,
+        numberOrNull(
+          quote
+            .regularMarketDayLow,
+        ),
 
       marketCap:
-        quote.marketCap ?? null,
+        numberOrNull(
+          quote.marketCap,
+        ),
 
       peRatioTTM:
-        quote.trailingPE ?? null,
+        numberOrNull(
+          quote.trailingPE,
+          summaryDetail.trailingPE,
+        ),
+
+      peRatio:
+        numberOrNull(
+          quote.trailingPE,
+          summaryDetail.trailingPE,
+        ),
 
       forwardPE:
-        quote.forwardPE ?? null,
+        numberOrNull(
+          quote.forwardPE,
+          financialData.forwardPE,
+          summaryDetail.forwardPE,
+        ),
 
       fiftyTwoWeekLow:
-        quote.fiftyTwoWeekLow ?? null,
+        numberOrNull(
+          quote.fiftyTwoWeekLow,
+          summaryDetail
+            .fiftyTwoWeekLow,
+        ),
 
       fiftyTwoWeekHigh:
-        quote.fiftyTwoWeekHigh ?? null,
+        numberOrNull(
+          quote.fiftyTwoWeekHigh,
+          summaryDetail
+            .fiftyTwoWeekHigh,
+        ),
+
+      week52Low:
+        numberOrNull(
+          quote.fiftyTwoWeekLow,
+          summaryDetail
+            .fiftyTwoWeekLow,
+        ),
+
+      week52High:
+        numberOrNull(
+          quote.fiftyTwoWeekHigh,
+          summaryDetail
+            .fiftyTwoWeekHigh,
+        ),
 
       volume:
-        quote.regularMarketVolume ??
-        quote.volume ??
-        null,
+        numberOrNull(
+          quote
+            .regularMarketVolume,
+          quote.volume,
+        ),
 
       averageVolume:
-        quote.averageDailyVolume3Month ??
-        null,
+        numberOrNull(
+          quote
+            .averageDailyVolume3Month,
+          summaryDetail
+            .averageVolume,
+        ),
 
       sector:
-        profile.sector || null,
+        profile.sector ||
+        null,
 
       industry:
-        profile.industry || null,
+        profile.industry ||
+        null,
 
       businessSummary:
-        profile.longBusinessSummary || null,
+        profile
+          .longBusinessSummary ||
+        null,
 
       website:
-        profile.website || null,
+        profile.website ||
+        null,
 
       employees:
-        profile.fullTimeEmployees ?? null,
-        enterpriseValue:
-  numberOrNull(
-    keyStatistics.enterpriseValue,
-  ),
+        numberOrNull(
+          profile
+            .fullTimeEmployees,
+        ),
 
-priceToBook:
-  numberOrNull(
-    keyStatistics.priceToBook,
-  ),
+      enterpriseValue:
+        numberOrNull(
+          keyStatistics
+            .enterpriseValue,
+          financialData
+            .enterpriseValue,
+        ),
 
-pegRatio:
-  numberOrNull(
-    keyStatistics.pegRatio,
-  ),
+      priceToBook:
+        numberOrNull(
+          keyStatistics
+            .priceToBook,
+        ),
 
-trailingEps:
-  numberOrNull(
-    keyStatistics.trailingEps,
-    quote.epsTrailingTwelveMonths,
-  ),
+      pegRatio:
+        numberOrNull(
+          keyStatistics.pegRatio,
+          keyStatistics
+            .trailingPegRatio,
+        ),
 
-forwardEps:
-  numberOrNull(
-    keyStatistics.forwardEps,
-    quote.epsForward,
-  ),
+      trailingEps:
+        numberOrNull(
+          keyStatistics
+            .trailingEps,
+          quote
+            .epsTrailingTwelveMonths,
+        ),
 
-totalRevenue:
-  numberOrNull(
-    financialData.totalRevenue,
-  ),
+      forwardEps:
+        numberOrNull(
+          keyStatistics
+            .forwardEps,
+          quote.epsForward,
+        ),
 
-revenueGrowth:
-  numberOrNull(
-    financialData.revenueGrowth,
-  ),
+      totalRevenue:
+        numberOrNull(
+          financialData
+            .totalRevenue,
+        ),
 
-earningsGrowth:
-  numberOrNull(
-    financialData.earningsGrowth,
-  ),
+      revenueGrowth:
+        numberOrNull(
+          financialData
+            .revenueGrowth,
+        ),
 
-profitMargins:
-  numberOrNull(
-    financialData.profitMargins,
-    keyStatistics.profitMargins,
-  ),
+      earningsGrowth:
+        numberOrNull(
+          financialData
+            .earningsGrowth,
+        ),
 
-returnOnEquity:
-  numberOrNull(
-    financialData.returnOnEquity,
-  ),
+      profitMargins:
+        numberOrNull(
+          financialData
+            .profitMargins,
+          keyStatistics
+            .profitMargins,
+        ),
 
-totalCash:
-  numberOrNull(
-    financialData.totalCash,
-  ),
+      returnOnEquity:
+        numberOrNull(
+          financialData
+            .returnOnEquity,
+        ),
 
-totalDebt:
-  numberOrNull(
-    financialData.totalDebt,
-  ),
+      totalCash:
+        numberOrNull(
+          financialData
+            .totalCash,
+        ),
 
-debtToEquity:
-  numberOrNull(
-    financialData.debtToEquity,
-  ),
+      totalDebt:
+        numberOrNull(
+          financialData
+            .totalDebt,
+        ),
 
-currentRatio:
-  numberOrNull(
-    financialData.currentRatio,
-  ),
+      debtToEquity:
+        numberOrNull(
+          financialData
+            .debtToEquity,
+        ),
 
-freeCashflow:
-  numberOrNull(
-    financialData.freeCashflow,
-  ),
+      currentRatio:
+        numberOrNull(
+          financialData
+            .currentRatio,
+        ),
 
-dividendYield:
-  numberOrNull(
-    summaryDetail.dividendYield,
-  ),
+      freeCashflow:
+        numberOrNull(
+          financialData
+            .freeCashflow,
+        ),
 
-      source: "Yahoo Finance",
+      dividendYield:
+        numberOrNull(
+          summaryDetail
+            .dividendYield,
+        ),
+
+      source:
+        "Yahoo Finance via yahoo-finance2",
 
       lastUpdated:
-        quote.regularMarketTime ||
-        new Date().toISOString(),
+        normalizeDate(
+          quote
+            .regularMarketTime,
+        ),
 
-      range: requestedRange,
+      range:
+        requestedRange,
 
       chart,
-    });
+    };
+
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=30, stale-while-revalidate=60",
+    );
+
+    return res
+      .status(200)
+      .json(responseData);
   } catch (error) {
     console.error(
       "Yahoo Finance stock-data function failed:",
@@ -463,24 +778,57 @@ dividendYield:
     const message =
       error instanceof Error
         ? error.message
-        : "Unable to retrieve stock data.";
+        : String(
+            error ||
+              "Unable to retrieve stock data.",
+          );
+
+    const normalizedMessage =
+      message.toLowerCase();
 
     const isNotFound =
-      message.toLowerCase().includes("not found") ||
-      message.toLowerCase().includes("no fundamentals");
+      normalizedMessage.includes(
+        "not found",
+      ) ||
+      normalizedMessage.includes(
+        "no fundamentals",
+      ) ||
+      normalizedMessage.includes(
+        "no data found",
+      );
+
+    const temporaryFailure =
+      isRetryableError(error);
+
+    const statusCode =
+      isNotFound
+        ? 404
+        : temporaryFailure
+          ? 503
+          : 500;
 
     return res
-      .status(isNotFound ? 404 : 500)
+      .status(statusCode)
       .json({
         error: {
           code: isNotFound
             ? "STOCK_NOT_FOUND"
-            : "STOCK_DATA_FAILED",
+            : temporaryFailure
+              ? "YAHOO_TEMPORARILY_UNAVAILABLE"
+              : "STOCK_DATA_FAILED",
 
           message: isNotFound
             ? "The requested stock symbol was not found."
-            : message,
+            : temporaryFailure
+              ? "Yahoo Finance is temporarily unavailable. Please retry shortly."
+              : "Unable to retrieve stock data.",
         },
+
+        details:
+          process.env.NODE_ENV !==
+          "production"
+            ? message
+            : undefined,
       });
   }
 }

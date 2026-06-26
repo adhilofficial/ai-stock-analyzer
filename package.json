@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:stock-master": "node scripts/build-indian-stock-master.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "Server": "node server.cjs"

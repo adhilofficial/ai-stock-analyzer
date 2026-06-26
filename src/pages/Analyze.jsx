@@ -27,8 +27,9 @@ import {
 import ScoreGauge from "../components/ScoreGauge";
 import AppShell from "../components/layout/AppShell";
 import PremiumAiResearchPanel from "../components/analyze/PremiumAiResearchPanel";
-import StockNewsPanel from "../components/analyze/StockNewsPanel";
+import TechnicalsTab from "../components/analyze/TechnicalsTab";
 import FundamentalsTab from "../components/analyze/FundamentalsTab";
+import StockNewsPanel from "../components/analyze/StockNewsPanel";
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
 import "../styles/analyze-v2.css";
@@ -40,13 +41,115 @@ import {
 } from "../services/financeApi";
 import { saveRecentAnalysis } from "../utils/dashboardStorage";
 
-const SAMPLES = [
-  "Reliance Industries",
-  "HDFC Bank",
-  "Infosys",
-  "Tata Motors",
-  "Wipro",
-  "Asian Paints",
+const POPULAR_STOCKS = [
+  {
+    symbol: "RELIANCE.NS",
+    name: "Reliance Industries Limited",
+    exchange: "NSE",
+    quoteType: "EQUITY",
+    currency: "INR",
+    logoDomain: "ril.com",
+    companyUrl: "https://www.ril.com",
+    nseUrl:
+      "https://www.nseindia.com/get-quotes/equity?symbol=RELIANCE",
+    bseUrl:
+      "https://www.bseindia.com/stock-share-price/equity/scripcode/500325",
+  },
+  {
+    symbol: "HDFCBANK.NS",
+    name: "HDFC Bank Limited",
+    exchange: "NSE",
+    quoteType: "EQUITY",
+    currency: "INR",
+    logoDomain: "hdfcbank.com",
+    companyUrl:
+      "https://www.hdfcbank.com",
+    nseUrl:
+      "https://www.nseindia.com/get-quotes/equity?symbol=HDFCBANK",
+    bseUrl:
+      "https://www.bseindia.com/stock-share-price/equity/scripcode/500180",
+  },
+  {
+    symbol: "INFY.NS",
+    name: "Infosys Limited",
+    exchange: "NSE",
+    quoteType: "EQUITY",
+    currency: "INR",
+    logoDomain: "infosys.com",
+    companyUrl:
+      "https://www.infosys.com",
+    nseUrl:
+      "https://www.nseindia.com/get-quotes/equity?symbol=INFY",
+    bseUrl:
+      "https://www.bseindia.com/stock-share-price/equity/scripcode/500209",
+  },
+  {
+    symbol: "TCS.NS",
+    name: "Tata Consultancy Services Limited",
+    exchange: "NSE",
+    quoteType: "EQUITY",
+    currency: "INR",
+    logoDomain: "tcs.com",
+    companyUrl: "https://www.tcs.com",
+    nseUrl:
+      "https://www.nseindia.com/get-quotes/equity?symbol=TCS",
+    bseUrl:
+      "https://www.bseindia.com/stock-share-price/equity/scripcode/532540",
+  },
+  {
+    symbol: "TATAMOTORS.NS",
+    name: "Tata Motors Limited",
+    exchange: "NSE",
+    quoteType: "EQUITY",
+    currency: "INR",
+    logoDomain: "tatamotors.com",
+    companyUrl:
+      "https://www.tatamotors.com",
+    nseUrl:
+      "https://www.nseindia.com/get-quotes/equity?symbol=TATAMOTORS",
+    bseUrl:
+      "https://www.bseindia.com/stock-share-price/equity/scripcode/500570",
+  },
+  {
+    symbol: "ICICIBANK.NS",
+    name: "ICICI Bank Limited",
+    exchange: "NSE",
+    quoteType: "EQUITY",
+    currency: "INR",
+    logoDomain: "icicibank.com",
+    companyUrl:
+      "https://www.icicibank.com",
+    nseUrl:
+      "https://www.nseindia.com/get-quotes/equity?symbol=ICICIBANK",
+    bseUrl:
+      "https://www.bseindia.com/stock-share-price/equity/scripcode/532174",
+  },
+  {
+    symbol: "BHARTIARTL.NS",
+    name: "Bharti Airtel Limited",
+    exchange: "NSE",
+    quoteType: "EQUITY",
+    currency: "INR",
+    logoDomain: "airtel.in",
+    companyUrl: "https://www.airtel.in",
+    nseUrl:
+      "https://www.nseindia.com/get-quotes/equity?symbol=BHARTIARTL",
+    bseUrl:
+      "https://www.bseindia.com/stock-share-price/equity/scripcode/532454",
+  },
+  {
+    symbol: "SBIN.NS",
+    name: "State Bank of India",
+    exchange: "NSE",
+    quoteType: "EQUITY",
+    currency: "INR",
+    logoDomain: "sbi.co.in",
+    companyUrl: "https://sbi.co.in",
+    nseUrl:
+      "https://www.nseindia.com/get-quotes/equity?symbol=SBIN",
+    bseUrl:
+      "https://www.bseindia.com/stock-share-price/equity/scripcode/500112",
+  },
 ];
 
 const TIMEFRAMES = ["1D", "1W", "1M", "1Y", "5Y", "MAX"];
@@ -199,7 +302,7 @@ const ANALYZE_LAYOUT_STYLES = `
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     display: flex;
     align-items: center;
-    overflow: hidden;
+    overflow: visible;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
   }
@@ -614,280 +717,291 @@ function createLiveResult(
   stockData,
   selectedStock,
 ) {
+  const fundamentals = {
+    enterpriseValue:
+      stockData.enterpriseValue ?? null,
+    forwardPE:
+      stockData.forwardPE ?? null,
+    priceToBook:
+      stockData.priceToBook ?? null,
+    pegRatio:
+      stockData.pegRatio ?? null,
+    trailingEps:
+      stockData.trailingEps ?? null,
+    forwardEps:
+      stockData.forwardEps ?? null,
+    totalRevenue:
+      stockData.totalRevenue ?? null,
+    revenueGrowth:
+      stockData.revenueGrowth ?? null,
+    earningsGrowth:
+      stockData.earningsGrowth ?? null,
+    profitMargins:
+      stockData.profitMargins ?? null,
+    returnOnEquity:
+      stockData.returnOnEquity ?? null,
+    totalCash:
+      stockData.totalCash ?? null,
+    totalDebt:
+      stockData.totalDebt ?? null,
+    debtToEquity:
+      stockData.debtToEquity ?? null,
+    currentRatio:
+      stockData.currentRatio ?? null,
+    freeCashflow:
+      stockData.freeCashflow ?? null,
+    dividendYield:
+      stockData.dividendYield ?? null,
+  };
+
   return {
     symbol: stockData.symbol,
-
     ticker: stockData.symbol,
-
     company:
       stockData.name ||
       selectedStock?.name ||
       stockData.symbol,
-
     exchange:
       stockData.exchange ||
+      selectedStock?.exchange ||
       "N/A",
-
     currency:
       stockData.currency ||
+      selectedStock?.currency ||
       "INR",
-
     marketState:
-      stockData.marketState ||
-      null,
-
+      stockData.marketState || null,
     sector:
-      stockData.sector ||
-      "N/A",
-
+      stockData.sector || "N/A",
     industry:
-      stockData.industry ||
-      "N/A",
-
+      stockData.industry || "N/A",
     businessSummary:
-      stockData.businessSummary ||
-      "",
-
+      stockData.businessSummary || "",
     website:
       stockData.website ||
+      selectedStock?.website ||
       "",
-
     employees:
-      stockData.employees ??
-      null,
-
+      stockData.employees ?? null,
     price:
-      stockData.price ??
-      null,
-
+      stockData.price ?? null,
     changeAbs:
-      stockData.change ??
-      0,
-
+      stockData.change ?? 0,
     changePercent:
-      stockData.changePercent ??
-      0,
-
+      stockData.changePercent ?? 0,
     marketCap:
-      stockData.marketCap ??
-      null,
-
+      stockData.marketCap ?? null,
     peRatio:
-      stockData.peRatioTTM ??
-      null,
-
+      stockData.peRatioTTM ?? null,
     week52Low:
-      stockData.fiftyTwoWeekLow ??
-      null,
-
+      stockData.fiftyTwoWeekLow ?? null,
     week52High:
-      stockData.fiftyTwoWeekHigh ??
-      null,
-
+      stockData.fiftyTwoWeekHigh ?? null,
     volume:
-      stockData.volume ??
-      null,
+      stockData.volume ?? null,
 
-    fundamentals: {
-      enterpriseValue:
-        stockData.enterpriseValue ??
-        null,
-
-      forwardPE:
-        stockData.forwardPE ??
-        null,
-
-      priceToBook:
-        stockData.priceToBook ??
-        null,
-
-      pegRatio:
-        stockData.pegRatio ??
-        null,
-
-      trailingEps:
-        stockData.trailingEps ??
-        null,
-
-      forwardEps:
-        stockData.forwardEps ??
-        null,
-
-      totalRevenue:
-        stockData.totalRevenue ??
-        null,
-
-      revenueGrowth:
-        stockData.revenueGrowth ??
-        null,
-
-      earningsGrowth:
-        stockData.earningsGrowth ??
-        null,
-
-      profitMargins:
-        stockData.profitMargins ??
-        null,
-
-      returnOnEquity:
-        stockData.returnOnEquity ??
-        null,
-
-      totalCash:
-        stockData.totalCash ??
-        null,
-
-      totalDebt:
-        stockData.totalDebt ??
-        null,
-
-      debtToEquity:
-        stockData.debtToEquity ??
-        null,
-
-      currentRatio:
-        stockData.currentRatio ??
-        null,
-
-      freeCashflow:
-        stockData.freeCashflow ??
-        null,
-
-      dividendYield:
-        stockData.dividendYield ??
-        null,
-    },
+    forwardPE:
+      fundamentals.forwardPE,
+    enterpriseValue:
+      fundamentals.enterpriseValue,
+    priceToBook:
+      fundamentals.priceToBook,
+    pegRatio:
+      fundamentals.pegRatio,
+    trailingEps:
+      fundamentals.trailingEps,
+    forwardEps:
+      fundamentals.forwardEps,
+    totalRevenue:
+      fundamentals.totalRevenue,
+    revenueGrowth:
+      fundamentals.revenueGrowth,
+    earningsGrowth:
+      fundamentals.earningsGrowth,
+    profitMargins:
+      fundamentals.profitMargins,
+    returnOnEquity:
+      fundamentals.returnOnEquity,
+    totalCash:
+      fundamentals.totalCash,
+    totalDebt:
+      fundamentals.totalDebt,
+    debtToEquity:
+      fundamentals.debtToEquity,
+    currentRatio:
+      fundamentals.currentRatio,
+    freeCashflow:
+      fundamentals.freeCashflow,
+    dividendYield:
+      fundamentals.dividendYield,
+    fundamentals,
 
     chart:
-      Array.isArray(
-        stockData.chart,
-      )
+      Array.isArray(stockData.chart)
         ? stockData.chart
         : [],
-
     source:
       stockData.source ||
       "Yahoo Finance",
-
     lastUpdated:
-      stockData.lastUpdated ||
-      null,
-
+      stockData.lastUpdated || null,
     logoDomain:
       stockData.logoDomain ||
+      selectedStock?.logoDomain ||
       getCompanyDomain(
-        stockData.website,
+        stockData.website ||
+          selectedStock?.website,
       ),
 
     signal: "WATCH",
-
     summary: "",
-
     keyThemes: [],
-
     growthDrivers: [],
-
     keyRisks: [],
-
     confidenceScore: 0,
-
     riskLevel: "Moderate",
-
     fundamentalScore: 0,
-
     fundamentalLabel:
       "AI unavailable",
-
     momentumScore: 0,
-
     momentumLabel:
       "AI unavailable",
-
     valuationScore: 0,
-
     valuationLabel:
       "AI unavailable",
-
     sentimentScore: 0,
-
     sentimentLabel:
       "AI unavailable",
-
     aiAvailable: false,
-
     aiSummaryCached: false,
   };
 }
 
-function mergeAiAnalysis(liveResult, aiAnalysis) {
-  const strength = Number(aiAnalysis?.strength);
+function mergeAiAnalysis(
+  liveResult,
+  aiAnalysis,
+) {
+  const strength = Number(
+    aiAnalysis?.strength,
+  );
 
   const confidenceScore =
     aiAnalysis?.confidenceScore ??
     (Number.isFinite(strength)
-      ? Math.min(100, Math.max(0, strength * 10))
+      ? Math.min(
+          100,
+          Math.max(0, strength * 10),
+        )
       : liveResult.confidenceScore);
 
   return {
     ...liveResult,
     ...aiAnalysis,
-    exchange:
-  liveResult.exchange,
 
-currency:
-  liveResult.currency,
-
-marketState:
-  liveResult.marketState,
-
-businessSummary:
-  liveResult.businessSummary,
-
-website:
-  liveResult.website,
-
-employees:
-  liveResult.employees,
-
-fundamentals:
-  liveResult.fundamentals,
+    // Live Yahoo Finance values remain the source of truth.
     symbol: liveResult.symbol,
-    ticker: aiAnalysis?.ticker || liveResult.ticker,
-    company: aiAnalysis?.company || liveResult.company,
-    sector: aiAnalysis?.sector || liveResult.sector,
-    industry: aiAnalysis?.industry || liveResult.industry,
+    ticker:
+      aiAnalysis?.ticker ||
+      liveResult.ticker,
+    company:
+      aiAnalysis?.company ||
+      liveResult.company,
+    exchange: liveResult.exchange,
+    currency: liveResult.currency,
+    marketState:
+      liveResult.marketState,
+    sector:
+      aiAnalysis?.sector ||
+      liveResult.sector,
+    industry:
+      aiAnalysis?.industry ||
+      liveResult.industry,
+    businessSummary:
+      liveResult.businessSummary,
+    website: liveResult.website,
+    employees: liveResult.employees,
     price: liveResult.price,
     changeAbs: liveResult.changeAbs,
-    changePercent: liveResult.changePercent,
+    changePercent:
+      liveResult.changePercent,
     marketCap: liveResult.marketCap,
     peRatio: liveResult.peRatio,
     week52Low: liveResult.week52Low,
-    week52High: liveResult.week52High,
+    week52High:
+      liveResult.week52High,
     volume: liveResult.volume,
+
+    forwardPE: liveResult.forwardPE,
+    enterpriseValue:
+      liveResult.enterpriseValue,
+    priceToBook:
+      liveResult.priceToBook,
+    pegRatio: liveResult.pegRatio,
+    trailingEps:
+      liveResult.trailingEps,
+    forwardEps: liveResult.forwardEps,
+    totalRevenue:
+      liveResult.totalRevenue,
+    revenueGrowth:
+      liveResult.revenueGrowth,
+    earningsGrowth:
+      liveResult.earningsGrowth,
+    profitMargins:
+      liveResult.profitMargins,
+    returnOnEquity:
+      liveResult.returnOnEquity,
+    totalCash: liveResult.totalCash,
+    totalDebt: liveResult.totalDebt,
+    debtToEquity:
+      liveResult.debtToEquity,
+    currentRatio:
+      liveResult.currentRatio,
+    freeCashflow:
+      liveResult.freeCashflow,
+    dividendYield:
+      liveResult.dividendYield,
+    fundamentals:
+      liveResult.fundamentals,
+
     chart: liveResult.chart,
     source: liveResult.source,
-    lastUpdated: liveResult.lastUpdated,
+    lastUpdated:
+      liveResult.lastUpdated,
     logoDomain:
       aiAnalysis?.logoDomain ||
       liveResult.logoDomain,
     signal: String(
-      aiAnalysis?.signal || "NEUTRAL",
+      aiAnalysis?.signal ||
+        "NEUTRAL",
     ).toUpperCase(),
-
-    summary: aiAnalysis?.summary || "",
-    keyThemes: Array.isArray(aiAnalysis?.keyThemes)
-      ? aiAnalysis.keyThemes
-      : [],
-    growthDrivers: Array.isArray(aiAnalysis?.growthDrivers)
-      ? aiAnalysis.growthDrivers
-      : Array.isArray(aiAnalysis?.positives)
-        ? aiAnalysis.positives
+    summary:
+      aiAnalysis?.summary || "",
+    keyThemes:
+      Array.isArray(
+        aiAnalysis?.keyThemes,
+      )
+        ? aiAnalysis.keyThemes
         : [],
-    keyRisks: Array.isArray(aiAnalysis?.keyRisks)
-      ? aiAnalysis.keyRisks
-      : Array.isArray(aiAnalysis?.risks)
-        ? aiAnalysis.risks
-        : [],
+    growthDrivers:
+      Array.isArray(
+        aiAnalysis?.growthDrivers,
+      )
+        ? aiAnalysis.growthDrivers
+        : Array.isArray(
+              aiAnalysis?.positives,
+            )
+          ? aiAnalysis.positives
+          : [],
+    keyRisks:
+      Array.isArray(
+        aiAnalysis?.keyRisks,
+      )
+        ? aiAnalysis.keyRisks
+        : Array.isArray(
+              aiAnalysis?.risks,
+            )
+          ? aiAnalysis.risks
+          : [],
     confidenceScore,
     riskLevel:
       aiAnalysis?.riskLevel ||
@@ -914,7 +1028,9 @@ fundamentals:
       "Not provided",
     aiAvailable: true,
     aiSummaryCached:
-      Boolean(aiAnalysis?.aiSummaryCached),
+      Boolean(
+        aiAnalysis?.aiSummaryCached,
+      ),
   };
 }
 
@@ -968,14 +1084,146 @@ function ScoreCard({ title, score, scoreLabel }) {
   );
 }
 
-function CompanyLogo({ domain, name, size = 52 }) {
-  const [failed, setFailed] = useState(false);
+function formatSuggestionPrice(
+  value,
+  currency = "INR",
+) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "Price unavailable";
+  }
+
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "Price unavailable";
+  }
+
+  try {
+    return new Intl.NumberFormat(
+      "en-IN",
+      {
+        style: "currency",
+        currency:
+          currency || "INR",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    ).format(number);
+  } catch {
+    return number.toFixed(2);
+  }
+}
+
+function formatSuggestionChange(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "";
+  }
+
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "";
+  }
+
+  return `${number >= 0 ? "+" : ""}${number.toFixed(2)}%`;
+}
+
+function matchesSuggestionPrefix(
+  suggestion,
+  searchText,
+) {
+  const normalizedQuery = String(
+    searchText || "",
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!normalizedQuery) {
+    return false;
+  }
+
+  const name = String(
+    suggestion?.name || "",
+  ).toLowerCase();
+
+  const ticker = String(
+    suggestion?.symbol || "",
+  )
+    .replace(/\.(NS|BO)$/i, "")
+    .toLowerCase();
+
+  const nameWords = name.split(
+    /[\s&-]+/,
+  );
+
+  return (
+    ticker.startsWith(
+      normalizedQuery,
+    ) ||
+    name.startsWith(
+      normalizedQuery,
+    ) ||
+    nameWords.some((word) =>
+      word.startsWith(
+        normalizedQuery,
+      ),
+    )
+  );
+}
+
+async function fetchPopularStocks() {
+  const response =
+    await fetch(
+      "/api/stock-search?popular=1",
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      },
+    );
+
+  const data =
+    await response
+      .json()
+      .catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      typeof data?.error === "string"
+        ? data.error
+        : data?.error?.message ||
+          "Unable to load popular stocks.";
+
+    throw new Error(message);
+  }
+
+  return Array.isArray(data)
+    ? data
+    : [];
+}
+
+function CompanyLogo({
+  domain,
+  name,
+  size = 52,
+}) {
+  const [failed, setFailed] =
+    useState(false);
 
   useEffect(() => {
     setFailed(false);
   }, [domain]);
 
-  const logoKey = import.meta.env.VITE_LOGO_KEY;
+  const logoKey =
+    import.meta.env.VITE_LOGO_KEY;
 
   const showImage = Boolean(
     domain &&
@@ -987,11 +1235,11 @@ function CompanyLogo({ domain, name, size = 52 }) {
     <div
       style={{
         width: size,
-
-
         height: size,
         borderRadius: "50%",
-        background: showImage ? "#fff" : "#1e293b",
+        background: showImage
+          ? "#fff"
+          : "#1e293b",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1002,8 +1250,12 @@ function CompanyLogo({ domain, name, size = 52 }) {
       {showImage ? (
         <img
           src={`https://img.logo.dev/${domain}?token=${logoKey}&size=128&format=webp`}
-          alt={name || "Company logo"}
-          onError={() => setFailed(true)}
+          alt={
+            name || "Company logo"
+          }
+          onError={() =>
+            setFailed(true)
+          }
           style={{
             width: "70%",
             height: "70%",
@@ -1018,79 +1270,569 @@ function CompanyLogo({ domain, name, size = 52 }) {
             color: "#93c5fd",
           }}
         >
-          {name?.charAt(0)?.toUpperCase() || "?"}
+          {name
+            ?.charAt(0)
+            ?.toUpperCase() || "?"}
         </span>
       )}
     </div>
   );
 }
 
+function getSuggestionExternalLinks(
+  suggestion,
+) {
+  const symbol = String(
+    suggestion?.symbol || "",
+  ).toUpperCase();
+
+  const baseSymbol =
+    symbol.replace(
+      /\.(NS|BO)$/i,
+      "",
+    );
+
+  const companyUrl =
+    suggestion?.companyUrl ||
+    suggestion?.website ||
+    "";
+
+  const nseUrl =
+    suggestion?.nseUrl ||
+    (
+      symbol.endsWith(".NS") &&
+      baseSymbol
+        ? `https://www.nseindia.com/get-quotes/equity?symbol=${encodeURIComponent(
+            baseSymbol,
+          )}`
+        : ""
+    );
+
+  const bseCode =
+    suggestion?.bseCode ||
+    (
+      symbol.endsWith(".BO")
+        ? baseSymbol
+        : ""
+    );
+
+  const bseUrl =
+    suggestion?.bseUrl ||
+    (
+      bseCode
+        ? `https://www.bseindia.com/stock-share-price/equity/scripcode/${encodeURIComponent(
+            bseCode,
+          )}`
+        : ""
+    );
+
+  return {
+    companyUrl,
+    nseUrl,
+    bseUrl,
+  };
+}
+
+function StockSuggestionList({
+  listboxId,
+  title,
+  suggestions,
+  suggestionsLoading,
+  activeSuggestionIndex,
+  onSelect,
+  onActivate,
+}) {
+  return (
+    <div
+      id={listboxId}
+      className="exa-stock-suggestions"
+      role="listbox"
+      aria-label={
+        title || "Stock suggestions"
+      }
+    >
+      {title && (
+        <div className="exa-stock-suggestion-heading">
+          {title}
+        </div>
+      )}
+
+      {suggestionsLoading && (
+        <div className="exa-stock-suggestion-status">
+          <LoaderCircle
+            size={17}
+            className="exa-analyze-spinner"
+          />
+          Searching stocks…
+        </div>
+      )}
+
+      {!suggestionsLoading &&
+        suggestions.map(
+          (suggestion, index) => {
+            const rawChange =
+              suggestion.changePercent;
+
+            const hasChange =
+              rawChange !== null &&
+              rawChange !== undefined &&
+              rawChange !== "" &&
+              Number.isFinite(
+                Number(rawChange),
+              );
+
+            const change =
+              hasChange
+                ? Number(rawChange)
+                : null;
+
+            const {
+              companyUrl,
+              nseUrl,
+              bseUrl,
+            } =
+              getSuggestionExternalLinks(
+                suggestion,
+              );
+
+            return (
+              <div
+                key={suggestion.symbol}
+                className="exa-stock-suggestion-group"
+                onMouseEnter={() =>
+                  onActivate(index)
+                }
+              >
+                <button
+                  id={`${listboxId}-option-${index}`}
+                  type="button"
+                  role="option"
+                  aria-selected={
+                    activeSuggestionIndex ===
+                    index
+                  }
+                  className={`exa-stock-suggestion-item ${
+                    activeSuggestionIndex ===
+                    index
+                      ? "active"
+                      : ""
+                  }`}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                  }}
+                  onClick={() =>
+                    onSelect(suggestion)
+                  }
+                >
+                  <CompanyLogo
+                    domain={
+                      suggestion.logoDomain
+                    }
+                    name={suggestion.name}
+                    size={38}
+                  />
+
+                  <div className="exa-stock-suggestion-info">
+                    <strong>
+                      {suggestion.name}
+                    </strong>
+
+                    <span>
+                      {suggestion.symbol}
+                      {suggestion.exchange
+                        ? ` · ${suggestion.exchange}`
+                        : ""}
+                    </span>
+                  </div>
+
+                  <div className="exa-stock-suggestion-price">
+                    <strong>
+                      {formatSuggestionPrice(
+                        suggestion.price,
+                        suggestion.currency,
+                      )}
+                    </strong>
+
+                    {hasChange && (
+                      <span
+                        className={
+                          change >= 0
+                            ? "positive"
+                            : "negative"
+                        }
+                      >
+                        {formatSuggestionChange(
+                          change,
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </button>
+
+                {(companyUrl ||
+                  nseUrl ||
+                  bseUrl) && (
+                  <div className="exa-stock-suggestion-links">
+                    {companyUrl && (
+                      <a
+                        href={companyUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        onMouseDown={(event) =>
+                          event.stopPropagation()
+                        }
+                        onClick={(event) =>
+                          event.stopPropagation()
+                        }
+                      >
+                        Website
+                      </a>
+                    )}
+
+                    {nseUrl && (
+                      <a
+                        href={nseUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        onMouseDown={(event) =>
+                          event.stopPropagation()
+                        }
+                        onClick={(event) =>
+                          event.stopPropagation()
+                        }
+                      >
+                        NSE
+                      </a>
+                    )}
+
+                    {bseUrl && (
+                      <a
+                        href={bseUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        onMouseDown={(event) =>
+                          event.stopPropagation()
+                        }
+                        onClick={(event) =>
+                          event.stopPropagation()
+                        }
+                      >
+                        BSE
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          },
+        )}
+
+      {!suggestionsLoading &&
+        suggestions.length === 0 && (
+          <div className="exa-stock-suggestion-status">
+            No matching Indian stocks
+            found.
+          </div>
+        )}
+    </div>
+  );
+}
+
+
 export default function Analyze() {
   const isMobile = useIsMobile();
   const location = useLocation();
   const autoAnalyzeRef = useRef("");
+  const searchSectionRef = useRef(null);
+  const suggestionRequestRef =
+    useRef(0);
 
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [chartLoading, setChartLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [aiNotice, setAiNotice] = useState("");
-  const [result, setResult] = useState(null);
-  const [timeframe, setTimeframe] = useState("1D");
-  const [activeTab, setActiveTab] = useState("Overview");
+  const [query, setQuery] =
+    useState("");
+  const [suggestions, setSuggestions] =
+    useState([]);
+  const [
+    suggestionsLoading,
+    setSuggestionsLoading,
+  ] = useState(false);
+  const [
+    showSuggestions,
+    setShowSuggestions,
+  ] = useState(false);
+  const [
+    activeSuggestionIndex,
+    setActiveSuggestionIndex,
+  ] = useState(-1);
+  const [
+    activeSearchSource,
+    setActiveSearchSource,
+  ] = useState(null);
+  const [loading, setLoading] =
+    useState(false);
+  const [chartLoading, setChartLoading] =
+    useState(false);
+  const [error, setError] =
+    useState("");
+  const [aiNotice, setAiNotice] =
+    useState("");
+  const [result, setResult] =
+    useState(null);
+  const [timeframe, setTimeframe] =
+    useState("1D");
+  const [activeTab, setActiveTab] =
+    useState("Overview");
+  const [
+    showFloatingSearch,
+    setShowFloatingSearch,
+  ] = useState(false);
 
-const searchSectionRef = useRef(null);
+  useEffect(() => {
+    const searchText = query.trim();
 
-const [
-  showFloatingSearch,
-  setShowFloatingSearch,
-] = useState(false);
+    if (
+      loading ||
+      !activeSearchSource
+    ) {
+      suggestionRequestRef.current += 1;
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setSuggestionsLoading(false);
+      setActiveSuggestionIndex(-1);
 
-useEffect(() => {
-  const searchElement =
-    searchSectionRef.current;
+      return undefined;
+    }
 
-  if (!searchElement) {
-    return undefined;
-  }
+    /*
+     * Empty focused search shows popular stocks
+     * inside the same suggestion dropdown.
+     *
+     * Local entries appear immediately. When the
+     * upgraded backend is installed, live prices
+     * replace them from ?popular=1.
+     */
+    if (!searchText) {
+      const requestId =
+        suggestionRequestRef.current +
+        1;
 
-  const observer =
-    new IntersectionObserver(
-      ([entry]) => {
-        setShowFloatingSearch(
-          !entry.isIntersecting,
-        );
-      },
-      {
-        root: null,
-        threshold: 0,
-        rootMargin:
-          "-76px 0px 0px 0px",
-      },
-    );
+      suggestionRequestRef.current =
+        requestId;
 
-  observer.observe(searchElement);
+      setSuggestions(
+        POPULAR_STOCKS,
+      );
+      setShowSuggestions(true);
+      setSuggestionsLoading(true);
+      setActiveSuggestionIndex(-1);
 
-  return () => {
-    observer.disconnect();
-  };
-}, []);
+      fetchPopularStocks()
+        .then((results) => {
+          if (
+            requestId !==
+            suggestionRequestRef.current
+          ) {
+            return;
+          }
 
+          const validResults =
+            Array.isArray(results)
+              ? results
+                  .filter(
+                    (item) =>
+                      item?.symbol &&
+                      item?.name,
+                  )
+                  .slice(0, 8)
+              : [];
+
+          if (
+            validResults.length > 0
+          ) {
+            setSuggestions(
+              validResults,
+            );
+          }
+        })
+        .catch((popularError) => {
+          console.warn(
+            "Popular stocks unavailable:",
+            popularError,
+          );
+        })
+        .finally(() => {
+          if (
+            requestId ===
+            suggestionRequestRef.current
+          ) {
+            setSuggestionsLoading(
+              false,
+            );
+          }
+        });
+
+      return () => {
+        suggestionRequestRef.current += 1;
+      };
+    }
+
+    const requestId =
+      suggestionRequestRef.current + 1;
+
+    suggestionRequestRef.current =
+      requestId;
+
+    const timeoutId =
+      window.setTimeout(
+        async () => {
+          setSuggestionsLoading(true);
+
+          try {
+            const results =
+              await searchStocks(
+                searchText,
+              );
+
+            if (
+              requestId !==
+              suggestionRequestRef.current
+            ) {
+              return;
+            }
+
+            const validResults =
+              Array.isArray(results)
+                ? results
+                    .filter(
+                      (item) =>
+                        item?.symbol &&
+                        item?.name,
+                    )
+                    .slice(0, 8)
+                : [];
+
+            setSuggestions(
+              validResults,
+            );
+            setShowSuggestions(true);
+            setActiveSuggestionIndex(-1);
+          } catch (suggestionError) {
+            if (
+              requestId !==
+              suggestionRequestRef.current
+            ) {
+              return;
+            }
+
+            console.warn(
+              "Stock suggestions unavailable:",
+              suggestionError,
+            );
+
+            setSuggestions([]);
+            setShowSuggestions(true);
+          } finally {
+            if (
+              requestId ===
+              suggestionRequestRef.current
+            ) {
+              setSuggestionsLoading(
+                false,
+              );
+            }
+          }
+        },
+        350,
+      );
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    query,
+    loading,
+    activeSearchSource,
+  ]);
+
+  useEffect(() => {
+    const searchElement =
+      searchSectionRef.current;
+
+    if (!searchElement) {
+      return undefined;
+    }
+
+    const observer =
+      new IntersectionObserver(
+        ([entry]) => {
+          setShowFloatingSearch(
+            !entry.isIntersecting,
+          );
+        },
+        {
+          root: null,
+          threshold: 0,
+          rootMargin:
+            "-76px 0px 0px 0px",
+        },
+      );
+
+    observer.observe(searchElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  /*
+   * The original search remains mounted while the floating
+   * search is displayed. Close the old dropdown when the
+   * page switches to the floating search.
+   */
+  useEffect(() => {
+    if (
+      showFloatingSearch &&
+      activeSearchSource === "main"
+    ) {
+      suggestionRequestRef.current += 1;
+      setShowSuggestions(false);
+      setSuggestions([]);
+      setSuggestionsLoading(false);
+      setActiveSuggestionIndex(-1);
+      setActiveSearchSource(null);
+    }
+  }, [
+    showFloatingSearch,
+    activeSearchSource,
+  ]);
 
   async function analyze(stock) {
-    const q = String(stock || query).trim();
+    const suppliedStock =
+      stock &&
+      typeof stock === "object"
+        ? stock
+        : null;
+
+    const q = String(
+      suppliedStock?.symbol ||
+        stock ||
+        query,
+    ).trim();
 
     if (!q || loading) {
       return;
     }
 
+    closeSuggestions();
     setLoading(true);
     setError("");
     setAiNotice("");
     setResult(null);
 
     try {
-      const searchResults = await searchStocks(q);
+      const searchResults =
+        suppliedStock
+          ? [suppliedStock]
+          : await searchStocks(q);
 
       if (
         !Array.isArray(searchResults) ||
@@ -1104,17 +1846,24 @@ useEffect(() => {
       const selectedStock =
         searchResults.find(
           (item) =>
-            item?.quoteType === "EQUITY" &&
-            item?.symbol?.endsWith(".NS"),
+            item?.quoteType ===
+              "EQUITY" &&
+            item?.symbol?.endsWith(
+              ".NS",
+            ),
         ) ||
         searchResults.find(
           (item) =>
-            item?.quoteType === "EQUITY" &&
-            item?.symbol?.endsWith(".BO"),
+            item?.quoteType ===
+              "EQUITY" &&
+            item?.symbol?.endsWith(
+              ".BO",
+            ),
         ) ||
         searchResults.find(
           (item) =>
-            item?.quoteType === "EQUITY",
+            item?.quoteType ===
+            "EQUITY",
         ) ||
         searchResults[0];
 
@@ -1124,10 +1873,11 @@ useEffect(() => {
         );
       }
 
-      const stockData = await getStockData(
-        selectedStock.symbol,
-        RANGE_MAP[timeframe],
-      );
+      const stockData =
+        await getStockData(
+          selectedStock.symbol,
+          RANGE_MAP[timeframe],
+        );
 
       if (!stockData?.symbol) {
         throw new Error(
@@ -1135,32 +1885,36 @@ useEffect(() => {
         );
       }
 
-      const liveResult = createLiveResult(
-        stockData,
-        selectedStock,
-      );
+      const liveResult =
+        createLiveResult(
+          stockData,
+          selectedStock,
+        );
 
       setResult(liveResult);
       setQuery("");
 
       try {
-        const aiAnalysis = await getAiAnalysis(
-          stockData,
-        );
+        const aiAnalysis =
+          await getAiAnalysis(
+            stockData,
+          );
 
         if (
           !aiAnalysis ||
-          typeof aiAnalysis !== "object"
+          typeof aiAnalysis !==
+            "object"
         ) {
           throw new Error(
             "The AI returned incomplete analysis data.",
           );
         }
 
-        const completeResult = mergeAiAnalysis(
-          liveResult,
-          aiAnalysis,
-        );
+        const completeResult =
+          mergeAiAnalysis(
+            liveResult,
+            aiAnalysis,
+          );
 
         setResult(completeResult);
 
@@ -1204,10 +1958,122 @@ useEffect(() => {
     }
   }
 
+  function closeSuggestions() {
+    suggestionRequestRef.current += 1;
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setSuggestionsLoading(false);
+    setActiveSuggestionIndex(-1);
+    setActiveSearchSource(null);
+  }
+
+  function selectSuggestion(
+    suggestion,
+  ) {
+    if (!suggestion?.symbol) {
+      return;
+    }
+
+    closeSuggestions();
+    setQuery("");
+    analyze(suggestion);
+  }
+
+  function handleSearchChange(
+    source,
+    event,
+  ) {
+    setActiveSearchSource(source);
+    setQuery(event.target.value);
+    setShowSuggestions(true);
+    setActiveSuggestionIndex(-1);
+  }
+
+  function handleSearchFocus(source) {
+    setActiveSearchSource(source);
+    setShowSuggestions(true);
+    setActiveSuggestionIndex(-1);
+
+    if (!query.trim()) {
+      setSuggestions(
+        POPULAR_STOCKS,
+      );
+      setSuggestionsLoading(false);
+    }
+  }
+
+  function handleSearchBlur(source) {
+    window.setTimeout(() => {
+      setActiveSearchSource(
+        (currentSource) =>
+          currentSource === source
+            ? null
+            : currentSource,
+      );
+      setShowSuggestions(false);
+      setActiveSuggestionIndex(-1);
+    }, 180);
+  }
+
+  function handleSearchKeyDown(event) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setShowSuggestions(false);
+      setActiveSuggestionIndex(-1);
+      return;
+    }
+
+    if (
+      !showSuggestions ||
+      suggestions.length === 0
+    ) {
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+
+      setActiveSuggestionIndex(
+        (current) =>
+          current >=
+          suggestions.length - 1
+            ? 0
+            : current + 1,
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+
+      setActiveSuggestionIndex(
+        (current) =>
+          current <= 0
+            ? suggestions.length - 1
+            : current - 1,
+      );
+      return;
+    }
+
+    if (
+      event.key === "Enter" &&
+      activeSuggestionIndex >= 0
+    ) {
+      event.preventDefault();
+
+      selectSuggestion(
+        suggestions[
+          activeSuggestionIndex
+        ],
+      );
+    }
+  }
+
   useEffect(() => {
-    const parameters = new URLSearchParams(
-      location.search,
-    );
+    const parameters =
+      new URLSearchParams(
+        location.search,
+      );
 
     const requestedStock = String(
       parameters.get("symbol") ||
@@ -1217,12 +2083,14 @@ useEffect(() => {
 
     if (
       !requestedStock ||
-      autoAnalyzeRef.current === requestedStock
+      autoAnalyzeRef.current ===
+        requestedStock
     ) {
       return;
     }
 
-    autoAnalyzeRef.current = requestedStock;
+    autoAnalyzeRef.current =
+      requestedStock;
     setQuery(requestedStock);
     analyze(requestedStock);
   }, [location.search]);
@@ -1362,125 +2230,223 @@ useEffect(() => {
       <main className="exa-dashboard-page exa-dashboard-v2 exa-analyze-page">
         <div className="exa-analyze-container">
         
-{/* Full search card at the top of the page */}
-<section
-  ref={searchSectionRef}
-  className="exa-analyze-home-search"
->
+          {/* Full search card at the top of the page */}
+          <section
+            ref={searchSectionRef}
+            className="exa-analyze-home-search"
+          >
+            <form
+              className="exa-analyze-search-form exa-search-with-icon-button"
+              onSubmit={(event) => {
+                event.preventDefault();
+                analyze();
+              }}
+            >
+              <div className="exa-analyze-search-field">
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) =>
+                    handleSearchChange(
+                      "main",
+                      event,
+                    )
+                  }
+                  onFocus={() =>
+                    handleSearchFocus(
+                      "main",
+                    )
+                  }
+                  onBlur={() =>
+                    handleSearchBlur(
+                      "main",
+                    )
+                  }
+                  onKeyDown={
+                    handleSearchKeyDown
+                  }
+                  placeholder="Search Reliance, Infosys, HDFC Bank or NSE ticker..."
+                  disabled={loading}
+                  className="exa-analyze-search-input"
+                  autoComplete="off"
+                  aria-label="Search Indian stocks"
+                  aria-autocomplete="list"
+                  aria-expanded={
+                    showSuggestions &&
+                    activeSearchSource ===
+                      "main"
+                  }
+                  aria-controls="main-stock-suggestion-list"
+                  aria-activedescendant={
+                    activeSuggestionIndex >=
+                    0
+                      ? `main-stock-suggestion-list-option-${activeSuggestionIndex}`
+                      : undefined
+                  }
+                />
 
-<form
-  className="exa-analyze-search-form exa-search-with-icon-button"
-  onSubmit={(event) => {
-    event.preventDefault();
-    analyze();
-  }}
->
-  <div className="exa-analyze-search-field">
-    <input
-      type="search"
-      value={query}
-      onChange={(event) =>
-        setQuery(event.target.value)
-      }
-      placeholder="Search Reliance, Infosys, HDFC Bank or NSE ticker..."
-      disabled={loading}
-      className="exa-analyze-search-input"
-      autoComplete="off"
-      aria-label="Search Indian stocks"
-    />
+                <button
+                  type="submit"
+                  className="exa-analyze-lens-button"
+                  disabled={
+                    loading ||
+                    !query.trim()
+                  }
+                  aria-label="Analyze stock"
+                  title="Analyze stock"
+                >
+                  {loading ? (
+                    <LoaderCircle
+                      size={18}
+                      className="exa-analyze-spinner"
+                    />
+                  ) : (
+                    <Search size={19} />
+                  )}
+                </button>
 
-    <button
-      type="submit"
-      className="exa-analyze-lens-button"
-      disabled={loading || !query.trim()}
-      aria-label="Analyze stock"
-      title="Analyze stock"
-    >
-      {loading ? (
-        <LoaderCircle
-          size={18}
-          className="exa-analyze-spinner"
-        />
-      ) : (
-        <Search size={19} />
-      )}
-    </button>
-  </div>
-</form>
+                {showSuggestions &&
+                  activeSearchSource ===
+                    "main" && (
+                    <StockSuggestionList
+                      listboxId="main-stock-suggestion-list"
+                      title={
+                        query.trim()
+                          ? "Matching stocks"
+                          : "Popular stocks"
+                      }
+                      suggestions={
+                        suggestions
+                      }
+                      suggestionsLoading={
+                        suggestionsLoading
+                      }
+                      activeSuggestionIndex={
+                        activeSuggestionIndex
+                      }
+                      onSelect={
+                        selectSuggestion
+                      }
+                      onActivate={
+                        setActiveSuggestionIndex
+                      }
+                    />
+                  )}
+              </div>
+            </form>
 
-  {/* Show popular stocks only before analysis */}
-  {!result && !loading && (
-    <div className="exa-analyze-quick-picks">
-      <span className="exa-analyze-quick-label">
-        Popular
-      </span>
+          </section>
 
-      {SAMPLES.map((sample) => (
-        <button
-          type="button"
-          key={sample}
-          className="exa-analyze-quick-chip"
-          onClick={() =>
-            analyze(sample)
-          }
-        >
-          {sample}
-        </button>
-      ))}
-    </div>
-  )}
-</section>
+          {/* Compact search appears only after scrolling */}
+          {result &&
+            showFloatingSearch && (
+              <section
+                className="exa-analyze-floating-search"
+                aria-label="Quick stock search"
+              >
+                <form
+                  className="exa-analyze-nav-search-form"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    analyze();
+                  }}
+                >
+                  <div className="exa-analyze-nav-search-field">
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(event) =>
+                        handleSearchChange(
+                          "floating",
+                          event,
+                        )
+                      }
+                      onFocus={() =>
+                        handleSearchFocus(
+                          "floating",
+                        )
+                      }
+                      onBlur={() =>
+                        handleSearchBlur(
+                          "floating",
+                        )
+                      }
+                      onKeyDown={
+                        handleSearchKeyDown
+                      }
+                      placeholder="Analyze another stock..."
+                      disabled={loading}
+                      className="exa-analyze-nav-search-input"
+                      autoComplete="off"
+                      aria-label="Analyze another stock"
+                      aria-autocomplete="list"
+                      aria-expanded={
+                        showSuggestions &&
+                        activeSearchSource ===
+                          "floating"
+                      }
+                      aria-controls="nav-stock-suggestion-list"
+                      aria-activedescendant={
+                        activeSuggestionIndex >=
+                        0
+                          ? `nav-stock-suggestion-list-option-${activeSuggestionIndex}`
+                          : undefined
+                      }
+                    />
 
-{/* Compact search appears only after scrolling */}
+                    <button
+                      type="submit"
+                      className="exa-analyze-nav-lens-button"
+                      disabled={
+                        loading ||
+                        !query.trim()
+                      }
+                      aria-label="Analyze stock"
+                      title="Analyze stock"
+                    >
+                      {loading ? (
+                        <LoaderCircle
+                          size={17}
+                          className="exa-analyze-spinner"
+                        />
+                      ) : (
+                        <Search
+                          size={18}
+                        />
+                      )}
+                    </button>
 
-{result && showFloatingSearch && (
-  <section
-    className="exa-analyze-floating-search"
-    aria-label="Quick stock search"
-  >
-    <form
-      className="exa-analyze-nav-search-form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        analyze();
-      }}
-    >
-      <div className="exa-analyze-nav-search-field">
-        <input
-          type="search"
-          value={query}
-          onChange={(event) =>
-            setQuery(event.target.value)
-          }
-          placeholder="Analyze another stock..."
-          disabled={loading}
-          className="exa-analyze-nav-search-input"
-          autoComplete="off"
-          aria-label="Analyze another stock"
-        />
-
-        <button
-          type="submit"
-          className="exa-analyze-nav-lens-button"
-          disabled={loading || !query.trim()}
-          aria-label="Analyze stock"
-          title="Analyze stock"
-        >
-          {loading ? (
-            <LoaderCircle
-              size={17}
-              className="exa-analyze-spinner"
-            />
-          ) : (
-            <Search size={18} />
-          )}
-        </button>
-      </div>
-    </form>
-  </section>
-)}
-
-
+                    {showSuggestions &&
+                      activeSearchSource ===
+                        "floating" && (
+                        <StockSuggestionList
+                          listboxId="nav-stock-suggestion-list"
+                          title={
+                            query.trim()
+                              ? "Matching stocks"
+                              : "Popular stocks"
+                          }
+                          suggestions={
+                            suggestions
+                          }
+                          suggestionsLoading={
+                            suggestionsLoading
+                          }
+                          activeSuggestionIndex={
+                            activeSuggestionIndex
+                          }
+                          onSelect={
+                            selectSuggestion
+                          }
+                          onActivate={
+                            setActiveSuggestionIndex
+                          }
+                        />
+                      )}
+                  </div>
+                </form>
+              </section>
+            )}
 
           <section className="exa-analyze-hero">
             <div className="exa-analyze-hero-content">
@@ -1676,8 +2642,6 @@ useEffect(() => {
                         <TrendingUp size={15} />
                       ) : (
                         <TrendingDown size={15} />
-
-                        
                       )}
 
                       <span>
@@ -2143,71 +3107,63 @@ useEffect(() => {
                   ))}
                 </div>
 
-                {activeTab === "Overview" && (
+               {activeTab === "Overview" && (
   <div
     style={{
       display: "grid",
-
-      gridTemplateColumns:
-        isMobile
-          ? "repeat(2, minmax(0, 1fr))"
-          : "repeat(4, minmax(0, 1fr))",
-
+      gridTemplateColumns: isMobile
+        ? "repeat(2, minmax(0, 1fr))"
+        : "repeat(4, minmax(0, 1fr))",
       gap: 12,
     }}
   >
     <ScoreCard
       title="Fundamental score"
-      score={
-        result.fundamentalScore
-      }
-      scoreLabel={
-        result.fundamentalLabel
-      }
+      score={result.fundamentalScore}
+      scoreLabel={result.fundamentalLabel}
     />
 
     <ScoreCard
       title="Momentum score"
-      score={
-        result.momentumScore
-      }
-      scoreLabel={
-        result.momentumLabel
-      }
+      score={result.momentumScore}
+      scoreLabel={result.momentumLabel}
     />
 
     <ScoreCard
       title="Valuation score"
-      score={
-        result.valuationScore
-      }
-      scoreLabel={
-        result.valuationLabel
-      }
+      score={result.valuationScore}
+      scoreLabel={result.valuationLabel}
     />
 
     <ScoreCard
       title="Sentiment score"
-      score={
-        result.sentimentScore
-      }
-      scoreLabel={
-        result.sentimentLabel
-      }
+      score={result.sentimentScore}
+      scoreLabel={result.sentimentLabel}
     />
   </div>
 )}
-
-{activeTab ===
-  "Fundamentals" && (
+{activeTab === "Fundamentals" && (
   <FundamentalsTab
     result={result}
+  />
+)}
+
+{activeTab === "Technicals" && (
+  <TechnicalsTab
+    chart={
+      Array.isArray(result.chart)
+        ? result.chart
+        : []
+    }
+    currency={result.currency || "INR"}
+    timeframe={timeframe}
   />
 )}
 
 {![
   "Overview",
   "Fundamentals",
+  "Technicals",
 ].includes(activeTab) && (
   <div
     style={{
@@ -2217,9 +3173,8 @@ useEffect(() => {
       fontSize: 14,
     }}
   >
-    This tab is part of the EXA
-    NEXUS roadmap and will be
-    added in a later phase.
+    The {activeTab} tab is part of the EXA NEXUS roadmap and
+    will be added in a later phase.
   </div>
 )}
               </div>
