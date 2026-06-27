@@ -24,12 +24,24 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import ScoreGauge from "../components/ScoreGauge";
-import AppShell from "../components/layout/AppShell";
-import PremiumAiResearchPanel from "../components/analyze/PremiumAiResearchPanel";
-import TechnicalsTab from "../components/analyze/TechnicalsTab";
-import FundamentalsTab from "../components/analyze/FundamentalsTab";
-import StockNewsPanel from "../components/analyze/StockNewsPanel";
+import ScoreGauge from 
+"../components/ScoreGauge";
+import AppShell from 
+"../components/layout/AppShell";
+import PremiumAiResearchPanel from
+ "../components/analyze/PremiumAiResearchPanel";
+import TechnicalsTab from 
+"../components/analyze/TechnicalsTab";
+import FundamentalsTab from 
+"../components/analyze/FundamentalsTab";
+import RisksTab from
+  "../components/analyze/RisksTab";
+  import FinancialsTab from
+  "../components/analyze/FinancialsTab";
+import StockNewsPanel from 
+"../components/analyze/StockNewsPanel";
+import NewsTab from
+  "../components/analyze/NewsTab";
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
 import "../styles/analyze-v2.css";
@@ -3219,10 +3231,31 @@ export default function Analyze() {
   />
 )}
 
+{activeTab === "Risks" && (
+  <RisksTab
+    result={result}
+    timeframe={timeframe}
+  />
+)}
+{activeTab === "Financials" && (
+  <FinancialsTab
+    result={result}
+  />
+)}
+{activeTab === "News" && (
+  <NewsTab
+    symbol={result.symbol}
+    company={result.company}
+  />
+)}
+
 {![
   "Overview",
   "Fundamentals",
   "Technicals",
+  "Risks",
+  "Financials",
+  "News"
 ].includes(activeTab) && (
   <div
     style={{
@@ -3245,10 +3278,15 @@ export default function Analyze() {
                     aiNotice={aiNotice}
                   />
 
-                  <StockNewsPanel
-                    symbol={result.symbol}
-                    company={result.company}
-                  />
+                  {activeTab !== "News" && (
+  <StockNewsPanel
+    symbol={result.symbol}
+    company={result.company}
+    onViewAll={() =>
+      setActiveTab("News")
+    }
+  />
+)}
                 </div>
               </aside>
             </section>

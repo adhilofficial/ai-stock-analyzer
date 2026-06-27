@@ -12,9 +12,7 @@ import {
 } from "lucide-react";
 
 function formatRelativeTime(value) {
-  if (!value) {
-    return "Recently";
-  }
+  if (!value) return "Recently";
 
   const date = new Date(value);
 
@@ -23,28 +21,16 @@ function formatRelativeTime(value) {
   }
 
   const difference = Date.now() - date.getTime();
-
-  if (difference < 60_000) {
-    return "Just now";
-  }
-
   const minutes = Math.floor(difference / 60_000);
 
-  if (minutes < 60) {
-    return `${minutes}m ago`;
-  }
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
 
   const hours = Math.floor(minutes / 60);
-
-  if (hours < 24) {
-    return `${hours}h ago`;
-  }
+  if (hours < 24) return `${hours}h ago`;
 
   const days = Math.floor(hours / 24);
-
-  if (days < 7) {
-    return `${days}d ago`;
-  }
+  if (days < 7) return `${days}d ago`;
 
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
@@ -56,12 +42,8 @@ function NewsSkeleton() {
   return (
     <div className="exa-stock-news-skeleton">
       {[1, 2, 3, 4].map((item) => (
-        <div
-          key={item}
-          className="exa-news-skeleton-item"
-        >
+        <div key={item} className="exa-news-skeleton-item">
           <span />
-
           <div>
             <i />
             <i />
@@ -76,13 +58,14 @@ function NewsSkeleton() {
 export default function StockNewsPanel({
   symbol,
   company,
+  onViewAll,
 }) {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const loadNews = useCallback(
-    async (signal) => {
+    async (signal, refresh = false) => {
       const cleanedSymbol = String(symbol || "").trim();
       const cleanedCompany = String(company || "").trim();
 
@@ -106,25 +89,19 @@ export default function StockNewsPanel({
           parameters.set("company", cleanedCompany);
         }
 
+        parameters.set("limit", "4");
+
+        if (refresh) {
+          parameters.set("refresh", "1");
+        }
+
         const response = await fetch(
           `/api/stock-news?${parameters.toString()}`,
           {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
+            headers: { Accept: "application/json" },
             signal,
           },
         );
-
-        const contentType =
-          response.headers.get("content-type") || "";
-
-        if (!contentType.includes("application/json")) {
-          throw new Error(
-            "The stock-news endpoint returned a non-JSON response.",
-          );
-        }
 
         const data = await response.json();
 
@@ -134,13 +111,13 @@ export default function StockNewsPanel({
           );
         }
 
-        setNews(Array.isArray(data?.news) ? data.news : []);
+        setNews(
+          Array.isArray(data.news)
+            ? data.news.slice(0, 4)
+            : [],
+        );
       } catch (caughtError) {
-        if (caughtError?.name === "AbortError") {
-          return;
-        }
-
-        console.error("Stock news loading error:", caughtError);
+        if (caughtError?.name === "AbortError") return;
 
         setError(
           caughtError instanceof Error
@@ -160,22 +137,13 @@ export default function StockNewsPanel({
 
   useEffect(() => {
     const controller = new AbortController();
-
     loadNews(controller.signal);
 
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [loadNews]);
 
-  function retryNews() {
-    loadNews();
-  }
-
   const yahooNewsUrl = symbol
-    ? `https://finance.yahoo.com/quote/${encodeURIComponent(
-        symbol,
-      )}/news/`
+    ? `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}/news/`
     : "https://finance.yahoo.com/news/";
 
   return (
@@ -196,7 +164,7 @@ export default function StockNewsPanel({
           <button
             type="button"
             className="exa-news-refresh-button"
-            onClick={retryNews}
+            onClick={() => loadNews(undefined, true)}
             aria-label="Refresh stock news"
           >
             <RefreshCw size={14} />
@@ -216,8 +184,7 @@ export default function StockNewsPanel({
           <AlertCircle size={18} />
           <strong>News unavailable</strong>
           <p>{error}</p>
-
-          <button type="button" onClick={retryNews}>
+          <button type="button" onClick={() => loadNews(undefined, true)}>
             Try again
           </button>
         </div>
@@ -263,21 +230,35 @@ export default function StockNewsPanel({
         <div className="exa-stock-news-message">
           <Newspaper size={20} />
           <strong>No recent news found</strong>
-          <p>
-            Yahoo Finance has not returned recent coverage for this stock.
-          </p>
+          <p>Yahoo Finance has not returned recent coverage for this stock.</p>
         </div>
       )}
 
-      <a
-        className="exa-stock-news-footer"
-        href={yahooNewsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        View more news on Yahoo Finance
-        <ExternalLink size={12} />
-      </a>
+      {typeof onViewAll === "function" ? (
+        <button
+          type="button"
+          className="exa-stock-news-footer"
+          onClick={onViewAll}
+          style={{
+            width: "100%",
+            border: 0,
+            cursor: "pointer",
+          }}
+        >
+          View all stock news
+          <Newspaper size={12} />
+        </button>
+      ) : (
+        <a
+          className="exa-stock-news-footer"
+          href={yahooNewsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View more news on Yahoo Finance
+          <ExternalLink size={12} />
+        </a>
+      )}
     </article>
   );
 }

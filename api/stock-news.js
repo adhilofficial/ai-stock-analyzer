@@ -1,65 +1,57 @@
-
-
 import yahooFinance from "./_lib/yahooFinance.js";
+import withRetry from "./_lib/withRetry.js";
 
 const newsCache = new Map();
+const CACHE_DURATION_MS = 5 * 60 * 1000;
+const DEFAULT_LIMIT = 30;
+const MAX_LIMIT = 40;
 
-const CACHE_DURATION =
-  3 * 60 * 1000;
+const POSITIVE_TERMS = [
+  "beats",
+  "beat estimates",
+  "surges",
+  "jumps",
+  "rises",
+  "gains",
+  "growth",
+  "record profit",
+  "strong results",
+  "upgrade",
+  "upgraded",
+  "outperform",
+  "expansion",
+  "wins order",
+  "order win",
+  "dividend",
+  "recovery",
+  "improves",
+  "positive",
+  "bullish",
+];
 
-const FILTER_VERSION =
-  "strict-company-news-v3";
+const NEGATIVE_TERMS = [
+  "misses",
+  "missed estimates",
+  "falls",
+  "drops",
+  "declines",
+  "loss",
+  "weak results",
+  "downgrade",
+  "downgraded",
+  "underperform",
+  "fraud",
+  "probe",
+  "investigation",
+  "penalty",
+  "default",
+  "warning",
+  "cuts guidance",
+  "negative",
+  "bearish",
+];
 
-const LEGAL_COMPANY_WORDS =
-  new Set([
-    "limited",
-    "ltd",
-    "plc",
-    "inc",
-    "incorporated",
-    "corporation",
-    "corp",
-    "company",
-    "co",
-    "group",
-    "holdings",
-    "holding",
-    "enterprises",
-  ]);
-
-const CONNECTOR_WORDS =
-  new Set([
-    "and",
-    "of",
-    "the",
-    "for",
-    "in",
-    "on",
-    "at",
-    "private",
-    "public",
-  ]);
-
-const GENERIC_BRAND_WORDS =
-  new Set([
-    "bank",
-    "state",
-    "national",
-    "indian",
-    "india",
-    "asian",
-    "power",
-    "financial",
-    "general",
-    "global",
-    "new",
-    "united",
-  ]);
-
-function cleanText(
-  value,
-  fallback = "",
-) {
+function cleanText(value, fallback = "") {
   const text = String(value || "")
     .replace(/\s+/g, " ")
     .trim();
@@ -67,65 +59,13 @@ function cleanText(
   return text || fallback;
 }
 
-function normalizeForMatching(value) {
-  return cleanText(value)
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function normalizeTicker(value) {
-  return cleanText(value)
-    .toUpperCase()
-    .replace(/\s+/g, "");
-}
-
-function removeExchangeSuffix(
-  ticker,
-) {
-  return normalizeTicker(ticker)
-    .replace(/\.(NS|BO)$/i, "");
-}
-
-function containsWholeTerm(
-  text,
-  term,
-) {
-  const normalizedText =
-    normalizeForMatching(text);
-
-  const normalizedTerm =
-    normalizeForMatching(term);
-
-  if (
-    !normalizedText ||
-    !normalizedTerm
-  ) {
-    return false;
-  }
-
-  return (
-    ` ${normalizedText} `.includes(
-      ` ${normalizedTerm} `,
-    )
-  );
-}
-
 function safeUrl(value) {
-  if (!value) {
-    return "";
-  }
+  if (!value) return "";
 
   try {
-    const url =
-      new URL(String(value));
+    const url = new URL(String(value));
 
-    if (
-      url.protocol !== "https:" &&
-      url.protocol !== "http:"
-    ) {
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
       return "";
     }
 
@@ -135,601 +75,329 @@ function safeUrl(value) {
   }
 }
 
-function normalizePublishedDate(
-  value,
-) {
-  if (!value) {
-    return null;
-  }
+function normalizePublishedDate(value) {
+  if (!value) return null;
 
   let normalizedValue = value;
 
   if (
-    typeof normalizedValue ===
-      "number" &&
-    normalizedValue <
-      1_000_000_000_000
+    typeof normalizedValue === "number" &&
+    normalizedValue < 1_000_000_000_000
   ) {
     normalizedValue *= 1000;
   }
 
-  const date =
-    new Date(normalizedValue);
+  const date = new Date(normalizedValue);
 
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
-    return null;
-  }
-
-  return date.toISOString();
+  return Number.isNaN(date.getTime())
+    ? null
+    : date.toISOString();
 }
 
-function getThumbnail(newsItem) {
-  const resolutions =
-    newsItem?.thumbnail
-      ?.resolutions;
+function getThumbnail(item) {
+  const resolutions = item?.thumbnail?.resolutions;
 
-  if (
-    Array.isArray(resolutions)
-  ) {
-    const validImage =
-      resolutions.find(
-        (resolution) =>
-          safeUrl(
-            resolution?.url,
-          ),
-      );
+  if (Array.isArray(resolutions)) {
+    const image = [...resolutions]
+      .reverse()
+      .find((entry) => safeUrl(entry?.url));
 
-    if (validImage?.url) {
-      return safeUrl(
-        validImage.url,
-      );
+    if (image?.url) {
+      return safeUrl(image.url);
     }
   }
 
   return safeUrl(
-    newsItem?.thumbnail
-      ?.originalUrl ||
-      newsItem?.thumbnail?.url,
+    item?.thumbnail?.originalUrl ||
+      item?.thumbnail?.url,
   );
 }
 
-function getCompanyIdentity(
-  company,
-) {
-  const allWords =
-    normalizeForMatching(company)
-      .split(" ")
-      .filter(Boolean);
-
-  const meaningfulWords =
-    allWords.filter(
-      (word) =>
-        !LEGAL_COMPANY_WORDS.has(
-          word,
-        ) &&
-        !CONNECTOR_WORDS.has(
-          word,
-        ),
-    );
-
-  const corePhrase =
-    meaningfulWords.join(" ");
-
-  const acronym =
-    meaningfulWords
-      .map((word) =>
-        word.charAt(0),
-      )
-      .join("");
-
-  const primaryBrand =
-    meaningfulWords[0] || "";
-
-  return {
-    meaningfulWords,
-    corePhrase,
-    acronym,
-    primaryBrand,
-  };
+function getSummary(item) {
+  return cleanText(
+    item?.summary ||
+      item?.description ||
+      item?.content ||
+      item?.snippet ||
+      "",
+  );
 }
 
-function getRelatedTickers(
-  newsItem,
-) {
-  if (
-    !Array.isArray(
-      newsItem?.relatedTickers,
-    )
-  ) {
-    return [];
+function classifySentiment(title, summary) {
+  const searchable = `${title} ${summary}`.toLowerCase();
+
+  const positiveScore = POSITIVE_TERMS.reduce(
+    (score, term) =>
+      searchable.includes(term) ? score + 1 : score,
+    0,
+  );
+
+  const negativeScore = NEGATIVE_TERMS.reduce(
+    (score, term) =>
+      searchable.includes(term) ? score + 1 : score,
+    0,
+  );
+
+  if (positiveScore > negativeScore) {
+    return "Positive";
   }
 
-  return newsItem.relatedTickers
-    .map(normalizeTicker)
-    .filter(Boolean);
+  if (negativeScore > positiveScore) {
+    return "Negative";
+  }
+
+  return "Neutral";
 }
 
-function evaluateNewsRelevance({
-  newsItem,
-  symbol,
-  companyIdentity,
-}) {
-  const title = cleanText(
-    newsItem?.title,
-  );
-
-  if (!title) {
-    return {
-      relevant: false,
-      score: 0,
-    };
-  }
-
-  const normalizedSymbol =
-    normalizeTicker(symbol);
-
-  const baseSymbol =
-    removeExchangeSuffix(
-      normalizedSymbol,
-    );
-
-  const relatedTickers =
-    getRelatedTickers(
-      newsItem,
-    );
-
-  const tickerMatch =
-    relatedTickers.some(
-      (ticker) => {
-        const tickerBase =
-          removeExchangeSuffix(
-            ticker,
-          );
-
-        return (
-          ticker ===
-            normalizedSymbol ||
-          tickerBase ===
-            baseSymbol
-        );
-      },
-    );
-
-  const exactCompanyMatch =
-    companyIdentity
-      .corePhrase &&
-    normalizeForMatching(
-      title,
-    ).includes(
-      companyIdentity
-        .corePhrase,
-    );
-
-  const acronymMatch =
-    companyIdentity.acronym
-      .length >= 3 &&
-    containsWholeTerm(
-      title,
-      companyIdentity.acronym,
-    );
-
-  const primaryBrand =
-    companyIdentity
-      .primaryBrand;
-
-  const distinctiveBrandMatch =
-    primaryBrand.length >= 4 &&
-    !GENERIC_BRAND_WORDS.has(
-      primaryBrand,
-    ) &&
-    containsWholeTerm(
-      title,
-      primaryBrand,
-    );
-
-  const matchingCompanyWords =
-    companyIdentity
-      .meaningfulWords
-      .filter(
-        (word) =>
-          word.length >= 4 &&
-          containsWholeTerm(
-            title,
-            word,
-          ),
-      );
-
-  const multipleWordMatch =
-    matchingCompanyWords
-      .length >= 2;
-
-  /*
-   * An article must satisfy at
-   * least one strong condition.
-   *
-   * Recency alone never makes an
-   * article relevant.
-   */
-  const relevant =
-    tickerMatch ||
-    exactCompanyMatch ||
-    acronymMatch ||
-    distinctiveBrandMatch ||
-    multipleWordMatch;
-
-  let score = 0;
-
-  if (tickerMatch) {
-    score += 100;
-  }
-
-  if (exactCompanyMatch) {
-    score += 80;
-  }
-
-  if (acronymMatch) {
-    score += 65;
-  }
-
-  if (
-    distinctiveBrandMatch
-  ) {
-    score += 55;
-  }
-
-  if (multipleWordMatch) {
-    score += 45;
-  }
-
-  score +=
-    matchingCompanyWords
-      .length * 5;
-
-  return {
-    relevant,
-    score,
-  };
-}
-
-function normalizeNewsItem(
-  newsItem,
-  index,
-) {
-  const title = cleanText(
-    newsItem?.title,
-    "Market update",
-  );
-
-  const link = safeUrl(
-    newsItem?.link ||
-      newsItem?.url,
-  );
+function normalizeNewsItem(item, index) {
+  const title = cleanText(item?.title, "Market update");
+  const summary = getSummary(item);
+  const link = safeUrl(item?.link || item?.url);
 
   return {
     id:
-      cleanText(
-        newsItem?.uuid,
-      ) ||
+      cleanText(item?.uuid) ||
       link ||
       `${title}-${index}`,
-
     title,
-
+    summary,
     publisher: cleanText(
-      newsItem?.publisher ||
-        newsItem?.provider,
+      item?.publisher || item?.provider,
       "Market News",
     ),
-
     link,
-
-    thumbnail:
-      getThumbnail(newsItem),
-
-    publishedAt:
-      normalizePublishedDate(
-        newsItem
-          ?.providerPublishTime ||
-          newsItem?.publishedAt ||
-          newsItem?.pubDate,
-      ),
-
-    type: cleanText(
-      newsItem?.type,
-      "STORY",
+    thumbnail: getThumbnail(item),
+    publishedAt: normalizePublishedDate(
+      item?.providerPublishTime ||
+        item?.publishedAt ||
+        item?.pubDate,
     ),
-
-    relatedTickers:
-      getRelatedTickers(
-        newsItem,
-      ),
+    relatedTickers: Array.isArray(item?.relatedTickers)
+      ? item.relatedTickers
+          .map((ticker) => cleanText(ticker).toUpperCase())
+          .filter(Boolean)
+      : [],
+    sentiment: classifySentiment(title, summary),
   };
 }
 
-async function searchYahooNews(
-  query,
-) {
-  const cleanedQuery =
-    cleanText(query);
+function relevanceScore(item, symbol, company) {
+  let score = 0;
 
-  if (!cleanedQuery) {
-    return [];
+  const normalizedSymbol = cleanText(symbol).toUpperCase();
+  const baseSymbol = normalizedSymbol.replace(/\.(NS|BO)$/i, "");
+  const title = cleanText(item?.title).toLowerCase();
+
+  const relatedTickers = Array.isArray(item?.relatedTickers)
+    ? item.relatedTickers.map((ticker) =>
+        cleanText(ticker).toUpperCase(),
+      )
+    : [];
+
+  if (normalizedSymbol && relatedTickers.includes(normalizedSymbol)) {
+    score += 20;
   }
 
-  const result =
-    await yahooFinance.search(
-      cleanedQuery,
-      {
+  if (
+    baseSymbol &&
+    relatedTickers.some(
+      (ticker) =>
+        ticker.replace(/\.(NS|BO)$/i, "") === baseSymbol,
+    )
+  ) {
+    score += 14;
+  }
+
+  if (
+    baseSymbol &&
+    title.includes(baseSymbol.toLowerCase())
+  ) {
+    score += 8;
+  }
+
+  cleanText(company)
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word.length >= 4)
+    .slice(0, 5)
+    .forEach((word) => {
+      if (title.includes(word)) {
+        score += 3;
+      }
+    });
+
+  return score;
+}
+
+function getPublishedTime(item) {
+  const value = normalizePublishedDate(
+    item?.providerPublishTime ||
+      item?.publishedAt ||
+      item?.pubDate,
+  );
+
+  return value ? new Date(value).getTime() : 0;
+}
+
+async function searchNews(query) {
+  if (!query) return [];
+
+  const result = await withRetry(
+    () =>
+      yahooFinance.search(query, {
         quotesCount: 0,
+        newsCount: MAX_LIMIT,
+      }),
+    {
+      attempts: 3,
+      delayMs: 500,
+      label: `Stock news "${query}"`,
+    },
+  );
 
-        newsCount: 30,
-
-        /*
-         * Fuzzy search caused Yahoo
-         * to return unrelated global
-         * financial news.
-         */
-        enableFuzzyQuery: false,
-      },
-    );
-
-  return Array.isArray(
-    result?.news,
-  )
+  return Array.isArray(result?.news)
     ? result.news
     : [];
 }
 
-export default async function handler(
-  request,
-  response,
-) {
-  /*
-   * Disable CDN caching while the
-   * strict news filter is being used.
-   */
+function getQueryValue(request, key) {
+  const value = request.query?.[key];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function handler(request, response) {
   response.setHeader(
     "Cache-Control",
-    "no-store, max-age=0",
+    "s-maxage=300, stale-while-revalidate=600",
   );
 
-  if (
-    request.method !== "GET"
-  ) {
-    response.setHeader(
-      "Allow",
-      "GET",
-    );
+  if (request.method !== "GET") {
+    response.setHeader("Allow", "GET");
 
-    return response
-      .status(405)
-      .json({
-        success: false,
-
-        error:
-          "Method not allowed.",
-
-        news: [],
-      });
+    return response.status(405).json({
+      success: false,
+      error: "Method not allowed.",
+    });
   }
 
   const symbol = cleanText(
-    request.query?.symbol,
+    getQueryValue(request, "symbol"),
   ).toUpperCase();
 
   const company = cleanText(
-    request.query?.company,
+    getQueryValue(request, "company"),
   );
 
+  const requestedLimit = Number(
+    getQueryValue(request, "limit"),
+  );
+
+  const limit = Number.isFinite(requestedLimit)
+    ? Math.min(
+        Math.max(Math.trunc(requestedLimit), 1),
+        MAX_LIMIT,
+      )
+    : DEFAULT_LIMIT;
+
   const forceRefresh =
-    String(
-      request.query?.refresh ||
-        "",
-    ) === "1";
+    String(getQueryValue(request, "refresh") || "") === "1";
 
   if (!symbol && !company) {
-    return response
-      .status(400)
-      .json({
-        success: false,
-
-        error:
-          "A stock symbol or company name is required.",
-
-        news: [],
-      });
+    return response.status(400).json({
+      success: false,
+      error: "A stock symbol or company name is required.",
+    });
   }
 
-  const companyIdentity =
-    getCompanyIdentity(company);
-
-  const baseSymbol =
-    removeExchangeSuffix(
-      symbol,
-    );
-
-  const cacheKey = [
-    FILTER_VERSION,
-    symbol,
-    company.toLowerCase(),
-  ].join(":");
-
-  const cachedResult =
-    newsCache.get(cacheKey);
+  const cacheKey = `${symbol}:${company.toLowerCase()}`;
+  const cached = newsCache.get(cacheKey);
 
   if (
     !forceRefresh &&
-    cachedResult &&
-    Date.now() -
-      cachedResult.createdAt <
-      CACHE_DURATION
+    cached &&
+    Date.now() - cached.createdAt < CACHE_DURATION_MS
   ) {
-    return response
-      .status(200)
-      .json({
-        ...cachedResult.data,
-        cached: true,
-      });
+    return response.status(200).json({
+      ...cached.data,
+      news: cached.data.news.slice(0, limit),
+      cached: true,
+    });
   }
 
   try {
-    /*
-     * Search only focused company
-     * queries. Do not search broad
-     * market keywords.
-     */
-    const queries = [
-      symbol,
-      companyIdentity
-        .corePhrase,
-      baseSymbol,
-    ]
-      .map(cleanText)
-      .filter(Boolean);
+    const cleanedSymbol = symbol.replace(/\.(NS|BO)$/i, "");
+    const primaryQuery = company || cleanedSymbol || symbol;
 
-    const uniqueQueries = [
-      ...new Set(queries),
-    ];
+    let items = await searchNews(primaryQuery);
 
-    const searchResults =
-      await Promise.allSettled(
-        uniqueQueries.map(
-          searchYahooNews,
-        ),
-      );
-
-    const yahooNews =
-      searchResults.flatMap(
-        (result) =>
-          result.status ===
-          "fulfilled"
-            ? result.value
-            : [],
-      );
-
-    const relevantItems =
-      yahooNews
-        .map((newsItem) => {
-          const relevance =
-            evaluateNewsRelevance({
-              newsItem,
-              symbol,
-              companyIdentity,
-            });
-
-          return {
-            newsItem,
-            ...relevance,
-          };
-        })
-        .filter(
-          (item) =>
-            item.relevant,
-        )
-        .sort(
-          (first, second) => {
-            if (
-              second.score !==
-              first.score
-            ) {
-              return (
-                second.score -
-                first.score
-              );
-            }
-
-            const firstDate =
-              normalizePublishedDate(
-                first.newsItem
-                  ?.providerPublishTime,
-              );
-
-            const secondDate =
-              normalizePublishedDate(
-                second.newsItem
-                  ?.providerPublishTime,
-              );
-
-            return (
-              new Date(
-                secondDate || 0,
-              ).getTime() -
-              new Date(
-                firstDate || 0,
-              ).getTime()
-            );
-          },
+    if (
+      items.length < 8 &&
+      symbol &&
+      primaryQuery !== symbol
+    ) {
+      try {
+        const fallbackItems = await searchNews(symbol);
+        items = [...items, ...fallbackItems];
+      } catch (fallbackError) {
+        console.warn(
+          "Ticker news fallback failed:",
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : fallbackError,
         );
+      }
+    }
 
-    const seenItems =
-      new Set();
+    const seen = new Set();
 
-    const news = relevantItems
-      .map(
-        (
-          { newsItem },
-          index,
-        ) =>
-          normalizeNewsItem(
-            newsItem,
-            index,
-          ),
-      )
+    const normalizedNews = items
+      .map((item) => ({
+        item,
+        relevance: relevanceScore(item, symbol, company),
+        publishedTime: getPublishedTime(item),
+      }))
+      .sort((first, second) => {
+        if (first.relevance !== second.relevance) {
+          return second.relevance - first.relevance;
+        }
+
+        return second.publishedTime - first.publishedTime;
+      })
+      .map(({ item }) => item)
+      .map(normalizeNewsItem)
       .filter((item) => {
-        if (
-          !item.title ||
-          !item.link
-        ) {
+        if (!item.title || !item.link) {
           return false;
         }
 
-        const duplicateKey =
-          normalizeForMatching(
-            item.title,
-          );
+        const key = `${item.title.toLowerCase()}|${item.link}`;
 
-        if (
-          seenItems.has(
-            duplicateKey,
-          )
-        ) {
+        if (seen.has(key)) {
           return false;
         }
 
-        seenItems.add(
-          duplicateKey,
-        );
-
+        seen.add(key);
         return true;
       })
-      .slice(0, 7);
+      .slice(0, MAX_LIMIT);
+
+    const sentimentSummary = normalizedNews.reduce(
+      (summary, item) => {
+        summary[item.sentiment] += 1;
+        return summary;
+      },
+      { Positive: 0, Neutral: 0, Negative: 0 },
+    );
 
     const data = {
       success: true,
-
       symbol,
-
-      company:
-        company ||
-        baseSymbol ||
-        symbol,
-
-      source:
-        "Yahoo Finance",
-
-      filter:
-        "Strict company relevance",
-
-      fetchedAt:
-        new Date().toISOString(),
-
+      company: company || cleanedSymbol || symbol,
+      source: "Yahoo Finance",
+      fetchedAt: new Date().toISOString(),
       cached: false,
-
-      news,
+      sentimentSummary,
+      news: normalizedNews,
     };
 
     newsCache.set(cacheKey, {
@@ -737,26 +405,20 @@ export default async function handler(
       data,
     });
 
-    return response
-      .status(200)
-      .json(data);
+    return response.status(200).json({
+      ...data,
+      news: normalizedNews.slice(0, limit),
+    });
   } catch (error) {
-    console.error(
-      "Stock news API error:",
-      error,
-    );
+    console.error("Stock news error:", error);
 
-    return response
-      .status(500)
-      .json({
-        success: false,
-
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to load stock-related news.",
-
-        news: [],
-      });
+    return response.status(500).json({
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unable to load stock-related news.",
+      news: [],
+    });
   }
 }
