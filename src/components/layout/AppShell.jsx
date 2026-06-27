@@ -47,6 +47,24 @@ function getInitialTheme() {
 
 export default function AppShell({
   children,
+
+  /*
+   * When true, the permanent default
+   * Topbar search will not be rendered.
+   *
+   * Dashboard uses this because it has
+   * its own large stock-search section.
+   */
+  hideDefaultSearch = false,
+
+  /*
+   * Optional custom search component
+   * rendered inside the Topbar.
+   *
+   * Dashboard supplies this only after
+   * its large search scrolls away.
+   */
+  topSearch = null,
 }) {
   const location =
     useLocation();
@@ -63,6 +81,10 @@ export default function AppShell({
     setSidebarOpen,
   ] = useState(false);
 
+  /*
+   * Apply the selected theme globally
+   * and save the selection locally.
+   */
   useEffect(() => {
     document.documentElement.setAttribute(
       "data-theme",
@@ -75,33 +97,52 @@ export default function AppShell({
     );
   }, [theme]);
 
+  /*
+   * Close the mobile sidebar whenever
+   * the route changes.
+   */
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
   function toggleTheme() {
-    setTheme((currentTheme) =>
-      currentTheme === "dark"
-        ? "light"
-        : "dark",
+    setTheme(
+      (currentTheme) =>
+        currentTheme === "dark"
+          ? "light"
+          : "dark",
     );
+  }
+
+  function openSidebar() {
+    setSidebarOpen(true);
+  }
+
+  function closeSidebar() {
+    setSidebarOpen(false);
   }
 
   return (
     <div className="exa-app-shell">
       <Sidebar
         isOpen={sidebarOpen}
-        onClose={() =>
-          setSidebarOpen(false)
-        }
+        onClose={closeSidebar}
       />
 
       <div className="exa-shell-main">
         <Topbar
           theme={theme}
-          onToggleTheme={toggleTheme}
-          onOpenSidebar={() =>
-            setSidebarOpen(true)
+          onToggleTheme={
+            toggleTheme
+          }
+          onOpenSidebar={
+            openSidebar
+          }
+          hideDefaultSearch={
+            hideDefaultSearch
+          }
+          topSearch={
+            topSearch
           }
         />
 

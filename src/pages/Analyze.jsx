@@ -1537,6 +1537,50 @@ function StockSuggestionList({
     </div>
   );
 }
+function normalizeDirectStockSymbol(value) {
+  const symbol = String(value || "")
+    .trim()
+    .toUpperCase();
+
+  const isYahooStockSymbol =
+    /^[A-Z0-9&_-]+\.(NS|BO)$/.test(
+      symbol,
+    );
+
+  return isYahooStockSymbol
+    ? symbol
+    : "";
+}
+
+function createDirectStockResult(value) {
+  const symbol =
+    normalizeDirectStockSymbol(
+      value,
+    );
+
+  if (!symbol) {
+    return null;
+  }
+
+  const isNse =
+    symbol.endsWith(".NS");
+
+  return {
+    symbol,
+
+    name: symbol.replace(
+      /\.(NS|BO)$/,
+      "",
+    ),
+
+    exchange: isNse
+      ? "NSE"
+      : "BSE",
+
+    quoteType: "EQUITY",
+    type: "Equity",
+  };
+}
 
 
 export default function Analyze() {
@@ -1806,33 +1850,44 @@ export default function Analyze() {
   ]);
 
   async function analyze(stock) {
-    const suppliedStock =
-      stock &&
-      typeof stock === "object"
-        ? stock
-        : null;
+  const suppliedStock =
+    stock &&
+    typeof stock === "object"
+      ? stock
+      : null;
 
-    const q = String(
-      suppliedStock?.symbol ||
-        stock ||
-        query,
-    ).trim();
+  const q = String(
+    suppliedStock?.symbol ||
+      stock ||
+      query,
+  ).trim();
 
-    if (!q || loading) {
-      return;
-    }
+  if (!q || loading) {
+    return;
+  }
 
-    closeSuggestions();
-    setLoading(true);
-    setError("");
-    setAiNotice("");
-    setResult(null);
+  /*
+   * Dashboard and direct URLs provide exact
+   * Yahoo symbols such as HDFCBANK.NS.
+   *
+   * Exact symbols do not need to pass through
+   * the company-name search endpoint.
+   */
+  const directStock =
+    suppliedStock ||
+    createDirectStockResult(q);
 
-    try {
-      const searchResults =
-        suppliedStock
-          ? [suppliedStock]
-          : await searchStocks(q);
+  closeSuggestions();
+  setLoading(true);
+  setError("");
+  setAiNotice("");
+  setResult(null);
+
+  try {
+    const searchResults =
+      directStock
+        ? [directStock]
+        : await searchStocks(q);
 
       if (
         !Array.isArray(searchResults) ||
@@ -1893,6 +1948,10 @@ export default function Analyze() {
 
       setResult(liveResult);
       setQuery("");
+      saveRecentAnalysis({
+       stockData,
+       analysis: liveResult,
+          });
 
       try {
         const aiAnalysis =

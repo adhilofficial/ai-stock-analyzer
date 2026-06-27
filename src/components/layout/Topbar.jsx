@@ -20,6 +20,8 @@ export default function Topbar({
   theme = "dark",
   onToggleTheme,
   onOpenSidebar,
+  hideDefaultSearch = false,
+  topSearch = null,
 }) {
   const navigate =
     useNavigate();
@@ -64,34 +66,40 @@ export default function Topbar({
           <Menu size={21} />
         </button>
 
-        <form
-          className="exa-topbar-search"
-          onSubmit={handleSearch}
-        >
-          <Search
-            size={17}
-            strokeWidth={1.8}
-          />
-
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(event) =>
-              setSearchQuery(
-                event.target.value,
-              )
-            }
-            placeholder="Search stocks, mutual funds, indices..."
-            aria-label="Search stocks, mutual funds or indices"
-          />
-
-          <button
-            type="submit"
-            aria-label="Search"
+        {topSearch ? (
+          <div className="exa-topbar-custom-search">
+            {topSearch}
+          </div>
+        ) : !hideDefaultSearch ? (
+          <form
+            className="exa-topbar-search"
+            onSubmit={handleSearch}
           >
-            <Search size={16} />
-          </button>
-        </form>
+            <Search
+              size={17}
+              strokeWidth={1.8}
+            />
+
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) =>
+                setSearchQuery(
+                  event.target.value,
+                )
+              }
+              placeholder="Search stocks, mutual funds, indices..."
+              aria-label="Search stocks, mutual funds or indices"
+            />
+
+            <button
+              type="submit"
+              aria-label="Search"
+            >
+              <Search size={16} />
+            </button>
+          </form>
+        ) : null}
       </div>
 
       <div className="exa-topbar-actions">
