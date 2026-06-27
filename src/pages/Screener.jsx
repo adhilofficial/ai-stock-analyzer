@@ -27,6 +27,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 
 import AppShell from "../components/layout/AppShell";
+import SnapshotFreshnessBanner from "../components/data/SnapshotFreshnessBanner";
 
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
@@ -2577,6 +2578,13 @@ export default function Screener() {
               {refreshing ? "Reloading" : "Reload results"}
             </button>
           </section>
+
+          {apiData && !error && (
+            <SnapshotFreshnessBanner
+              generatedAt={apiData.generatedAt}
+              source={apiData.source}
+            />
+          )}
 
           <section className="exa-screener-summary-grid">
             <SummaryCard

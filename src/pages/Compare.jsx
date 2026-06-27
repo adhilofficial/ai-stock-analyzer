@@ -34,6 +34,8 @@ import {
 
 import AppShell from
   "../components/layout/AppShell";
+import SnapshotFreshnessBanner from
+  "../components/data/SnapshotFreshnessBanner";
 
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
@@ -2492,6 +2494,13 @@ export default function Compare() {
             </button>
           </section>
 
+          {apiData && !error && (
+            <SnapshotFreshnessBanner
+              generatedAt={apiData.generatedAt}
+              source={apiData.source}
+            />
+          )}
+
           {loading ? (
             <section className="exa-compare-table-card">
               <div className="exa-compare-state">
@@ -2543,14 +2552,7 @@ export default function Compare() {
                   <strong>
                     {stocks.length} companies
                   </strong>{" "}
-                  selected · snapshot generated{" "}
-                  {apiData?.generatedAt
-                    ? new Date(
-                        apiData.generatedAt,
-                      ).toLocaleString(
-                        "en-IN",
-                      )
-                    : "time unavailable"}
+                  selected for relative comparison
                 </span>
 
                 <span>
