@@ -10,6 +10,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:stock-master": "node scripts/build-indian-stock-master.mjs",
+    "build:screener-universe": "node scripts/build-screener-universe.mjs",
+    "build:screener-snapshot": "node scripts/build-screener-snapshot.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "Server": "node server.cjs"
