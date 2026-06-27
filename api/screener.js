@@ -10,6 +10,7 @@ import {
 
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
+const MAX_COMPARE_STOCKS = 5;
 
 const ALLOWED_SORT_FIELDS =
   new Set([
@@ -109,6 +110,82 @@ function cleanText(value) {
 function normalizeText(value) {
   return cleanText(value)
     .toLowerCase();
+}
+function normalizeSymbol(value) {
+  return cleanText(value)
+    .toUpperCase();
+}
+
+function parseRequestedSymbols(
+  request,
+) {
+  const rawValue =
+    cleanText(
+      getQueryValue(
+        request,
+        "symbols",
+      ),
+    );
+
+  if (!rawValue) {
+    return [];
+  }
+
+  const seen = new Set();
+
+  return rawValue
+    .split(",")
+    .map(normalizeSymbol)
+    .filter((symbol) => {
+      if (
+        !symbol ||
+        seen.has(symbol)
+      ) {
+        return false;
+      }
+
+      seen.add(symbol);
+
+      return true;
+    });
+}
+
+function createStockLookup(stocks) {
+  const lookup = new Map();
+
+  stocks.forEach((stock) => {
+    const symbol =
+      normalizeSymbol(
+        stock?.symbol ||
+          stock?.yahooSymbol,
+      );
+
+    const nseSymbol =
+      normalizeSymbol(
+        stock?.nseSymbol,
+      );
+
+    if (symbol) {
+      lookup.set(
+        symbol,
+        stock,
+      );
+    }
+
+    if (nseSymbol) {
+      lookup.set(
+        nseSymbol,
+        stock,
+      );
+
+      lookup.set(
+        `${nseSymbol}.NS`,
+        stock,
+      );
+    }
+  });
+
+  return lookup;
 }
 
 function safeNumber(value) {
@@ -810,6 +887,134 @@ export default async function handler(
 
     const allStocks =
       snapshot.stocks;
+
+      /*
+|--------------------------------------------------------------------------
+| Multi-stock comparison request
+|--------------------------------------------------------------------------
+|
+| Example:
+| /api/screener?symbols=RELIANCE.NS,TCS.NS
+|
+*/
+
+const requestedSymbols =
+  parseRequestedSymbols(
+    request,
+  );
+
+if (
+  requestedSymbols.length > 0
+) {
+  if (
+    requestedSymbols.length < 2
+  ) {
+    return response
+      .status(400)
+      .json({
+        success: false,
+
+        error:
+          "Select at least two stock symbols to compare.",
+
+        stocks: [],
+      });
+  }
+
+  if (
+    requestedSymbols.length >
+    MAX_COMPARE_STOCKS
+  ) {
+    return response
+      .status(400)
+      .json({
+        success: false,
+
+        error:
+          `You can compare up to ${MAX_COMPARE_STOCKS} companies at one time.`,
+
+        stocks: [],
+      });
+  }
+
+  const stockLookup =
+    createStockLookup(
+      allStocks,
+    );
+
+  const stocks = [];
+  const missingSymbols = [];
+
+  requestedSymbols.forEach(
+    (requestedSymbol) => {
+      const stock =
+        stockLookup.get(
+          requestedSymbol,
+        );
+
+      if (stock) {
+        stocks.push(stock);
+      } else {
+        missingSymbols.push(
+          requestedSymbol,
+        );
+      }
+    },
+  );
+
+  if (stocks.length < 2) {
+    return response
+      .status(404)
+      .json({
+        success: false,
+
+        error:
+          "At least two selected companies were not available in the current screener snapshot.",
+
+        requestedSymbols,
+
+        missingSymbols,
+
+        stocks,
+      });
+  }
+
+  return response
+    .status(200)
+    .json({
+      success: true,
+
+      comparison: true,
+
+      maxStocks:
+        MAX_COMPARE_STOCKS,
+
+      requestedSymbols,
+
+      foundCount:
+        stocks.length,
+
+      missingSymbols,
+
+      generatedAt:
+        snapshot.generatedAt ||
+        null,
+
+      fetchedAt:
+        new Date()
+          .toISOString(),
+
+      source:
+        snapshot.source ||
+        "Yahoo Finance",
+
+      snapshotVersion:
+        snapshot.version ??
+        null,
+
+      stocks,
+    });
+}
 
     const page =
       clampInteger(
