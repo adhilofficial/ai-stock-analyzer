@@ -6,6 +6,7 @@ import {
   ArrowRight,
   BarChart3,
   BookmarkPlus,
+  Check,
   ExternalLink,
   Filter,
   FolderOpen,
@@ -13,12 +14,14 @@ import {
   RefreshCw,
   RotateCcw,
   Save,
+  Scale,
   Search,
   SlidersHorizontal,
   Sparkles,
   Trash2,
   TrendingDown,
   TrendingUp,
+  X,
 } from "lucide-react";
 
 import { useLocation, useNavigate } from "react-router-dom";
@@ -164,6 +167,11 @@ const DEFAULT_SORT_VALUE = "marketCap-desc";
 const SAVED_SCREENS_STORAGE_KEY = "exa-screener-saved-screens-v1";
 
 const MAX_SAVED_SCREENS = 20;
+
+const COMPARE_SELECTION_STORAGE_KEY =
+  "exa-screener-compare-selection-v1";
+
+const MAX_COMPARE_STOCKS = 5;
 
 const ALLOWED_PAGE_SIZES = new Set([5, 10, 15]);
 
@@ -527,11 +535,87 @@ function describeSavedScreen(screen) {
   return parts.slice(0, 5).join(" · ");
 }
 
+
+function normalizeCompareStock(stock) {
+  const symbol = String(stock?.symbol || "")
+    .trim()
+    .toUpperCase();
+
+  if (!symbol) {
+    return null;
+  }
+
+  return {
+    symbol,
+    name: String(stock?.name || symbol).trim(),
+    sector: String(stock?.sector || "Sector unavailable").trim(),
+    logoDomain: String(stock?.logoDomain || "").trim(),
+  };
+}
+
+function readCompareSelection() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const rawValue = window.sessionStorage.getItem(
+      COMPARE_SELECTION_STORAGE_KEY,
+    );
+
+    if (!rawValue) {
+      return [];
+    }
+
+    const parsed = JSON.parse(rawValue);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    const seen = new Set();
+
+    return parsed
+      .map(normalizeCompareStock)
+      .filter((stock) => {
+        if (!stock || seen.has(stock.symbol)) {
+          return false;
+        }
+
+        seen.add(stock.symbol);
+        return true;
+      })
+      .slice(0, MAX_COMPARE_STOCKS);
+  } catch (error) {
+    console.error("Unable to restore compare selection:", error);
+    return [];
+  }
+}
+
+function writeCompareSelection(stocks) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.sessionStorage.setItem(
+      COMPARE_SELECTION_STORAGE_KEY,
+      JSON.stringify(stocks),
+    );
+  } catch (error) {
+    console.error("Unable to save compare selection:", error);
+  }
+}
+
 const SCREENER_STYLES = `
   .exa-screener-page {
     min-height: 100vh;
     padding: 28px;
     color: #e2e8f0;
+  }
+
+  .exa-screener-page.compare-active {
+    padding-bottom: 145px;
   }
 
   .exa-screener-container {
@@ -1013,6 +1097,210 @@ const SCREENER_STYLES = `
     text-align: center;
   }
 
+  .exa-screener-table tbody tr.compare-selected {
+    background: rgba(37, 99, 235, 0.08);
+  }
+
+  .exa-screener-compare-cell {
+    width: 58px;
+    text-align: center !important;
+  }
+
+  .exa-screener-compare-toggle {
+    width: 29px;
+    height: 29px;
+    border: 1px solid #29405f;
+    border-radius: 8px;
+    color: #64748b;
+    background: #101e34;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease,
+      background 160ms ease,
+      transform 160ms ease;
+  }
+
+  .exa-screener-compare-toggle:hover {
+    border-color: rgba(96, 165, 250, 0.55);
+    color: #bfdbfe;
+    transform: translateY(-1px);
+  }
+
+  .exa-screener-compare-toggle.selected {
+    border-color: rgba(34, 211, 238, 0.45);
+    color: #ecfeff;
+    background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.92),
+      rgba(79, 70, 229, 0.92)
+    );
+  }
+
+  .exa-compare-tray {
+    position: fixed;
+    right: 24px;
+    bottom: 22px;
+    left: calc(var(--sidebar-width, 250px) + 24px);
+    z-index: 70;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 13px 14px;
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    border-radius: 16px;
+    background:
+      linear-gradient(
+        145deg,
+        rgba(11, 27, 48, 0.98),
+        rgba(6, 17, 32, 0.98)
+      );
+    box-shadow:
+      0 20px 60px rgba(2, 8, 23, 0.52),
+      0 0 0 1px rgba(37, 99, 235, 0.05);
+    backdrop-filter: blur(16px);
+  }
+
+  .exa-compare-tray-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .exa-compare-tray-title {
+    min-width: 132px;
+    flex-shrink: 0;
+  }
+
+  .exa-compare-tray-title strong {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #f8fafc;
+    font-size: 11px;
+  }
+
+  .exa-compare-tray-title small {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 8px;
+  }
+
+  .exa-compare-tray-stocks {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    flex: 1;
+    overflow-x: auto;
+    padding: 2px 0;
+  }
+
+  .exa-compare-chip {
+    min-width: 0;
+    max-width: 190px;
+    padding: 7px 8px;
+    border: 1px solid #203754;
+    border-radius: 10px;
+    background: #101e34;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+
+  .exa-compare-chip-copy {
+    min-width: 0;
+  }
+
+  .exa-compare-chip-copy strong {
+    display: block;
+    overflow: hidden;
+    color: #e2e8f0;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .exa-compare-chip-copy small {
+    display: block;
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 7px;
+  }
+
+  .exa-compare-chip-remove {
+    width: 23px;
+    height: 23px;
+    margin-left: auto;
+    border: 0;
+    border-radius: 7px;
+    color: #94a3b8;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .exa-compare-chip-remove:hover {
+    color: #fda4af;
+    background: rgba(244, 63, 94, 0.08);
+  }
+
+  .exa-compare-tray-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+
+  .exa-compare-clear,
+  .exa-compare-open {
+    min-height: 36px;
+    padding: 8px 11px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .exa-compare-clear {
+    border: 1px solid #29405f;
+    color: #94a3b8;
+    background: #101e34;
+  }
+
+  .exa-compare-open {
+    border: 1px solid rgba(96, 165, 250, 0.38);
+    color: #ffffff;
+    background: linear-gradient(
+      135deg,
+      #2563eb,
+      #4f46e5
+    );
+  }
+
+  .exa-compare-open:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  .exa-compare-tray-message {
+    margin: 8px 0 0;
+    color: #fbbf24;
+    font-size: 8px;
+  }
+
   .exa-screener-toolbar {
     padding: 14px;
     margin-top: 14px;
@@ -1094,7 +1382,7 @@ const SCREENER_STYLES = `
 
   .exa-screener-table {
     width: 100%;
-    min-width: 1120px;
+    min-width: 1180px;
     border-collapse: collapse;
   }
 
@@ -1311,6 +1599,32 @@ const SCREENER_STYLES = `
   .exa-screener-page-button:disabled {
     cursor: not-allowed;
     opacity: 0.45;
+  }
+
+  @media (max-width: 900px) {
+    .exa-compare-tray {
+      right: 12px;
+      bottom: 12px;
+      left: 12px;
+    }
+
+    .exa-compare-tray-main {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .exa-compare-tray-title {
+      min-width: 0;
+    }
+
+    .exa-compare-tray-actions {
+      width: 100%;
+    }
+
+    .exa-compare-clear,
+    .exa-compare-open {
+      flex: 1;
+    }
   }
 
   @media (max-width: 1100px) {
@@ -1581,6 +1895,12 @@ export default function Screener() {
 
   const [savedScreenError, setSavedScreenError] = useState("");
 
+  const [selectedCompareStocks, setSelectedCompareStocks] = useState(() =>
+    readCompareSelection(),
+  );
+
+  const [compareMessage, setCompareMessage] = useState("");
+
   const loadScreener = useCallback(
     async ({ refresh = false, signal } = {}) => {
       if (refresh) {
@@ -1724,6 +2044,24 @@ export default function Screener() {
       window.clearTimeout(timer);
     };
   }, [savedScreenMessage, savedScreenError]);
+
+  useEffect(() => {
+    writeCompareSelection(selectedCompareStocks);
+  }, [selectedCompareStocks]);
+
+  useEffect(() => {
+    if (!compareMessage) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setCompareMessage("");
+    }, 3500);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [compareMessage]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -2089,6 +2427,78 @@ export default function Screener() {
     setSavedScreenMessage(`Deleted “${screenName}”.`);
   }
 
+  function isStockSelectedForCompare(symbol) {
+    const normalizedSymbol = String(symbol || "")
+      .trim()
+      .toUpperCase();
+
+    return selectedCompareStocks.some(
+      (stock) => stock.symbol === normalizedSymbol,
+    );
+  }
+
+  function toggleCompareStock(stock) {
+    const normalizedStock = normalizeCompareStock(stock);
+
+    if (!normalizedStock) {
+      return;
+    }
+
+    setCompareMessage("");
+
+    setSelectedCompareStocks((current) => {
+      const alreadySelected = current.some(
+        (item) => item.symbol === normalizedStock.symbol,
+      );
+
+      if (alreadySelected) {
+        return current.filter(
+          (item) => item.symbol !== normalizedStock.symbol,
+        );
+      }
+
+      if (current.length >= MAX_COMPARE_STOCKS) {
+        setCompareMessage(
+          `You can compare up to ${MAX_COMPARE_STOCKS} companies at one time.`,
+        );
+
+        return current;
+      }
+
+      return [...current, normalizedStock];
+    });
+  }
+
+  function removeCompareStock(symbol) {
+    const normalizedSymbol = String(symbol || "")
+      .trim()
+      .toUpperCase();
+
+    setSelectedCompareStocks((current) =>
+      current.filter((stock) => stock.symbol !== normalizedSymbol),
+    );
+  }
+
+  function clearCompareSelection() {
+    setSelectedCompareStocks([]);
+    setCompareMessage("");
+  }
+
+  function openComparison() {
+    if (selectedCompareStocks.length < 2) {
+      setCompareMessage("Select at least two companies to compare.");
+      return;
+    }
+
+    const symbols = selectedCompareStocks
+      .map((stock) => stock.symbol)
+      .join(",");
+
+    navigate(
+      `/compare?symbols=${encodeURIComponent(symbols)}`,
+    );
+  }
+
   const visibleStocks = stocks;
 
   const matchingCount = Number(apiData?.matchingStocks ?? stocks.length);
@@ -2127,7 +2537,13 @@ export default function Screener() {
     <AppShell>
       <style>{SCREENER_STYLES}</style>
 
-      <main className="exa-screener-page">
+      <main
+        className={
+          selectedCompareStocks.length > 0
+            ? "exa-screener-page compare-active"
+            : "exa-screener-page"
+        }
+      >
         <div className="exa-screener-container">
           <section className="exa-screener-header">
             <div>
@@ -2635,6 +3051,10 @@ export default function Screener() {
                     <table className="exa-screener-table">
                       <thead>
                         <tr>
+                          <th className="exa-screener-compare-cell">
+                            Compare
+                          </th>
+
                           <th>Company</th>
 
                           <th>Price</th>
@@ -2671,8 +3091,47 @@ export default function Screener() {
                             .toLowerCase()
                             .replace(/\s+/g, "-");
 
+                          const selectedForCompare =
+                            isStockSelectedForCompare(stock.symbol);
+
                           return (
-                            <tr key={stock.symbol}>
+                            <tr
+                              key={stock.symbol}
+                              className={
+                                selectedForCompare
+                                  ? "compare-selected"
+                                  : ""
+                              }
+                            >
+                              <td className="exa-screener-compare-cell">
+                                <button
+                                  type="button"
+                                  className={
+                                    selectedForCompare
+                                      ? "exa-screener-compare-toggle selected"
+                                      : "exa-screener-compare-toggle"
+                                  }
+                                  aria-pressed={selectedForCompare}
+                                  aria-label={
+                                    selectedForCompare
+                                      ? `Remove ${stock.name} from comparison`
+                                      : `Add ${stock.name} to comparison`
+                                  }
+                                  title={
+                                    selectedForCompare
+                                      ? "Remove from comparison"
+                                      : "Add to comparison"
+                                  }
+                                  onClick={() => toggleCompareStock(stock)}
+                                >
+                                  {selectedForCompare ? (
+                                    <Check size={14} />
+                                  ) : (
+                                    <Scale size={13} />
+                                  )}
+                                </button>
+                              </td>
+
                               <td>
                                 <div className="exa-screener-company">
                                   <CompanyLogo
@@ -2849,6 +3308,86 @@ export default function Screener() {
             </div>
           </section>
         </div>
+
+        {selectedCompareStocks.length > 0 && (
+          <section
+            className="exa-compare-tray"
+            aria-label="Selected companies for comparison"
+          >
+            <div className="exa-compare-tray-main">
+              <div className="exa-compare-tray-title">
+                <strong>
+                  <Scale size={15} />
+                  Compare stocks
+                </strong>
+
+                <small>
+                  {selectedCompareStocks.length}/{MAX_COMPARE_STOCKS} selected
+                </small>
+              </div>
+
+              <div className="exa-compare-tray-stocks">
+                {selectedCompareStocks.map((stock) => (
+                  <div
+                    key={stock.symbol}
+                    className="exa-compare-chip"
+                  >
+                    <CompanyLogo
+                      domain={stock.logoDomain}
+                      name={stock.name}
+                    />
+
+                    <div className="exa-compare-chip-copy">
+                      <strong title={stock.name}>
+                        {stock.name}
+                      </strong>
+
+                      <small>{stock.symbol}</small>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="exa-compare-chip-remove"
+                      onClick={() =>
+                        removeCompareStock(stock.symbol)
+                      }
+                      aria-label={`Remove ${stock.name}`}
+                      title="Remove"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="exa-compare-tray-actions">
+                <button
+                  type="button"
+                  className="exa-compare-clear"
+                  onClick={clearCompareSelection}
+                >
+                  Clear
+                </button>
+
+                <button
+                  type="button"
+                  className="exa-compare-open"
+                  disabled={selectedCompareStocks.length < 2}
+                  onClick={openComparison}
+                >
+                  <Scale size={13} />
+                  Compare {selectedCompareStocks.length}
+                </button>
+              </div>
+            </div>
+
+            {compareMessage && (
+              <p className="exa-compare-tray-message" role="status">
+                {compareMessage}
+              </p>
+            )}
+          </section>
+        )}
       </main>
     </AppShell>
   );

@@ -31,6 +31,7 @@ const ComingSoon = lazy(() =>
   import("./pages/ComingSoon"),
 );
 import Screener from "./pages/Screener";
+import Compare from "./pages/Compare";
 
 function PageLoader() {
   return (
@@ -138,6 +139,11 @@ function AppRoutes() {
             <PremiumComingSoon />
           }
         />
+
+        <Route
+  path="/compare"
+  element={<Compare />}
+/>
 
         <Route
           path="*"
