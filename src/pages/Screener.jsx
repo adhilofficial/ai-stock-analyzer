@@ -1,33 +1,29 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
   BarChart3,
+  BookmarkPlus,
   ExternalLink,
   Filter,
+  FolderOpen,
   LoaderCircle,
   RefreshCw,
   RotateCcw,
+  Save,
   Search,
   SlidersHorizontal,
   Sparkles,
+  Trash2,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
 
-import {
-  useNavigate,
-} from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import AppShell from
-  "../components/layout/AppShell";
+import AppShell from "../components/layout/AppShell";
 
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
@@ -58,57 +54,49 @@ const PRESETS = [
   {
     id: "all",
     label: "All stocks",
-    description:
-      "Clear every active screener filter.",
+    description: "Clear every active screener filter.",
   },
 
   {
     id: "quality-growth",
     label: "Quality growth",
-    description:
-      "Growth, profitability and controlled debt.",
+    description: "Growth, profitability and controlled debt.",
   },
 
   {
     id: "low-debt",
     label: "Low debt",
-    description:
-      "Companies with lower debt-to-equity.",
+    description: "Companies with lower debt-to-equity.",
   },
 
   {
     id: "high-roe",
     label: "High ROE",
-    description:
-      "Return on equity of at least 15%.",
+    description: "Return on equity of at least 15%.",
   },
 
   {
     id: "positive-momentum",
     label: "Positive momentum",
-    description:
-      "Bullish price and moving-average alignment.",
+    description: "Bullish price and moving-average alignment.",
   },
 
   {
     id: "near-high",
     label: "Near 52-week high",
-    description:
-      "Trading within 10% of the annual high.",
+    description: "Trading within 10% of the annual high.",
   },
 
   {
     id: "value",
     label: "Value screen",
-    description:
-      "Moderate P/E with profitability controls.",
+    description: "Moderate P/E with profitability controls.",
   },
 
   {
     id: "oversold",
     label: "Oversold",
-    description:
-      "RSI at or below 35.",
+    description: "RSI at or below 35.",
   },
 ];
 
@@ -144,8 +132,8 @@ const SORT_OPTIONS = [
   },
 
   {
-  value: "debtToEquity-asc",
-  label: "Debt-to-equity: Low to high",
+    value: "debtToEquity-asc",
+    label: "Debt-to-equity: Low to high",
   },
 
   {
@@ -168,6 +156,376 @@ const SORT_OPTIONS = [
     label: "Company name: A to Z",
   },
 ];
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_SORT_VALUE = "marketCap-desc";
+
+const SAVED_SCREENS_STORAGE_KEY = "exa-screener-saved-screens-v1";
+
+const MAX_SAVED_SCREENS = 20;
+
+const ALLOWED_PAGE_SIZES = new Set([5, 10, 15]);
+
+const VALID_SORT_VALUES = new Set(SORT_OPTIONS.map((option) => option.value));
+
+const VALID_PRESET_IDS = new Set(PRESETS.map((preset) => preset.id));
+
+const FILTER_URL_KEYS = {
+  sector: "sector",
+  trend: "trend",
+  minPrice: "minPrice",
+  maxPrice: "maxPrice",
+  minPe: "minPe",
+  maxPe: "maxPe",
+  minRevenueGrowth: "minRevenueGrowth",
+  minRoe: "minRoe",
+  minProfitMargin: "minProfitMargin",
+  maxDebtToEquity: "maxDebtToEquity",
+  minRsi: "minRsi",
+  maxRsi: "maxRsi",
+  maxDistanceFromHigh: "maxDistanceFromHigh",
+};
+
+function parsePositiveInteger(value, fallback) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number) || number < 1) {
+    return fallback;
+  }
+
+  return Math.trunc(number);
+}
+
+function filtersAreDefault(filters) {
+  return Object.entries(DEFAULT_FILTERS).every(
+    ([key, defaultValue]) =>
+      String(filters?.[key] ?? defaultValue) === String(defaultValue),
+  );
+}
+
+function parseScreenerUrlState(search) {
+  const parameters = new URLSearchParams(search);
+
+  const requestedPage = parsePositiveInteger(
+    parameters.get("page"),
+    DEFAULT_PAGE,
+  );
+
+  const requestedPageSize = parsePositiveInteger(
+    parameters.get("limit"),
+    DEFAULT_PAGE_SIZE,
+  );
+
+  const pageSize = ALLOWED_PAGE_SIZES.has(requestedPageSize)
+    ? requestedPageSize
+    : DEFAULT_PAGE_SIZE;
+
+  const requestedSort = String(
+    parameters.get("sort") || DEFAULT_SORT_VALUE,
+  ).trim();
+
+  const sortValue = VALID_SORT_VALUES.has(requestedSort)
+    ? requestedSort
+    : DEFAULT_SORT_VALUE;
+
+  const searchQuery = String(
+    parameters.get("q") || parameters.get("search") || "",
+  ).trim();
+
+  const filters = {
+    ...DEFAULT_FILTERS,
+  };
+
+  Object.entries(FILTER_URL_KEYS).forEach(([filterKey, urlKey]) => {
+    const value = parameters.get(urlKey);
+
+    if (value !== null && value !== "") {
+      filters[filterKey] = value;
+    }
+  });
+
+  const requestedPreset = String(parameters.get("preset") || "").trim();
+
+  let activePreset = "all";
+
+  if (requestedPreset && VALID_PRESET_IDS.has(requestedPreset)) {
+    activePreset = requestedPreset;
+  } else if (
+    searchQuery ||
+    !filtersAreDefault(filters) ||
+    sortValue !== DEFAULT_SORT_VALUE
+  ) {
+    activePreset = "custom";
+  }
+
+  return {
+    page: requestedPage,
+    pageSize,
+    searchQuery,
+    debouncedSearch: searchQuery,
+    filters,
+    activePreset,
+    sortValue,
+  };
+}
+
+function buildScreenerSearchParams({
+  page,
+  pageSize,
+  searchQuery,
+  filters,
+  activePreset,
+  sortValue,
+}) {
+  const parameters = new URLSearchParams();
+
+  if (page > DEFAULT_PAGE) {
+    parameters.set("page", String(page));
+  }
+
+  if (pageSize !== DEFAULT_PAGE_SIZE) {
+    parameters.set("limit", String(pageSize));
+  }
+
+  const normalizedSearch = String(searchQuery || "").trim();
+
+  if (normalizedSearch) {
+    parameters.set("q", normalizedSearch);
+  }
+
+  Object.entries(FILTER_URL_KEYS).forEach(([filterKey, urlKey]) => {
+    const value = String(filters?.[filterKey] ?? "").trim();
+
+    const defaultValue = String(DEFAULT_FILTERS[filterKey] ?? "");
+
+    if (value && value !== "All" && value !== defaultValue) {
+      parameters.set(urlKey, value);
+    }
+  });
+
+  if (sortValue && sortValue !== DEFAULT_SORT_VALUE) {
+    parameters.set("sort", sortValue);
+  }
+
+  if (activePreset && activePreset !== "all" && activePreset !== "custom") {
+    parameters.set("preset", activePreset);
+  }
+
+  return parameters;
+}
+
+function normalizeSavedScreen(screen) {
+  if (!screen || typeof screen !== "object") {
+    return null;
+  }
+
+  const id = String(screen.id || "").trim();
+
+  const name = String(screen.name || "").trim();
+
+  if (!id || !name) {
+    return null;
+  }
+
+  const normalizedFilters = {
+    ...DEFAULT_FILTERS,
+  };
+
+  Object.keys(DEFAULT_FILTERS).forEach((key) => {
+    const value = screen.filters?.[key];
+
+    if (value !== null && value !== undefined) {
+      normalizedFilters[key] = String(value);
+    }
+  });
+
+  const requestedPageSize = parsePositiveInteger(
+    screen.pageSize,
+    DEFAULT_PAGE_SIZE,
+  );
+
+  const pageSize = ALLOWED_PAGE_SIZES.has(requestedPageSize)
+    ? requestedPageSize
+    : DEFAULT_PAGE_SIZE;
+
+  const requestedSort = String(screen.sortValue || DEFAULT_SORT_VALUE).trim();
+
+  const sortValue = VALID_SORT_VALUES.has(requestedSort)
+    ? requestedSort
+    : DEFAULT_SORT_VALUE;
+
+  const requestedPreset = String(screen.activePreset || "custom").trim();
+
+  const activePreset =
+    requestedPreset === "custom" || VALID_PRESET_IDS.has(requestedPreset)
+      ? requestedPreset
+      : "custom";
+
+  const createdAt = String(screen.createdAt || new Date().toISOString());
+
+  const updatedAt = String(screen.updatedAt || createdAt);
+
+  return {
+    id,
+    name: name.slice(0, 50),
+    createdAt,
+    updatedAt,
+    searchQuery: String(screen.searchQuery || "").trim(),
+    filters: normalizedFilters,
+    activePreset,
+    sortValue,
+    pageSize,
+  };
+}
+
+function readSavedScreens() {
+  if (typeof window === "undefined") {
+    return {
+      screens: [],
+      error: "",
+    };
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(SAVED_SCREENS_STORAGE_KEY);
+
+    if (!rawValue) {
+      return {
+        screens: [],
+        error: "",
+      };
+    }
+
+    const parsed = JSON.parse(rawValue);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error("Saved screen data is not an array.");
+    }
+
+    const screens = parsed
+      .map(normalizeSavedScreen)
+      .filter(Boolean)
+      .sort(
+        (first, second) =>
+          new Date(second.updatedAt).getTime() -
+          new Date(first.updatedAt).getTime(),
+      )
+      .slice(0, MAX_SAVED_SCREENS);
+
+    return {
+      screens,
+      error: "",
+    };
+  } catch (error) {
+    console.error("Unable to read saved screener screens:", error);
+
+    return {
+      screens: [],
+      error: "Saved screens could not be loaded from this browser.",
+    };
+  }
+}
+
+function writeSavedScreens(screens) {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    window.localStorage.setItem(
+      SAVED_SCREENS_STORAGE_KEY,
+      JSON.stringify(screens),
+    );
+
+    return true;
+  } catch (error) {
+    console.error("Unable to save screener screens:", error);
+
+    return false;
+  }
+}
+
+function createSavedScreenId() {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+
+  return `screen-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function formatSavedScreenDate(value) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Recently saved";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(date);
+  } catch {
+    return date.toLocaleString();
+  }
+}
+
+function describeSavedScreen(screen) {
+  const parts = [];
+
+  if (screen.searchQuery) {
+    parts.push(`Search: ${screen.searchQuery}`);
+  }
+
+  if (screen.filters?.sector && screen.filters.sector !== "All") {
+    parts.push(screen.filters.sector);
+  }
+
+  if (screen.filters?.trend && screen.filters.trend !== "All") {
+    parts.push(`${screen.filters.trend} trend`);
+  }
+
+  if (screen.filters?.minRoe) {
+    parts.push(`ROE ≥ ${screen.filters.minRoe}%`);
+  }
+
+  if (screen.filters?.maxPe) {
+    parts.push(`P/E ≤ ${screen.filters.maxPe}`);
+  }
+
+  const activeFilterCount = Object.entries(screen.filters || {}).filter(
+    ([key, value]) =>
+      String(value || "").trim() &&
+      String(value) !== String(DEFAULT_FILTERS[key] || "") &&
+      value !== "All",
+  ).length;
+
+  const representedFilterCount = [
+    screen.filters?.sector !== "All" && screen.filters?.sector,
+    screen.filters?.trend !== "All" && screen.filters?.trend,
+    screen.filters?.minRoe,
+    screen.filters?.maxPe,
+  ].filter(Boolean).length;
+
+  const additionalFilters = Math.max(
+    activeFilterCount - representedFilterCount,
+    0,
+  );
+
+  if (additionalFilters > 0) {
+    parts.push(`+${additionalFilters} more`);
+  }
+
+  if (parts.length === 0) {
+    return "All stocks with the selected sorting and page size.";
+  }
+
+  return parts.slice(0, 5).join(" · ");
+}
 
 const SCREENER_STYLES = `
   .exa-screener-page {
@@ -442,6 +800,217 @@ const SCREENER_STYLES = `
     color: #64748b;
     font-size: 9px;
     line-height: 1.45;
+  }
+
+  .exa-saved-screens-panel {
+    padding: 15px;
+    margin-top: 14px;
+    border: 1px solid #1e3350;
+    border-radius: 16px;
+    background: #0a1628;
+  }
+
+  .exa-saved-screens-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  .exa-saved-screens-heading-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    min-width: 0;
+  }
+
+  .exa-saved-screens-heading h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 13px;
+  }
+
+  .exa-saved-screens-heading p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .exa-saved-screens-count {
+    flex-shrink: 0;
+    padding: 4px 7px;
+    border: 1px solid #1e3350;
+    border-radius: 999px;
+    color: #93c5fd;
+    background: #101e34;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .exa-saved-screen-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .exa-saved-screen-name-input {
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 11px;
+    border: 1px solid #1e3350;
+    border-radius: 10px;
+    outline: none;
+    color: #e2e8f0;
+    background: #101e34;
+    font-size: 11px;
+  }
+
+  .exa-saved-screen-name-input:focus {
+    border-color: rgba(96, 165, 250, 0.65);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .exa-saved-screen-save-button {
+    min-height: 40px;
+    padding: 8px 13px;
+    border: 1px solid rgba(96, 165, 250, 0.32);
+    border-radius: 10px;
+    color: #dbeafe;
+    background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.9),
+      rgba(79, 70, 229, 0.9)
+    );
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .exa-saved-screen-save-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .exa-saved-screen-status {
+    margin-top: 9px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .exa-saved-screen-status.success {
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.08);
+  }
+
+  .exa-saved-screen-status.error {
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    color: #fda4af;
+    background: rgba(244, 63, 94, 0.08);
+  }
+
+  .exa-saved-screen-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+    max-height: 330px;
+    overflow-y: auto;
+    margin-top: 12px;
+    padding-right: 2px;
+  }
+
+  .exa-saved-screen-card {
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid #1e3350;
+    border-radius: 11px;
+    background: #101e34;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .exa-saved-screen-copy {
+    min-width: 0;
+  }
+
+  .exa-saved-screen-copy strong {
+    display: block;
+    overflow: hidden;
+    color: #f8fafc;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .exa-saved-screen-copy p {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 4px 0 0;
+    color: #94a3b8;
+    font-size: 8px;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .exa-saved-screen-copy small {
+    display: block;
+    margin-top: 5px;
+    color: #475569;
+    font-size: 8px;
+  }
+
+  .exa-saved-screen-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .exa-saved-screen-open,
+  .exa-saved-screen-delete {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .exa-saved-screen-open {
+    border: 1px solid rgba(96, 165, 250, 0.28);
+    color: #bfdbfe;
+    background: rgba(37, 99, 235, 0.11);
+  }
+
+  .exa-saved-screen-delete {
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    color: #fda4af;
+    background: rgba(244, 63, 94, 0.07);
+  }
+
+  .exa-saved-screen-empty {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px dashed #1e3350;
+    border-radius: 10px;
+    color: #64748b;
+    background: rgba(15, 29, 50, 0.45);
+    font-size: 9px;
+    line-height: 1.6;
+    text-align: center;
   }
 
   .exa-screener-toolbar {
@@ -800,6 +1369,18 @@ const SCREENER_STYLES = `
       grid-template-columns: 1fr 1fr;
     }
 
+    .exa-saved-screen-form {
+      grid-template-columns: 1fr;
+    }
+
+    .exa-saved-screen-save-button {
+      width: 100%;
+    }
+
+    .exa-saved-screen-list {
+      grid-template-columns: 1fr;
+    }
+
     .exa-screener-toolbar {
       align-items: stretch;
     }
@@ -831,135 +1412,79 @@ const SCREENER_STYLES = `
 `;
 
 function numericValue(value) {
-  if (
-    value === "" ||
-    value === null ||
-    value === undefined
-  ) {
+  if (value === "" || value === null || value === undefined) {
     return null;
   }
 
-  const number =
-    Number(value);
+  const number = Number(value);
 
-  return Number.isFinite(number)
-    ? number
-    : null;
+  return Number.isFinite(number) ? number : null;
 }
 
-function formatNumber(
-  value,
-  digits = 2,
-) {
-  const number =
-    numericValue(value);
+function formatNumber(value, digits = 2) {
+  const number = numericValue(value);
 
   if (number === null) {
     return "N/A";
   }
 
-  return new Intl.NumberFormat(
-    "en-IN",
-    {
-      maximumFractionDigits:
-        digits,
-    },
-  ).format(number);
+  return new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits: digits,
+  }).format(number);
 }
 
-function formatPrice(
-  value,
-  currency = "INR",
-) {
-  const number =
-    numericValue(value);
+function formatPrice(value, currency = "INR") {
+  const number = numericValue(value);
 
   if (number === null) {
     return "N/A";
   }
 
   try {
-    return new Intl.NumberFormat(
-      "en-IN",
-      {
-        style: "currency",
-        currency:
-          currency || "INR",
-        maximumFractionDigits: 2,
-      },
-    ).format(number);
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: currency || "INR",
+      maximumFractionDigits: 2,
+    }).format(number);
   } catch {
-    return formatNumber(
-      number,
-      2,
-    );
+    return formatNumber(number, 2);
   }
 }
 
 function formatMarketCap(value) {
-  const number =
-    numericValue(value);
+  const number = numericValue(value);
 
   if (number === null) {
     return "N/A";
   }
 
-  if (
-    Math.abs(number) >=
-    1_00_00_000
-  ) {
-    return `₹${(
-      number / 1_00_00_000
-    ).toFixed(0)} Cr`;
+  if (Math.abs(number) >= 1_00_00_000) {
+    return `₹${(number / 1_00_00_000).toFixed(0)} Cr`;
   }
 
-  if (
-    Math.abs(number) >=
-    1_00_000
-  ) {
-    return `₹${(
-      number / 1_00_000
-    ).toFixed(1)} L`;
+  if (Math.abs(number) >= 1_00_000) {
+    return `₹${(number / 1_00_000).toFixed(1)} L`;
   }
 
-  return `₹${formatNumber(
-    number,
-    0,
-  )}`;
+  return `₹${formatNumber(number, 0)}`;
 }
 
 function formatPercent(value) {
-  const number =
-    numericValue(value);
+  const number = numericValue(value);
 
   if (number === null) {
     return "N/A";
   }
 
-  return `${number.toFixed(
-    2,
-  )}%`;
+  return `${number.toFixed(2)}%`;
 }
 
-function CompanyLogo({
-  domain,
-  name,
-}) {
-  const [
-    failed,
-    setFailed,
-  ] = useState(false);
+function CompanyLogo({ domain, name }) {
+  const [failed, setFailed] = useState(false);
 
-  const logoKey =
-    import.meta.env
-      .VITE_LOGO_KEY;
+  const logoKey = import.meta.env.VITE_LOGO_KEY;
 
-  const showImage =
-    Boolean(
-      domain &&
-        logoKey &&
-        !failed,
-    );
+  const showImage = Boolean(domain && logoKey && !failed);
 
   return (
     <span className="exa-screener-company-logo">
@@ -968,14 +1493,10 @@ function CompanyLogo({
           src={`https://img.logo.dev/${domain}?token=${logoKey}&size=128&format=webp`}
           alt=""
           loading="lazy"
-          onError={() =>
-            setFailed(true)
-          }
+          onError={() => setFailed(true)}
         />
       ) : (
-        String(
-          name || "?",
-        )
+        String(name || "?")
           .trim()
           .charAt(0)
           .toUpperCase()
@@ -984,11 +1505,7 @@ function CompanyLogo({
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-  note,
-}) {
+function SummaryCard({ label, value, note }) {
   return (
     <article className="exa-screener-summary-card">
       <span>{label}</span>
@@ -998,20 +1515,12 @@ function SummaryCard({
   );
 }
 
-function NumberInput({
-  value,
-  onChange,
-  placeholder,
-}) {
+function NumberInput({ value, onChange, placeholder }) {
   return (
     <input
       type="number"
       value={value}
-      onChange={(event) =>
-        onChange(
-          event.target.value,
-        )
-      }
+      onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       className="exa-screener-input"
       inputMode="decimal"
@@ -1020,308 +1529,207 @@ function NumberInput({
 }
 
 export default function Screener() {
-  const navigate =
-    useNavigate();
+  const location = useLocation();
 
-  const [
-    stocks,
-    setStocks,
-  ] = useState([]);
+  const navigate = useNavigate();
 
-  const [
-    apiData,
-    setApiData,
-  ] = useState(null);
+  const initialUrlStateRef = useRef(null);
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+  if (initialUrlStateRef.current === null) {
+    initialUrlStateRef.current = parseScreenerUrlState(location.search);
+  }
 
-  const [
-    refreshing,
-    setRefreshing,
-  ] = useState(false);
+  const initialUrlState = initialUrlStateRef.current;
 
-  const [
-    error,
-    setError,
-  ] = useState("");
+  const lastHandledSearchRef = useRef(location.search);
 
-  const [
-    page,
-    setPage,
-  ] = useState(1);
+  const skipNextUrlWriteRef = useRef(false);
 
-  const [
-    pageSize,
-    setPageSize,
-  ] = useState(10);
+  const [stocks, setStocks] = useState([]);
 
-  const [
-    searchQuery,
-    setSearchQuery,
-  ] = useState("");
+  const [apiData, setApiData] = useState(null);
 
-  const [
-    debouncedSearch,
-    setDebouncedSearch,
-  ] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const [
-    filters,
-    setFilters,
-  ] = useState(
-    DEFAULT_FILTERS,
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [error, setError] = useState("");
+
+  const [page, setPage] = useState(initialUrlState.page);
+
+  const [pageSize, setPageSize] = useState(initialUrlState.pageSize);
+
+  const [searchQuery, setSearchQuery] = useState(initialUrlState.searchQuery);
+
+  const [debouncedSearch, setDebouncedSearch] = useState(
+    initialUrlState.debouncedSearch,
   );
 
-  const [
-    activePreset,
-    setActivePreset,
-  ] = useState("all");
+  const [filters, setFilters] = useState(initialUrlState.filters);
 
-  const [
-    sortValue,
-    setSortValue,
-  ] = useState(
-    "marketCap-desc",
+  const [activePreset, setActivePreset] = useState(
+    initialUrlState.activePreset,
   );
 
-  const loadScreener =
-    useCallback(
-      async ({
-        refresh = false,
-        signal,
-      } = {}) => {
-        if (refresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
+  const [sortValue, setSortValue] = useState(initialUrlState.sortValue);
 
-        setError("");
+  const [savedScreens, setSavedScreens] = useState([]);
 
-        try {
-          const parameters =
-            new URLSearchParams({
-              page:
-                String(page),
+  const [savedScreenName, setSavedScreenName] = useState("");
 
-              limit:
-                String(
-                  pageSize,
-                ),
+  const [savedScreenMessage, setSavedScreenMessage] = useState("");
 
-              sort:
-                sortValue,
-            });
+  const [savedScreenError, setSavedScreenError] = useState("");
 
-          function addParameter(
-            key,
-            value,
-          ) {
-            if (
-              value === null ||
-              value === undefined ||
-              value === "" ||
-              value === "All"
-            ) {
-              return;
-            }
+  const loadScreener = useCallback(
+    async ({ refresh = false, signal } = {}) => {
+      if (refresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
 
-            parameters.set(
-              key,
-              String(value),
-            );
-          }
+      setError("");
 
-          addParameter(
-            "q",
-            debouncedSearch,
-          );
+      try {
+        const parameters = new URLSearchParams({
+          page: String(page),
 
-          addParameter(
-            "sector",
-            filters.sector,
-          );
+          limit: String(pageSize),
 
-          addParameter(
-            "trend",
-            filters.trend,
-          );
+          sort: sortValue,
+        });
 
-          addParameter(
-            "minPrice",
-            filters.minPrice,
-          );
-
-          addParameter(
-            "maxPrice",
-            filters.maxPrice,
-          );
-
-          addParameter(
-            "minPe",
-            filters.minPe,
-          );
-
-          addParameter(
-            "maxPe",
-            filters.maxPe,
-          );
-
-          addParameter(
-            "minRevenueGrowth",
-            filters.minRevenueGrowth,
-          );
-
-          addParameter(
-            "minRoe",
-            filters.minRoe,
-          );
-
-          addParameter(
-            "minProfitMargin",
-            filters.minProfitMargin,
-          );
-
-          addParameter(
-            "maxDebtToEquity",
-            filters.maxDebtToEquity,
-          );
-
-          addParameter(
-            "minRsi",
-            filters.minRsi,
-          );
-
-          addParameter(
-            "maxRsi",
-            filters.maxRsi,
-          );
-
-          addParameter(
-            "maxDistanceFromHigh",
-            filters.maxDistanceFromHigh,
-          );
-
-          if (refresh) {
-            parameters.set(
-              "refresh",
-              "1",
-            );
-          }
-
-          const response =
-            await fetch(
-              `/api/screener?${parameters.toString()}`,
-              {
-                method: "GET",
-
-                headers: {
-                  Accept:
-                    "application/json",
-                },
-
-                signal,
-              },
-            );
-
-          const contentType =
-            response.headers.get(
-              "content-type",
-            ) || "";
-
+        function addParameter(key, value) {
           if (
-            !contentType.includes(
-              "application/json",
-            )
-          ) {
-            throw new Error(
-              "The Screener API returned a non-JSON response. Restart Vercel development mode.",
-            );
-          }
-
-          const data =
-            await response.json();
-
-          if (
-            !response.ok ||
-            data?.success !== true
-          ) {
-            throw new Error(
-              data?.error ||
-                "Unable to load screener data.",
-            );
-          }
-
-          setApiData(data);
-
-          setStocks(
-            Array.isArray(
-              data?.stocks,
-            )
-              ? data.stocks
-              : [],
-          );
-
-          if (
-            Number.isFinite(
-              Number(data?.page),
-            ) &&
-            Number(data.page) !==
-              page
-          ) {
-            setPage(
-              Number(data.page),
-            );
-          }
-        } catch (
-          caughtError
-        ) {
-          if (
-            caughtError?.name ===
-            "AbortError"
+            value === null ||
+            value === undefined ||
+            value === "" ||
+            value === "All"
           ) {
             return;
           }
 
-          console.error(
-            "Screener loading error:",
-            caughtError,
-          );
-
-          setError(
-            caughtError instanceof
-              Error
-              ? caughtError.message
-              : "Unable to load the stock screener.",
-          );
-
-          setStocks([]);
-        } finally {
-          if (!signal?.aborted) {
-            setLoading(false);
-            setRefreshing(false);
-          }
+          parameters.set(key, String(value));
         }
-      },
-      [
-        page,
-        pageSize,
-        debouncedSearch,
-        filters,
-        sortValue,
-      ],
-    );
+
+        addParameter("q", debouncedSearch);
+
+        addParameter("sector", filters.sector);
+
+        addParameter("trend", filters.trend);
+
+        addParameter("minPrice", filters.minPrice);
+
+        addParameter("maxPrice", filters.maxPrice);
+
+        addParameter("minPe", filters.minPe);
+
+        addParameter("maxPe", filters.maxPe);
+
+        addParameter("minRevenueGrowth", filters.minRevenueGrowth);
+
+        addParameter("minRoe", filters.minRoe);
+
+        addParameter("minProfitMargin", filters.minProfitMargin);
+
+        addParameter("maxDebtToEquity", filters.maxDebtToEquity);
+
+        addParameter("minRsi", filters.minRsi);
+
+        addParameter("maxRsi", filters.maxRsi);
+
+        addParameter("maxDistanceFromHigh", filters.maxDistanceFromHigh);
+
+        if (refresh) {
+          parameters.set("refresh", "1");
+        }
+
+        const response = await fetch(`/api/screener?${parameters.toString()}`, {
+          method: "GET",
+
+          headers: {
+            Accept: "application/json",
+          },
+
+          signal,
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+
+        if (!contentType.includes("application/json")) {
+          throw new Error(
+            "The Screener API returned a non-JSON response. Restart Vercel development mode.",
+          );
+        }
+
+        const data = await response.json();
+
+        if (!response.ok || data?.success !== true) {
+          throw new Error(data?.error || "Unable to load screener data.");
+        }
+
+        setApiData(data);
+
+        setStocks(Array.isArray(data?.stocks) ? data.stocks : []);
+
+        if (Number.isFinite(Number(data?.page)) && Number(data.page) !== page) {
+          setPage(Number(data.page));
+        }
+      } catch (caughtError) {
+        if (caughtError?.name === "AbortError") {
+          return;
+        }
+
+        console.error("Screener loading error:", caughtError);
+
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Unable to load the stock screener.",
+        );
+
+        setStocks([]);
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    },
+    [page, pageSize, debouncedSearch, filters, sortValue],
+  );
 
   useEffect(() => {
-    const controller =
-      new AbortController();
+    const result = readSavedScreens();
+
+    setSavedScreens(result.screens);
+
+    if (result.error) {
+      setSavedScreenError(result.error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!savedScreenMessage && !savedScreenError) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setSavedScreenMessage("");
+      setSavedScreenError("");
+    }, 4500);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [savedScreenMessage, savedScreenError]);
+
+  useEffect(() => {
+    const controller = new AbortController();
 
     loadScreener({
-      signal:
-        controller.signal,
+      signal: controller.signal,
     });
 
     return () => {
@@ -1330,56 +1738,117 @@ export default function Screener() {
   }, [loadScreener]);
 
   useEffect(() => {
-    const timer =
-      window.setTimeout(() => {
-        setPage(1);
+    const normalizedSearch = searchQuery.trim();
 
-        setDebouncedSearch(
-          searchQuery.trim(),
-        );
-      }, 450);
+    if (normalizedSearch === debouncedSearch) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setPage(1);
+
+      setDebouncedSearch(normalizedSearch);
+    }, 450);
 
     return () => {
-      window.clearTimeout(
-        timer,
-      );
+      window.clearTimeout(timer);
     };
-  }, [searchQuery]);
+  }, [searchQuery, debouncedSearch]);
 
-  const availableSectors =
-    useMemo(() => {
-      const sectors =
-        Array.isArray(
-          apiData?.sectors,
-        )
-          ? apiData.sectors
-          : [];
+  /*
+   * Restore screener state when the
+   * user uses browser Back/Forward or
+   * opens a shared screener URL.
+   */
+  useEffect(() => {
+    if (location.search === lastHandledSearchRef.current) {
+      return;
+    }
 
-      return [
-        "All",
-        ...sectors.filter(
-          (sector) =>
-            sector &&
-            sector !==
-              "Not available",
-        ),
-      ];
-    }, [apiData]);
+    lastHandledSearchRef.current = location.search;
 
-  function updateFilter(
-    key,
-    value,
-  ) {
-    setFilters(
-      (current) => ({
-        ...current,
-        [key]: value,
-      }),
+    const nextState = parseScreenerUrlState(location.search);
+
+    skipNextUrlWriteRef.current = true;
+
+    setPage(nextState.page);
+    setPageSize(nextState.pageSize);
+    setSearchQuery(nextState.searchQuery);
+    setDebouncedSearch(nextState.debouncedSearch);
+    setFilters(nextState.filters);
+    setActivePreset(nextState.activePreset);
+    setSortValue(nextState.sortValue);
+  }, [location.search]);
+
+  /*
+   * Keep the visible page URL in sync
+   * with the active screener state.
+   * Default values are omitted so the
+   * shared URL stays clean.
+   */
+  useEffect(() => {
+    if (skipNextUrlWriteRef.current) {
+      skipNextUrlWriteRef.current = false;
+
+      return;
+    }
+
+    const nextParameters = buildScreenerSearchParams({
+      page,
+      pageSize,
+      searchQuery: debouncedSearch,
+      filters,
+      activePreset,
+      sortValue,
+    });
+
+    const nextQuery = nextParameters.toString();
+
+    const nextSearch = nextQuery ? `?${nextQuery}` : "";
+
+    if (nextSearch === location.search) {
+      return;
+    }
+
+    lastHandledSearchRef.current = nextSearch;
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch,
+      },
+      {
+        replace: true,
+      },
     );
+  }, [
+    page,
+    pageSize,
+    debouncedSearch,
+    filters,
+    activePreset,
+    sortValue,
+    location.pathname,
+    location.search,
+    navigate,
+  ]);
 
-    setActivePreset(
-      "custom",
-    );
+  const availableSectors = useMemo(() => {
+    const sectors = Array.isArray(apiData?.sectors) ? apiData.sectors : [];
+
+    return [
+      "All",
+      ...sectors.filter((sector) => sector && sector !== "Not available"),
+    ];
+  }, [apiData]);
+
+  function updateFilter(key, value) {
+    setFilters((current) => ({
+      ...current,
+      [key]: value,
+    }));
+
+    setActivePreset("custom");
 
     setPage(1);
   }
@@ -1394,22 +1863,16 @@ export default function Screener() {
 
     setActivePreset("all");
 
-    setSortValue(
-      "marketCap-desc",
-    );
+    setSortValue(DEFAULT_SORT_VALUE);
 
     setPage(1);
   }
 
-  function applyPreset(
-    presetId,
-  ) {
+  function applyPreset(presetId) {
     setSearchQuery("");
     setDebouncedSearch("");
 
-    setActivePreset(
-      presetId,
-    );
+    setActivePreset(presetId);
 
     setPage(1);
 
@@ -1418,21 +1881,16 @@ export default function Screener() {
         setFilters({
           ...DEFAULT_FILTERS,
 
-          minRevenueGrowth:
-            "10",
+          minRevenueGrowth: "10",
 
           minRoe: "15",
 
-          minProfitMargin:
-            "10",
+          minProfitMargin: "10",
 
-          maxDebtToEquity:
-            "100",
+          maxDebtToEquity: "100",
         });
 
-        setSortValue(
-          "revenueGrowthPercent-desc",
-        );
+        setSortValue("revenueGrowthPercent-desc");
 
         break;
 
@@ -1440,13 +1898,10 @@ export default function Screener() {
         setFilters({
           ...DEFAULT_FILTERS,
 
-          maxDebtToEquity:
-            "50",
+          maxDebtToEquity: "50",
         });
 
-        setSortValue(
-          "debtToEquity-asc",
-        );
+        setSortValue("debtToEquity-asc");
 
         break;
 
@@ -1457,9 +1912,7 @@ export default function Screener() {
           minRoe: "15",
         });
 
-        setSortValue(
-          "returnOnEquityPercent-desc",
-        );
+        setSortValue("returnOnEquityPercent-desc");
 
         break;
 
@@ -1474,9 +1927,7 @@ export default function Screener() {
           maxRsi: "70",
         });
 
-        setSortValue(
-          "rsi-desc",
-        );
+        setSortValue("rsi-desc");
 
         break;
 
@@ -1484,13 +1935,10 @@ export default function Screener() {
         setFilters({
           ...DEFAULT_FILTERS,
 
-          maxDistanceFromHigh:
-            "10",
+          maxDistanceFromHigh: "10",
         });
 
-        setSortValue(
-          "distanceFrom52WeekHigh-asc",
-        );
+        setSortValue("distanceFrom52WeekHigh-asc");
 
         break;
 
@@ -1504,13 +1952,10 @@ export default function Screener() {
 
           minRoe: "10",
 
-          maxDebtToEquity:
-            "100",
+          maxDebtToEquity: "100",
         });
 
-        setSortValue(
-          "peRatio-asc",
-        );
+        setSortValue("peRatio-asc");
 
         break;
 
@@ -1521,9 +1966,7 @@ export default function Screener() {
           maxRsi: "35",
         });
 
-        setSortValue(
-          "rsi-asc",
-        );
+        setSortValue("rsi-asc");
 
         break;
 
@@ -1532,115 +1975,177 @@ export default function Screener() {
           ...DEFAULT_FILTERS,
         });
 
-        setSortValue(
-          "marketCap-desc",
-        );
+        setSortValue("marketCap-desc");
 
         break;
     }
   }
 
-  const visibleStocks =
-    stocks;
+  function persistSavedScreens(nextScreens) {
+    setSavedScreens(nextScreens);
 
-  const matchingCount =
-    Number(
-      apiData?.matchingStocks ??
-        stocks.length,
+    const saved = writeSavedScreens(nextScreens);
+
+    if (!saved) {
+      setSavedScreenError(
+        "This browser did not allow EXA to save the screen locally.",
+      );
+
+      return false;
+    }
+
+    setSavedScreenError("");
+    return true;
+  }
+
+  function saveCurrentScreen(event) {
+    event.preventDefault();
+
+    const name = savedScreenName.trim().replace(/\s+/g, " ").slice(0, 50);
+
+    if (name.length < 2) {
+      setSavedScreenMessage("");
+      setSavedScreenError("Enter a screen name with at least two characters.");
+      return;
+    }
+
+    const now = new Date().toISOString();
+
+    const existingScreen = savedScreens.find(
+      (screen) => screen.name.toLowerCase() === name.toLowerCase(),
     );
 
-  const bullishCount =
-    stocks.filter(
-      (stock) =>
-        stock?.trend ===
-        "Bullish",
-    ).length;
+    const nextScreen = {
+      id: existingScreen?.id || createSavedScreenId(),
+      name,
+      createdAt: existingScreen?.createdAt || now,
+      updatedAt: now,
+      searchQuery: searchQuery.trim(),
+      filters: {
+        ...DEFAULT_FILTERS,
+        ...filters,
+      },
+      activePreset,
+      sortValue,
+      pageSize,
+    };
 
-  const positiveChangeCount =
-    stocks.filter(
-      (stock) =>
-        Number(
-          stock?.changePercent,
-        ) > 0,
-    ).length;
+    const nextScreens = [
+      nextScreen,
+      ...savedScreens.filter((screen) => screen.id !== nextScreen.id),
+    ].slice(0, MAX_SAVED_SCREENS);
 
-  const averageRsi =
-    (() => {
-      const values =
-        stocks
-          .map(
-            (stock) =>
-              numericValue(
-                stock?.rsi,
-              ),
-          )
-          .filter(
-            (value) =>
-              value !== null,
-          );
+    if (!persistSavedScreens(nextScreens)) {
+      return;
+    }
 
-      if (
-        values.length === 0
-      ) {
-        return "N/A";
-      }
+    setSavedScreenName("");
+    setSavedScreenMessage(
+      existingScreen ? `Updated “${name}”.` : `Saved “${name}”.`,
+    );
+  }
 
-      return (
-        values.reduce(
-          (sum, value) =>
-            sum + value,
-          0,
-        ) / values.length
-      ).toFixed(1);
-    })();
+  function openSavedScreen(savedScreen) {
+    const screen = normalizeSavedScreen(savedScreen);
 
-  function openAnalysis(
-    symbol,
-  ) {
+    if (!screen) {
+      setSavedScreenMessage("");
+      setSavedScreenError(
+        "This saved screen is invalid and could not be opened.",
+      );
+      return;
+    }
+
+    setPage(1);
+    setPageSize(screen.pageSize);
+    setSearchQuery(screen.searchQuery);
+    setDebouncedSearch(screen.searchQuery);
+    setFilters({
+      ...DEFAULT_FILTERS,
+      ...screen.filters,
+    });
+    setActivePreset(screen.activePreset);
+    setSortValue(screen.sortValue);
+
+    setSavedScreenError("");
+    setSavedScreenMessage(`Opened “${screen.name}”.`);
+  }
+
+  function deleteSavedScreen(screenId, screenName) {
+    const confirmed =
+      typeof window === "undefined" ||
+      window.confirm(`Delete the saved screen “${screenName}”?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    const nextScreens = savedScreens.filter((screen) => screen.id !== screenId);
+
+    if (!persistSavedScreens(nextScreens)) {
+      return;
+    }
+
+    setSavedScreenMessage(`Deleted “${screenName}”.`);
+  }
+
+  const visibleStocks = stocks;
+
+  const matchingCount = Number(apiData?.matchingStocks ?? stocks.length);
+
+  const bullishCount = stocks.filter(
+    (stock) => stock?.trend === "Bullish",
+  ).length;
+
+  const positiveChangeCount = stocks.filter(
+    (stock) => Number(stock?.changePercent) > 0,
+  ).length;
+
+  const averageRsi = (() => {
+    const values = stocks
+      .map((stock) => numericValue(stock?.rsi))
+      .filter((value) => value !== null);
+
+    if (values.length === 0) {
+      return "N/A";
+    }
+
+    return (
+      values.reduce((sum, value) => sum + value, 0) / values.length
+    ).toFixed(1);
+  })();
+
+  function openAnalysis(symbol) {
     if (!symbol) {
       return;
     }
 
-    navigate(
-      `/analyze?symbol=${encodeURIComponent(
-        symbol,
-      )}`,
-    );
+    navigate(`/analyze?symbol=${encodeURIComponent(symbol)}`);
   }
 
   return (
     <AppShell>
-      <style>
-        {SCREENER_STYLES}
-      </style>
+      <style>{SCREENER_STYLES}</style>
 
       <main className="exa-screener-page">
         <div className="exa-screener-container">
           <section className="exa-screener-header">
             <div>
-              <p className="exa-screener-eyebrow">
-                EXA NEXUS
-              </p>
+              <p className="exa-screener-eyebrow">EXA NEXUS</p>
 
-              <h1>
-                Stock Screener
-              </h1>
+              <h1>Stock Screener</h1>
 
               <p className="exa-screener-subtitle">
-                Discover Indian equities using live market data,
-                fundamental indicators and technical conditions.
-                Screener results are educational research filters,
-                not Buy or Sell recommendations.
+                Discover Indian equities using live market data, fundamental
+                indicators and technical conditions. Screener results are
+                educational research filters, not Buy or Sell recommendations.
               </p>
             </div>
 
             <button
               type="button"
               className="exa-screener-refresh"
-              disabled={
-                loading ||
-                refreshing
-              }
+              disabled={loading || refreshing}
               onClick={() =>
                 loadScreener({
                   refresh: true,
@@ -1648,29 +2153,19 @@ export default function Screener() {
               }
             >
               {refreshing ? (
-                <LoaderCircle
-                  size={15}
-                  className="exa-screener-spinner"
-                />
+                <LoaderCircle size={15} className="exa-screener-spinner" />
               ) : (
-                <RefreshCw
-                  size={15}
-                />
+                <RefreshCw size={15} />
               )}
 
-              {refreshing
-                ? "Reloading"
-                : "Reload results"}
+              {refreshing ? "Reloading" : "Reload results"}
             </button>
           </section>
 
           <section className="exa-screener-summary-grid">
             <SummaryCard
               label="Universe"
-              value={
-                apiData?.totalStocks ??
-                "—"
-              }
+              value={apiData?.totalStocks ?? "—"}
               note="Complete snapshot universe"
             />
 
@@ -1682,12 +2177,7 @@ export default function Screener() {
 
             <SummaryCard
               label="Bullish trends"
-              value={
-                apiData
-                  ?.trendSummary
-                  ?.Bullish ??
-                bullishCount
-              }
+              value={apiData?.trendSummary?.Bullish ?? bullishCount}
               note="Price > SMA20 > SMA50"
             />
 
@@ -1702,62 +2192,37 @@ export default function Screener() {
             <aside className="exa-screener-sidebar">
               <div className="exa-screener-panel-heading">
                 <div>
-                  <SlidersHorizontal
-                    size={16}
-                    color="#60a5fa"
-                  />
+                  <SlidersHorizontal size={16} color="#60a5fa" />
 
-                  <h2>
-                    Filters
-                  </h2>
+                  <h2>Filters</h2>
                 </div>
 
                 <button
                   type="button"
                   className="exa-screener-reset"
-                  onClick={
-                    resetFilters
-                  }
+                  onClick={resetFilters}
                 >
-                  <RotateCcw
-                    size={12}
-                  />
+                  <RotateCcw size={12} />
                   Reset
                 </button>
               </div>
 
               <div className="exa-screener-sidebar-fields">
                 <div className="exa-screener-filter-group">
-                  <label className="exa-screener-filter-label">
-                    Sector
-                  </label>
+                  <label className="exa-screener-filter-label">Sector</label>
 
                   <select
                     className="exa-screener-select"
-                    value={
-                      filters.sector
-                    }
+                    value={filters.sector}
                     onChange={(event) =>
-                      updateFilter(
-                        "sector",
-                        event.target
-                          .value,
-                      )
+                      updateFilter("sector", event.target.value)
                     }
                   >
-                    {availableSectors.map(
-                      (sector) => (
-                        <option
-                          key={sector}
-                          value={sector}
-                        >
-                          {sector ===
-                          "All"
-                            ? "All sectors"
-                            : sector}
-                        </option>
-                      ),
-                    )}
+                    {availableSectors.map((sector) => (
+                      <option key={sector} value={sector}>
+                        {sector === "All" ? "All sectors" : sector}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -1768,15 +2233,9 @@ export default function Screener() {
 
                   <select
                     className="exa-screener-select"
-                    value={
-                      filters.trend
-                    }
+                    value={filters.trend}
                     onChange={(event) =>
-                      updateFilter(
-                        "trend",
-                        event.target
-                          .value,
-                      )
+                      updateFilter("trend", event.target.value)
                     }
                   >
                     {[
@@ -1786,19 +2245,11 @@ export default function Screener() {
                       "Sideways",
                       "Negative",
                       "Bearish",
-                    ].map(
-                      (trend) => (
-                        <option
-                          key={trend}
-                          value={trend}
-                        >
-                          {trend ===
-                          "All"
-                            ? "All trends"
-                            : trend}
-                        </option>
-                      ),
-                    )}
+                    ].map((trend) => (
+                      <option key={trend} value={trend}>
+                        {trend === "All" ? "All trends" : trend}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -1809,70 +2260,32 @@ export default function Screener() {
 
                   <div className="exa-screener-range-row">
                     <NumberInput
-                      value={
-                        filters.minPrice
-                      }
-                      onChange={(
-                        value,
-                      ) =>
-                        updateFilter(
-                          "minPrice",
-                          value,
-                        )
-                      }
+                      value={filters.minPrice}
+                      onChange={(value) => updateFilter("minPrice", value)}
                       placeholder="Min ₹"
                     />
 
                     <NumberInput
-                      value={
-                        filters.maxPrice
-                      }
-                      onChange={(
-                        value,
-                      ) =>
-                        updateFilter(
-                          "maxPrice",
-                          value,
-                        )
-                      }
+                      value={filters.maxPrice}
+                      onChange={(value) => updateFilter("maxPrice", value)}
                       placeholder="Max ₹"
                     />
                   </div>
                 </div>
 
                 <div className="exa-screener-filter-group">
-                  <label className="exa-screener-filter-label">
-                    P/E range
-                  </label>
+                  <label className="exa-screener-filter-label">P/E range</label>
 
                   <div className="exa-screener-range-row">
                     <NumberInput
-                      value={
-                        filters.minPe
-                      }
-                      onChange={(
-                        value,
-                      ) =>
-                        updateFilter(
-                          "minPe",
-                          value,
-                        )
-                      }
+                      value={filters.minPe}
+                      onChange={(value) => updateFilter("minPe", value)}
                       placeholder="Min"
                     />
 
                     <NumberInput
-                      value={
-                        filters.maxPe
-                      }
-                      onChange={(
-                        value,
-                      ) =>
-                        updateFilter(
-                          "maxPe",
-                          value,
-                        )
-                      }
+                      value={filters.maxPe}
+                      onChange={(value) => updateFilter("maxPe", value)}
                       placeholder="Max"
                     />
                   </div>
@@ -1884,16 +2297,9 @@ export default function Screener() {
                   </label>
 
                   <NumberInput
-                    value={
-                      filters.minRevenueGrowth
-                    }
-                    onChange={(
-                      value,
-                    ) =>
-                      updateFilter(
-                        "minRevenueGrowth",
-                        value,
-                      )
+                    value={filters.minRevenueGrowth}
+                    onChange={(value) =>
+                      updateFilter("minRevenueGrowth", value)
                     }
                     placeholder="Example: 10"
                   />
@@ -1905,17 +2311,8 @@ export default function Screener() {
                   </label>
 
                   <NumberInput
-                    value={
-                      filters.minRoe
-                    }
-                    onChange={(
-                      value,
-                    ) =>
-                      updateFilter(
-                        "minRoe",
-                        value,
-                      )
-                    }
+                    value={filters.minRoe}
+                    onChange={(value) => updateFilter("minRoe", value)}
                     placeholder="Example: 15"
                   />
                 </div>
@@ -1926,17 +2323,8 @@ export default function Screener() {
                   </label>
 
                   <NumberInput
-                    value={
-                      filters.minProfitMargin
-                    }
-                    onChange={(
-                      value,
-                    ) =>
-                      updateFilter(
-                        "minProfitMargin",
-                        value,
-                      )
-                    }
+                    value={filters.minProfitMargin}
+                    onChange={(value) => updateFilter("minProfitMargin", value)}
                     placeholder="Example: 10"
                   />
                 </div>
@@ -1947,54 +2335,25 @@ export default function Screener() {
                   </label>
 
                   <NumberInput
-                    value={
-                      filters.maxDebtToEquity
-                    }
-                    onChange={(
-                      value,
-                    ) =>
-                      updateFilter(
-                        "maxDebtToEquity",
-                        value,
-                      )
-                    }
+                    value={filters.maxDebtToEquity}
+                    onChange={(value) => updateFilter("maxDebtToEquity", value)}
                     placeholder="Example: 100"
                   />
                 </div>
 
                 <div className="exa-screener-filter-group">
-                  <label className="exa-screener-filter-label">
-                    RSI range
-                  </label>
+                  <label className="exa-screener-filter-label">RSI range</label>
 
                   <div className="exa-screener-range-row">
                     <NumberInput
-                      value={
-                        filters.minRsi
-                      }
-                      onChange={(
-                        value,
-                      ) =>
-                        updateFilter(
-                          "minRsi",
-                          value,
-                        )
-                      }
+                      value={filters.minRsi}
+                      onChange={(value) => updateFilter("minRsi", value)}
                       placeholder="Min"
                     />
 
                     <NumberInput
-                      value={
-                        filters.maxRsi
-                      }
-                      onChange={(
-                        value,
-                      ) =>
-                        updateFilter(
-                          "maxRsi",
-                          value,
-                        )
-                      }
+                      value={filters.maxRsi}
+                      onChange={(value) => updateFilter("maxRsi", value)}
                       placeholder="Max"
                     />
                   </div>
@@ -2006,16 +2365,9 @@ export default function Screener() {
                   </label>
 
                   <NumberInput
-                    value={
-                      filters.maxDistanceFromHigh
-                    }
-                    onChange={(
-                      value,
-                    ) =>
-                      updateFilter(
-                        "maxDistanceFromHigh",
-                        value,
-                      )
+                    value={filters.maxDistanceFromHigh}
+                    onChange={(value) =>
+                      updateFilter("maxDistanceFromHigh", value)
                     }
                     placeholder="Example: 10"
                   />
@@ -2026,68 +2378,149 @@ export default function Screener() {
             <div className="exa-screener-main">
               <section className="exa-screener-presets">
                 <div className="exa-screener-presets-title">
-                  <Sparkles
-                    size={15}
-                    color="#60a5fa"
-                  />
-
+                  <Sparkles size={15} color="#60a5fa" />
                   Quick screen presets
                 </div>
 
                 <div className="exa-screener-preset-list">
-                  {PRESETS.map(
-                    (preset) => (
-                      <button
-                        key={
-                          preset.id
-                        }
-                        type="button"
-                        className={
-                          activePreset ===
-                          preset.id
-                            ? "exa-screener-preset-button active"
-                            : "exa-screener-preset-button"
-                        }
-                        onClick={() =>
-                          applyPreset(
-                            preset.id,
-                          )
-                        }
-                      >
-                        <strong>
-                          {
-                            preset.label
-                          }
-                        </strong>
+                  {PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      className={
+                        activePreset === preset.id
+                          ? "exa-screener-preset-button active"
+                          : "exa-screener-preset-button"
+                      }
+                      onClick={() => applyPreset(preset.id)}
+                    >
+                      <strong>{preset.label}</strong>
 
-                        <small>
-                          {
-                            preset.description
-                          }
-                        </small>
-                      </button>
-                    ),
-                  )}
+                      <small>{preset.description}</small>
+                    </button>
+                  ))}
                 </div>
+              </section>
+
+              <section className="exa-saved-screens-panel">
+                <div className="exa-saved-screens-heading">
+                  <div className="exa-saved-screens-heading-main">
+                    <BookmarkPlus size={16} color="#60a5fa" />
+
+                    <div>
+                      <h2>Saved screens</h2>
+
+                      <p>
+                        Save the current search, filters, sorting and page size
+                        in this browser.
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="exa-saved-screens-count">
+                    {savedScreens.length}/{MAX_SAVED_SCREENS}
+                  </span>
+                </div>
+
+                <form
+                  className="exa-saved-screen-form"
+                  onSubmit={saveCurrentScreen}
+                >
+                  <input
+                    type="text"
+                    value={savedScreenName}
+                    onChange={(event) => setSavedScreenName(event.target.value)}
+                    maxLength={50}
+                    placeholder="Name this screen, for example High ROE Banks"
+                    className="exa-saved-screen-name-input"
+                    aria-label="Saved screen name"
+                  />
+
+                  <button
+                    type="submit"
+                    className="exa-saved-screen-save-button"
+                    disabled={savedScreenName.trim().length < 2}
+                  >
+                    <Save size={13} />
+                    Save current screen
+                  </button>
+                </form>
+
+                {savedScreenMessage && (
+                  <div
+                    className="exa-saved-screen-status success"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {savedScreenMessage}
+                  </div>
+                )}
+
+                {savedScreenError && (
+                  <div className="exa-saved-screen-status error" role="alert">
+                    {savedScreenError}
+                  </div>
+                )}
+
+                {savedScreens.length > 0 ? (
+                  <div className="exa-saved-screen-list">
+                    {savedScreens.map((screen) => (
+                      <article
+                        key={screen.id}
+                        className="exa-saved-screen-card"
+                      >
+                        <div className="exa-saved-screen-copy">
+                          <strong title={screen.name}>{screen.name}</strong>
+
+                          <p>{describeSavedScreen(screen)}</p>
+
+                          <small>
+                            Updated {formatSavedScreenDate(screen.updatedAt)}
+                          </small>
+                        </div>
+
+                        <div className="exa-saved-screen-actions">
+                          <button
+                            type="button"
+                            className="exa-saved-screen-open"
+                            onClick={() => openSavedScreen(screen)}
+                            title={`Open ${screen.name}`}
+                            aria-label={`Open saved screen ${screen.name}`}
+                          >
+                            <FolderOpen size={13} />
+                          </button>
+
+                          <button
+                            type="button"
+                            className="exa-saved-screen-delete"
+                            onClick={() =>
+                              deleteSavedScreen(screen.id, screen.name)
+                            }
+                            title={`Delete ${screen.name}`}
+                            aria-label={`Delete saved screen ${screen.name}`}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="exa-saved-screen-empty">
+                    No saved screens yet. Configure the screener, enter a name
+                    and save it for quick access later.
+                  </div>
+                )}
               </section>
 
               <section className="exa-screener-toolbar">
                 <div className="exa-screener-search">
-                  <Search
-                    size={15}
-                  />
+                  <Search size={15} />
 
                   <input
                     type="search"
-                    value={
-                      searchQuery
-                    }
-                    onChange={(event) =>
-                      setSearchQuery(
-                        event.target
-                          .value,
-                      )
-                    }
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Search the complete universe by company or symbol"
                     aria-label="Search screener stocks"
                   />
@@ -2095,63 +2528,36 @@ export default function Screener() {
 
                 <select
                   className="exa-screener-toolbar-select"
-                  value={
-                    sortValue
-                  }
+                  value={sortValue}
                   onChange={(event) => {
-                    setSortValue(
-                      event.target
-                        .value,
-                    );
+                    setSortValue(event.target.value);
+
+                    setActivePreset("custom");
 
                     setPage(1);
                   }}
                 >
-                  {SORT_OPTIONS.map(
-                    (option) => (
-                      <option
-                        key={
-                          option.value
-                        }
-                        value={
-                          option.value
-                        }
-                      >
-                        {
-                          option.label
-                        }
-                      </option>
-                    ),
-                  )}
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
 
                 <select
                   className="exa-screener-toolbar-select"
-                  value={
-                    pageSize
-                  }
+                  value={pageSize}
                   onChange={(event) => {
-                    setPageSize(
-                      Number(
-                        event.target
-                          .value,
-                      ),
-                    );
+                    setPageSize(Number(event.target.value));
 
                     setPage(1);
                   }}
                 >
-                  <option value={5}>
-                    5 stocks
-                  </option>
+                  <option value={5}>5 stocks</option>
 
-                  <option value={10}>
-                    10 stocks
-                  </option>
+                  <option value={10}>10 stocks</option>
 
-                  <option value={15}>
-                    15 stocks
-                  </option>
+                  <option value={15}>15 stocks</option>
                 </select>
 
                 <span className="exa-screener-result-count">
@@ -2160,22 +2566,17 @@ export default function Screener() {
               </section>
 
               <div className="exa-screener-notice">
-                Search, filters, presets and sorting now apply to the
-                complete screener universe. Results are filtered and
-                sorted before pagination.
+                Search, filters, presets and sorting apply to the complete
+                screener universe. The page URL can be shared, while saved
+                screens are stored locally in this browser.
               </div>
 
               <section className="exa-screener-table-card">
                 {loading ? (
                   <div className="exa-screener-state">
-                    <LoaderCircle
-                      size={28}
-                      className="exa-screener-spinner"
-                    />
+                    <LoaderCircle size={28} className="exa-screener-spinner" />
 
-                    <strong>
-                      Loading screener data
-                    </strong>
+                    <strong>Loading screener data</strong>
 
                     <p>
                       Loading the generated market snapshot and applying
@@ -2184,18 +2585,11 @@ export default function Screener() {
                   </div>
                 ) : error ? (
                   <div className="exa-screener-state">
-                    <AlertCircle
-                      size={27}
-                      color="#fb7185"
-                    />
+                    <AlertCircle size={27} color="#fb7185" />
 
-                    <strong>
-                      Screener unavailable
-                    </strong>
+                    <strong>Screener unavailable</strong>
 
-                    <p>
-                      {error}
-                    </p>
+                    <p>{error}</p>
 
                     <button
                       type="button"
@@ -2209,28 +2603,19 @@ export default function Screener() {
                         })
                       }
                     >
-                      <RefreshCw
-                        size={14}
-                      />
-
+                      <RefreshCw size={14} />
                       Try again
                     </button>
                   </div>
-                ) : visibleStocks.length ===
-                  0 ? (
+                ) : visibleStocks.length === 0 ? (
                   <div className="exa-screener-state">
-                    <Filter
-                      size={27}
-                      color="#60a5fa"
-                    />
+                    <Filter size={27} color="#60a5fa" />
 
-                    <strong>
-                      No matching stocks
-                    </strong>
+                    <strong>No matching stocks</strong>
 
                     <p>
-                      Change the current filters, select another
-                      preset or move to another screener page.
+                      Change the current filters, select another preset or move
+                      to another screener page.
                     </p>
 
                     <button
@@ -2239,14 +2624,9 @@ export default function Screener() {
                       style={{
                         marginTop: 14,
                       }}
-                      onClick={
-                        resetFilters
-                      }
+                      onClick={resetFilters}
                     >
-                      <RotateCcw
-                        size={14}
-                      />
-
+                      <RotateCcw size={14} />
                       Reset filters
                     </button>
                   </div>
@@ -2255,305 +2635,178 @@ export default function Screener() {
                     <table className="exa-screener-table">
                       <thead>
                         <tr>
-                          <th>
-                            Company
-                          </th>
+                          <th>Company</th>
 
-                          <th>
-                            Price
-                          </th>
+                          <th>Price</th>
 
-                          <th>
-                            Change
-                          </th>
+                          <th>Change</th>
 
-                          <th>
-                            Market cap
-                          </th>
+                          <th>Market cap</th>
 
-                          <th>
-                            P/E
-                          </th>
+                          <th>P/E</th>
 
-                          <th>
-                            Revenue growth
-                          </th>
+                          <th>Revenue growth</th>
 
-                          <th>
-                            ROE
-                          </th>
+                          <th>ROE</th>
 
-                          <th>
-                            Debt/equity
-                          </th>
+                          <th>Debt/equity</th>
 
-                          <th>
-                            RSI
-                          </th>
+                          <th>RSI</th>
 
-                          <th>
-                            Trend
-                          </th>
+                          <th>Trend</th>
 
-                          <th>
-                            52W high distance
-                          </th>
+                          <th>52W high distance</th>
 
-                          <th>
-                            Actions
-                          </th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
 
                       <tbody>
-                        {visibleStocks.map(
-                          (stock) => {
-                            const change =
-                              Number(
-                                stock?.changePercent,
-                              ) || 0;
+                        {visibleStocks.map((stock) => {
+                          const change = Number(stock?.changePercent) || 0;
 
-                            const trendClass =
-                              String(
-                                stock?.trend ||
-                                  "unavailable",
-                              )
-                                .toLowerCase()
-                                .replace(
-                                  /\s+/g,
-                                  "-",
-                                );
+                          const trendClass = String(
+                            stock?.trend || "unavailable",
+                          )
+                            .toLowerCase()
+                            .replace(/\s+/g, "-");
 
-                            return (
-                              <tr
-                                key={
-                                  stock.symbol
+                          return (
+                            <tr key={stock.symbol}>
+                              <td>
+                                <div className="exa-screener-company">
+                                  <CompanyLogo
+                                    domain={stock.logoDomain}
+                                    name={stock.name}
+                                  />
+
+                                  <div className="exa-screener-company-copy">
+                                    <strong title={stock.name}>
+                                      {stock.name}
+                                    </strong>
+
+                                    <span>
+                                      {stock.symbol} · {stock.sector}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              <td>
+                                {formatPrice(stock.price, stock.currency)}
+                              </td>
+
+                              <td
+                                className={
+                                  change > 0
+                                    ? "exa-screener-positive"
+                                    : change < 0
+                                      ? "exa-screener-negative"
+                                      : "exa-screener-neutral"
                                 }
                               >
-                                <td>
-                                  <div className="exa-screener-company">
-                                    <CompanyLogo
-                                      domain={
-                                        stock.logoDomain
-                                      }
-                                      name={
-                                        stock.name
-                                      }
-                                    />
+                                {change > 0 ? "+" : ""}
+                                {formatPercent(change)}
+                              </td>
 
-                                    <div className="exa-screener-company-copy">
-                                      <strong title={stock.name}>
-                                        {
-                                          stock.name
-                                        }
-                                      </strong>
+                              <td>{formatMarketCap(stock.marketCap)}</td>
 
-                                      <span>
-                                        {
-                                          stock.symbol
-                                        }{" "}
-                                        ·{" "}
-                                        {
-                                          stock.sector
-                                        }
-                                      </span>
-                                    </div>
-                                  </div>
-                                </td>
+                              <td>{formatNumber(stock.peRatio, 2)}</td>
 
-                                <td>
-                                  {formatPrice(
-                                    stock.price,
-                                    stock.currency,
-                                  )}
-                                </td>
+                              <td
+                                className={
+                                  Number(stock.revenueGrowthPercent) > 0
+                                    ? "exa-screener-positive"
+                                    : Number(stock.revenueGrowthPercent) < 0
+                                      ? "exa-screener-negative"
+                                      : ""
+                                }
+                              >
+                                {formatPercent(stock.revenueGrowthPercent)}
+                              </td>
 
-                                <td
+                              <td>
+                                {formatPercent(stock.returnOnEquityPercent)}
+                              </td>
+
+                              <td>{formatNumber(stock.debtToEquity, 2)}</td>
+
+                              <td>
+                                <strong
                                   className={
-                                    change > 0
-                                      ? "exa-screener-positive"
-                                      : change <
-                                          0
-                                        ? "exa-screener-negative"
-                                        : "exa-screener-neutral"
-                                  }
-                                >
-                                  {change >
-                                  0
-                                    ? "+"
-                                    : ""}
-                                  {formatPercent(
-                                    change,
-                                  )}
-                                </td>
-
-                                <td>
-                                  {formatMarketCap(
-                                    stock.marketCap,
-                                  )}
-                                </td>
-
-                                <td>
-                                  {formatNumber(
-                                    stock.peRatio,
-                                    2,
-                                  )}
-                                </td>
-
-                                <td
-                                  className={
-                                    Number(
-                                      stock
-                                        .revenueGrowthPercent,
-                                    ) > 0
-                                      ? "exa-screener-positive"
-                                      : Number(
-                                            stock
-                                              .revenueGrowthPercent,
-                                          ) <
-                                          0
-                                        ? "exa-screener-negative"
+                                    Number(stock.rsi) >= 70
+                                      ? "exa-screener-negative"
+                                      : Number(stock.rsi) <= 30
+                                        ? "exa-screener-positive"
                                         : ""
                                   }
                                 >
-                                  {formatPercent(
-                                    stock
-                                      .revenueGrowthPercent,
-                                  )}
-                                </td>
+                                  {formatNumber(stock.rsi, 1)}
+                                </strong>
 
-                                <td>
-                                  {formatPercent(
-                                    stock
-                                      .returnOnEquityPercent,
-                                  )}
-                                </td>
+                                <div
+                                  style={{
+                                    marginTop: 3,
+                                    color: "#64748b",
+                                    fontSize: 8,
+                                  }}
+                                >
+                                  {stock.rsiStatus}
+                                </div>
+                              </td>
 
-                                <td>
-                                  {formatNumber(
-                                    stock.debtToEquity,
-                                    2,
-                                  )}
-                                </td>
-
-                                <td>
-                                  <strong
-                                    className={
-                                      Number(
-                                        stock.rsi,
-                                      ) >=
-                                      70
-                                        ? "exa-screener-negative"
-                                        : Number(
-                                              stock.rsi,
-                                            ) <=
-                                            30
-                                          ? "exa-screener-positive"
-                                          : ""
-                                    }
-                                  >
-                                    {formatNumber(
-                                      stock.rsi,
-                                      1,
-                                    )}
-                                  </strong>
-
-                                  <div
-                                    style={{
-                                      marginTop:
-                                        3,
-                                      color:
-                                        "#64748b",
-                                      fontSize:
-                                        8,
-                                    }}
-                                  >
-                                    {
-                                      stock.rsiStatus
-                                    }
-                                  </div>
-                                </td>
-
-                                <td>
-                                  <span
-                                    className={`exa-screener-trend ${trendClass}`}
-                                  >
-                                    {[
-                                      "Bullish",
-                                      "Positive",
-                                    ].includes(
+                              <td>
+                                <span
+                                  className={`exa-screener-trend ${trendClass}`}
+                                >
+                                  {["Bullish", "Positive"].includes(
+                                    stock.trend,
+                                  ) ? (
+                                    <TrendingUp size={11} />
+                                  ) : ["Bearish", "Negative"].includes(
                                       stock.trend,
                                     ) ? (
-                                      <TrendingUp
-                                        size={11}
-                                      />
-                                    ) : [
-                                        "Bearish",
-                                        "Negative",
-                                      ].includes(
-                                        stock.trend,
-                                      ) ? (
-                                      <TrendingDown
-                                        size={11}
-                                      />
-                                    ) : (
-                                      <BarChart3
-                                        size={11}
-                                      />
-                                    )}
-
-                                    {
-                                      stock.trend
-                                    }
-                                  </span>
-                                </td>
-
-                                <td>
-                                  {formatPercent(
-                                    stock
-                                      .distanceFrom52WeekHigh,
+                                    <TrendingDown size={11} />
+                                  ) : (
+                                    <BarChart3 size={11} />
                                   )}
-                                </td>
 
-                                <td>
-                                  <div className="exa-screener-row-actions">
-                                    <button
-                                      type="button"
-                                      className="exa-screener-action"
-                                      onClick={() =>
-                                        openAnalysis(
-                                          stock.symbol,
-                                        )
-                                      }
+                                  {stock.trend}
+                                </span>
+                              </td>
+
+                              <td>
+                                {formatPercent(stock.distanceFrom52WeekHigh)}
+                              </td>
+
+                              <td>
+                                <div className="exa-screener-row-actions">
+                                  <button
+                                    type="button"
+                                    className="exa-screener-action"
+                                    onClick={() => openAnalysis(stock.symbol)}
+                                  >
+                                    Analyze
+                                    <ArrowRight size={11} />
+                                  </button>
+
+                                  {stock.nseUrl && (
+                                    <a
+                                      className="exa-screener-link"
+                                      href={stock.nseUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title="Open NSE"
+                                      aria-label="Open NSE"
                                     >
-                                      Analyze
-                                      <ArrowRight
-                                        size={11}
-                                      />
-                                    </button>
-
-                                    {stock.nseUrl && (
-                                      <a
-                                        className="exa-screener-link"
-                                        href={
-                                          stock.nseUrl
-                                        }
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        title="Open NSE"
-                                        aria-label="Open NSE"
-                                      >
-                                        <ExternalLink
-                                          size={11}
-                                        />
-                                      </a>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          },
-                        )}
+                                      <ExternalLink size={11} />
+                                    </a>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -2561,12 +2814,7 @@ export default function Screener() {
 
                 <div className="exa-screener-pagination">
                   <span className="exa-screener-pagination-info">
-                    Page{" "}
-                    {apiData?.page ||
-                      page}{" "}
-                    of{" "}
-                    {apiData?.totalPages ||
-                      1}
+                    Page {apiData?.page || page} of {apiData?.totalPages || 1}
                     {" · "}
                     {matchingCount} matching stocks
                     {" · "}
@@ -2577,50 +2825,23 @@ export default function Screener() {
                     <button
                       type="button"
                       className="exa-screener-page-button"
-                      disabled={
-                        loading ||
-                        page <= 1
-                      }
+                      disabled={loading || page <= 1}
                       onClick={() =>
-                        setPage(
-                          (current) =>
-                            Math.max(
-                              current -
-                                1,
-                              1,
-                            ),
-                        )
+                        setPage((current) => Math.max(current - 1, 1))
                       }
                     >
-                      <ArrowLeft
-                        size={12}
-                      />
+                      <ArrowLeft size={12} />
                       Previous
                     </button>
 
                     <button
                       type="button"
                       className="exa-screener-page-button"
-                      disabled={
-                        loading ||
-                        page >=
-                          (
-                            apiData?.totalPages ||
-                            1
-                          )
-                      }
-                      onClick={() =>
-                        setPage(
-                          (current) =>
-                            current +
-                            1,
-                        )
-                      }
+                      disabled={loading || page >= (apiData?.totalPages || 1)}
+                      onClick={() => setPage((current) => current + 1)}
                     >
                       Next
-                      <ArrowRight
-                        size={12}
-                      />
+                      <ArrowRight size={12} />
                     </button>
                   </div>
                 </div>
