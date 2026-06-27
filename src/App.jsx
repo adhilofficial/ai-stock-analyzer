@@ -30,6 +30,7 @@ const Analyze = lazy(() =>
 const ComingSoon = lazy(() =>
   import("./pages/ComingSoon"),
 );
+import Screener from "./pages/Screener";
 
 function PageLoader() {
   return (
@@ -92,18 +93,16 @@ function AppRoutes() {
         />
 
         <Route
-          path="/screener"
+          path="/portfolio"
           element={
             <PremiumComingSoon />
           }
         />
 
         <Route
-          path="/portfolio"
-          element={
-            <PremiumComingSoon />
-          }
-        />
+  path="/screener"
+  element={<Screener />}
+/>
 
         <Route
           path="/market-pulse"
