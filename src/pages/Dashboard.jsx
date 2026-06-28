@@ -144,7 +144,7 @@ const DASHBOARD_POPULAR_STOCKS = [
 const DASHBOARD_ANALYZER_STYLES = `
   .exa-dashboard-research-search {
     position: relative;
-    z-index: 80;
+    z-index: 10;
     margin-bottom: 18px;
     padding: 16px;
     border: 1px solid rgba(96, 165, 250, 0.16);

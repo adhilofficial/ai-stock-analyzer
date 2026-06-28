@@ -4533,3 +4533,83 @@ body {
     right: 8px !important;
   }
 }
+
+
+/* =========================================
+   TOPBAR SCROLL STACKING FIX
+   ========================================= */
+
+.exa-shell-main {
+  position: relative;
+  min-width: 0;
+}
+
+/*
+ * Keep the Topbar permanently above
+ * every scrolling page section.
+ */
+.exa-topbar {
+  position: sticky !important;
+  top: 0 !important;
+
+  z-index: 1200 !important;
+  isolation: isolate;
+
+  /*
+   * Prevent page sections from being
+   * visible through the Topbar.
+   */
+  background:
+    rgba(5, 15, 29, 0.98) !important;
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/*
+ * Put all regular page content inside
+ * a lower stacking context.
+ */
+.exa-shell-content {
+  position: relative;
+  z-index: 0;
+  min-width: 0;
+}
+
+/*
+ * Main Dashboard search must scroll
+ * underneath the Topbar.
+ */
+.exa-dashboard-research-search {
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/*
+ * Search suggestions remain above cards,
+ * but cannot cover the Topbar.
+ */
+.exa-dashboard-research-search
+  .exa-dashboard-suggestions {
+  z-index: 200 !important;
+}
+
+/*
+ * The compact search belongs inside
+ * the Topbar and remains above the page.
+ */
+.exa-topbar
+  .exa-dashboard-top-search,
+.exa-topbar
+  .exa-dashboard-suggestions {
+  z-index: 1300 !important;
+}
+
+/* Light mode Topbar background */
+
+html[data-theme="light"]
+  .exa-topbar {
+  background:
+    rgba(248, 250, 252, 0.98)
+    !important;
+}
