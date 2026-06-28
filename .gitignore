@@ -28,3 +28,5 @@ api.env
 
 .vercel
 .env*
+
+phase-*-current-files.zip
