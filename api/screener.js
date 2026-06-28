@@ -888,6 +888,82 @@ export default async function handler(
     const allStocks =
       snapshot.stocks;
 
+    /*
+    |-----------------------------------------------------------------------
+    | Phase 9B market-pulse history request
+    |-----------------------------------------------------------------------
+    |
+    | Example:
+    | /api/screener?mode=market-pulse
+    |
+    | This reuses the existing Screener serverless function, so Phase 9B
+    | does not create another Vercel function.
+    |
+    */
+
+    const mode =
+      normalizeText(
+        getQueryValue(
+          request,
+          "mode",
+        ),
+      );
+
+    if (
+      mode ===
+      "market-pulse"
+    ) {
+      const history =
+        Array.isArray(
+          snapshot
+            ?.marketPulseHistory,
+        )
+          ? snapshot
+              .marketPulseHistory
+          : snapshot
+              ?.marketPulse
+            ? [
+                snapshot
+                  .marketPulse,
+              ]
+            : [];
+
+      return response
+        .status(200)
+        .json({
+          success: true,
+
+          generatedAt:
+            snapshot.generatedAt ||
+            null,
+
+          fetchedAt:
+            new Date()
+              .toISOString(),
+
+          source:
+            snapshot.source ||
+            "Yahoo Finance",
+
+          snapshotVersion:
+            snapshot.version ??
+            null,
+
+          cached: true,
+          snapshot: true,
+
+          marketPulse:
+            snapshot.marketPulse ||
+            history[
+              history.length - 1
+            ] ||
+            null,
+
+          marketPulseHistory:
+            history,
+        });
+    }
+
       /*
 |--------------------------------------------------------------------------
 | Multi-stock comparison request

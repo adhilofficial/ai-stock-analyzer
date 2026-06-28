@@ -1201,6 +1201,683 @@ function buildSnapshotRow(
   };
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Phase 9B market-pulse aggregates and history
+|--------------------------------------------------------------------------
+*/
+
+const MARKET_PULSE_HISTORY_LIMIT = 30;
+
+function clampNumber(
+  value,
+  minimum,
+  maximum,
+) {
+  const number =
+    safeNumber(value);
+
+  if (number === null) {
+    return minimum;
+  }
+
+  return Math.min(
+    Math.max(number, minimum),
+    maximum,
+  );
+}
+
+function getIndiaDateKey(value) {
+  const date =
+    value instanceof Date
+      ? value
+      : new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime(),
+    )
+  ) {
+    return new Date()
+      .toISOString()
+      .slice(0, 10);
+  }
+
+  try {
+    return new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "Asia/Kolkata",
+
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      },
+    ).format(date);
+  } catch {
+    return date
+      .toISOString()
+      .slice(0, 10);
+  }
+}
+
+function averageNumbers(values) {
+  const validValues = values
+    .map(safeNumber)
+    .filter(
+      (value) =>
+        value !== null,
+    );
+
+  if (
+    validValues.length === 0
+  ) {
+    return null;
+  }
+
+  return validValues.reduce(
+    (sum, value) =>
+      sum + value,
+    0,
+  ) / validValues.length;
+}
+
+function buildSectorPulse(
+  sectorName,
+  sectorStocks,
+) {
+  const totalStocks =
+    sectorStocks.length;
+
+  const advancing =
+    sectorStocks.filter(
+      (stock) =>
+        safeNumber(
+          stock?.changePercent,
+        ) > 0,
+    ).length;
+
+  const declining =
+    sectorStocks.filter(
+      (stock) =>
+        safeNumber(
+          stock?.changePercent,
+        ) < 0,
+    ).length;
+
+  const above50Count =
+    sectorStocks.filter(
+      (stock) => {
+        const price =
+          safeNumber(
+            stock?.price,
+          );
+
+        const sma50 =
+          safeNumber(
+            stock?.sma50,
+          );
+
+        return (
+          price !== null &&
+          sma50 !== null &&
+          price > sma50
+        );
+      },
+    ).length;
+
+  const totalVolume =
+    sectorStocks.reduce(
+      (sum, stock) =>
+        sum +
+        (
+          safeNumber(
+            stock?.volume,
+          ) || 0
+        ),
+      0,
+    );
+
+  const totalAverageVolume =
+    sectorStocks.reduce(
+      (sum, stock) =>
+        sum +
+        (
+          safeNumber(
+            stock?.averageVolume,
+          ) || 0
+        ),
+      0,
+    );
+
+  const averageChange =
+    averageNumbers(
+      sectorStocks.map(
+        (stock) =>
+          stock?.changePercent,
+      ),
+    ) || 0;
+
+  const advancingPercent =
+    totalStocks > 0
+      ? advancing /
+        totalStocks *
+        100
+      : 0;
+
+  const above50DMA =
+    totalStocks > 0
+      ? above50Count /
+        totalStocks *
+        100
+      : 0;
+
+  const volumeRatio =
+    totalAverageVolume > 0
+      ? totalVolume /
+        totalAverageVolume *
+        100
+      : 0;
+
+  const momentumScore =
+    clampNumber(
+      50 +
+        averageChange * 12 +
+        (
+          advancingPercent - 50
+        ) * 0.35 +
+        (
+          above50DMA - 50
+        ) * 0.15 +
+        clampNumber(
+          volumeRatio - 100,
+          -50,
+          50,
+        ) * 0.08,
+      0,
+      100,
+    );
+
+  return {
+    sector:
+      sectorName ||
+      "Other",
+
+    stockCount:
+      totalStocks,
+
+    advancing,
+    declining,
+
+    advancingPercent:
+      roundNumber(
+        advancingPercent,
+        2,
+      ),
+
+    averageChangePercent:
+      roundNumber(
+        averageChange,
+        2,
+      ),
+
+    above50DMA:
+      roundNumber(
+        above50DMA,
+        2,
+      ),
+
+    volumeRatio:
+      roundNumber(
+        volumeRatio,
+        2,
+      ),
+
+    momentumScore:
+      roundNumber(
+        momentumScore,
+        1,
+      ),
+  };
+}
+
+function buildMarketPulse(
+  stocks,
+  generatedAt,
+) {
+  const validStocks =
+    Array.isArray(stocks)
+      ? stocks.filter(Boolean)
+      : [];
+
+  const totalStocks =
+    validStocks.length;
+
+  let advancing = 0;
+  let declining = 0;
+  let unchanged = 0;
+  let above20Count = 0;
+  let above50Count = 0;
+  let week52Highs = 0;
+  let week52Lows = 0;
+  let upVolume = 0;
+  let downVolume = 0;
+  let unchangedVolume = 0;
+  let totalAverageVolume = 0;
+
+  const sectorGroups =
+    new Map();
+
+  validStocks.forEach(
+    (stock) => {
+      const changePercent =
+        safeNumber(
+          stock?.changePercent,
+        ) || 0;
+
+      const volume =
+        safeNumber(
+          stock?.volume,
+        ) || 0;
+
+      const averageVolume =
+        safeNumber(
+          stock?.averageVolume,
+        ) || 0;
+
+      const price =
+        safeNumber(
+          stock?.price,
+        );
+
+      const sma20 =
+        safeNumber(
+          stock?.sma20,
+        );
+
+      const sma50 =
+        safeNumber(
+          stock?.sma50,
+        );
+
+      const week52High =
+        safeNumber(
+          stock?.week52High,
+        );
+
+      const week52Low =
+        safeNumber(
+          stock?.week52Low,
+        );
+
+      if (changePercent > 0) {
+        advancing += 1;
+        upVolume += volume;
+      } else if (
+        changePercent < 0
+      ) {
+        declining += 1;
+        downVolume += volume;
+      } else {
+        unchanged += 1;
+        unchangedVolume += volume;
+      }
+
+      if (
+        price !== null &&
+        sma20 !== null &&
+        price > sma20
+      ) {
+        above20Count += 1;
+      }
+
+      if (
+        price !== null &&
+        sma50 !== null &&
+        price > sma50
+      ) {
+        above50Count += 1;
+      }
+
+      if (
+        price !== null &&
+        week52High !== null &&
+        week52High > 0 &&
+        price >=
+          week52High * 0.98
+      ) {
+        week52Highs += 1;
+      }
+
+      if (
+        price !== null &&
+        week52Low !== null &&
+        week52Low > 0 &&
+        price <=
+          week52Low * 1.02
+      ) {
+        week52Lows += 1;
+      }
+
+      totalAverageVolume +=
+        averageVolume;
+
+      const sector =
+        cleanText(
+          stock?.sector,
+        ) ||
+        "Other";
+
+      if (
+        !sectorGroups.has(sector)
+      ) {
+        sectorGroups.set(
+          sector,
+          [],
+        );
+      }
+
+      sectorGroups
+        .get(sector)
+        .push(stock);
+    },
+  );
+
+  const totalVolume =
+    upVolume +
+    downVolume +
+    unchangedVolume;
+
+  const directionalTotal =
+    advancing +
+    declining;
+
+  const advancingPercent =
+    totalStocks > 0
+      ? advancing /
+        totalStocks *
+        100
+      : 0;
+
+  const decliningPercent =
+    totalStocks > 0
+      ? declining /
+        totalStocks *
+        100
+      : 0;
+
+  const above20DMA =
+    totalStocks > 0
+      ? above20Count /
+        totalStocks *
+        100
+      : 0;
+
+  const above50DMA =
+    totalStocks > 0
+      ? above50Count /
+        totalStocks *
+        100
+      : 0;
+
+  const upVolumeShare =
+    totalVolume > 0
+      ? upVolume /
+        totalVolume *
+        100
+      : 50;
+
+  const downVolumeShare =
+    totalVolume > 0
+      ? downVolume /
+        totalVolume *
+        100
+      : 50;
+
+  const volumeRatio =
+    totalAverageVolume > 0
+      ? totalVolume /
+        totalAverageVolume *
+        100
+      : 0;
+
+  const sectors = [
+    ...sectorGroups.entries(),
+  ]
+    .map(
+      ([sectorName, sectorStocks]) =>
+        buildSectorPulse(
+          sectorName,
+          sectorStocks,
+        ),
+    )
+    .sort(
+      (first, second) =>
+        (
+          second.momentumScore || 0
+        ) -
+        (
+          first.momentumScore || 0
+        ),
+    );
+
+  const positiveSectors =
+    sectors.filter(
+      (sector) =>
+        (
+          sector.averageChangePercent ||
+          0
+        ) > 0,
+    ).length;
+
+  const negativeSectors =
+    sectors.filter(
+      (sector) =>
+        (
+          sector.averageChangePercent ||
+          0
+        ) < 0,
+    ).length;
+
+  const sectorParticipationPercent =
+    sectors.length > 0
+      ? positiveSectors /
+        sectors.length *
+        100
+      : 50;
+
+  const marketParticipationScore =
+    clampNumber(
+      advancingPercent * 0.35 +
+        above20DMA * 0.2 +
+        above50DMA * 0.25 +
+        upVolumeShare * 0.2,
+      0,
+      100,
+    );
+
+  return {
+    generatedAt,
+
+    date:
+      getIndiaDateKey(
+        generatedAt,
+      ),
+
+    totalStocks,
+    advancing,
+    declining,
+    unchanged,
+
+    advancingPercent:
+      roundNumber(
+        advancingPercent,
+        2,
+      ),
+
+    decliningPercent:
+      roundNumber(
+        decliningPercent,
+        2,
+      ),
+
+    advanceDeclineRatio:
+      roundNumber(
+        declining > 0
+          ? advancing /
+            declining
+          : directionalTotal > 0
+            ? advancing
+            : 0,
+        2,
+      ),
+
+    above20DMA:
+      roundNumber(
+        above20DMA,
+        2,
+      ),
+
+    above50DMA:
+      roundNumber(
+        above50DMA,
+        2,
+      ),
+
+    week52Highs,
+    week52Lows,
+
+    upVolume,
+    downVolume,
+    unchangedVolume,
+    totalVolume,
+
+    upVolumeShare:
+      roundNumber(
+        upVolumeShare,
+        2,
+      ),
+
+    downVolumeShare:
+      roundNumber(
+        downVolumeShare,
+        2,
+      ),
+
+    volumeRatio:
+      roundNumber(
+        volumeRatio,
+        2,
+      ),
+
+    positiveSectors,
+    negativeSectors,
+
+    sectorParticipationPercent:
+      roundNumber(
+        sectorParticipationPercent,
+        2,
+      ),
+
+    marketParticipationScore:
+      roundNumber(
+        marketParticipationScore,
+        1,
+      ),
+
+    sectors,
+  };
+}
+
+async function readPreviousSnapshot() {
+  try {
+    const text =
+      await readFile(
+        OUTPUT_FILE,
+        "utf8",
+      );
+
+    const snapshot =
+      JSON.parse(text);
+
+    return snapshot &&
+      typeof snapshot ===
+        "object"
+      ? snapshot
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildMarketPulseHistory(
+  previousSnapshot,
+  currentPulse,
+) {
+  const previousHistory =
+    Array.isArray(
+      previousSnapshot
+        ?.marketPulseHistory,
+    )
+      ? previousSnapshot
+          .marketPulseHistory
+      : previousSnapshot
+          ?.marketPulse
+        ? [
+            previousSnapshot
+              .marketPulse,
+          ]
+        : [];
+
+  const historyByDate =
+    new Map();
+
+  previousHistory
+    .filter(Boolean)
+    .forEach(
+      (item) => {
+        const date =
+          cleanText(
+            item?.date,
+          ) ||
+          getIndiaDateKey(
+            item?.generatedAt,
+          );
+
+        if (date) {
+          historyByDate.set(
+            date,
+            {
+              ...item,
+              date,
+            },
+          );
+        }
+      },
+    );
+
+  historyByDate.set(
+    currentPulse.date,
+    currentPulse,
+  );
+
+  return [
+    ...historyByDate.values(),
+  ]
+    .sort(
+      (first, second) =>
+        String(first.date)
+          .localeCompare(
+            String(second.date),
+          ),
+    )
+    .slice(
+      -MARKET_PULSE_HISTORY_LIMIT,
+    );
+}
+
 /*
 |--------------------------------------------------------------------------
 | Main builder
@@ -1211,6 +1888,9 @@ async function main() {
   console.log(
     "Reading screener universe...",
   );
+
+  const previousSnapshot =
+    await readPreviousSnapshot();
 
   const universe =
     await readUniverse();
@@ -1324,11 +2004,25 @@ async function main() {
       ),
   );
 
-  const snapshot = {
-    version: 1,
+  const generatedAt =
+    new Date().toISOString();
 
-    generatedAt:
-      new Date().toISOString(),
+  const marketPulse =
+    buildMarketPulse(
+      stocks,
+      generatedAt,
+    );
+
+  const marketPulseHistory =
+    buildMarketPulseHistory(
+      previousSnapshot,
+      marketPulse,
+    );
+
+  const snapshot = {
+    version: 2,
+
+    generatedAt,
 
     source:
       "Yahoo Finance",
@@ -1340,6 +2034,10 @@ async function main() {
       stocks.length,
 
     sectors,
+
+    marketPulse,
+
+    marketPulseHistory,
 
     stocks,
   };
