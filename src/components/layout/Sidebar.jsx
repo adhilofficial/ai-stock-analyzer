@@ -10,10 +10,11 @@ import {
   LineChart,
   Settings,
   Sparkles,
-  X,
 } from "lucide-react";
 
-import { NavLink } from "react-router-dom";
+import {
+  NavLink,
+} from "react-router-dom";
 
 import ExaBrandLogo from "./ExaBrandLogo";
 
@@ -65,8 +66,25 @@ export default function Sidebar({
   onClose,
 }) {
   function closeSidebar() {
-    if (typeof onClose === "function") {
+    if (
+      typeof onClose === "function"
+    ) {
       onClose();
+    }
+  }
+
+  function handleNavigationClick() {
+    /*
+     * Close the drawer after selecting a
+     * page on phones and tablets.
+     *
+     * Keep it open on desktop.
+     */
+    if (
+      typeof window !== "undefined" &&
+      window.innerWidth <= 900
+    ) {
+      closeSidebar();
     }
   }
 
@@ -94,20 +112,27 @@ export default function Sidebar({
           <NavLink
             to="/dashboard"
             className="exa-brand-link"
-            onClick={closeSidebar}
+            onClick={
+              handleNavigationClick
+            }
             aria-label="Open EXA Dashboard"
           >
-            <ExaBrandLogo />
+            <ExaBrandLogo
+              showTagline
+            />
           </NavLink>
 
-          <button
+          {/* <button
             type="button"
-            className="exa-sidebar-close"
-            aria-label="Close navigation"
+            className="exa-sidebar-collapse-button"
             onClick={closeSidebar}
+            aria-label="Hide sidebar"
+            title="Hide sidebar"
           >
-            <X size={19} />
-          </button>
+            <span aria-hidden="true">
+              ‹‹‹
+            </span>
+          </button> */}
         </div>
 
         <nav
@@ -127,15 +152,19 @@ export default function Sidebar({
               <NavLink
                 key={path}
                 to={path}
-                onClick={closeSidebar}
-                className={({ isActive }) =>
+                onClick={
+                  handleNavigationClick
+                }
+                className={({
+                  isActive,
+                }) =>
                   isActive
                     ? "exa-sidebar-link active"
                     : "exa-sidebar-link"
                 }
               >
                 <Icon
-                  size={17}
+                  size={19}
                   strokeWidth={1.8}
                 />
 
@@ -149,10 +178,12 @@ export default function Sidebar({
           <NavLink
             to="/settings"
             className="exa-sidebar-link"
-            onClick={closeSidebar}
+            onClick={
+              handleNavigationClick
+            }
           >
             <Settings
-              size={17}
+              size={19}
               strokeWidth={1.8}
             />
 
@@ -162,10 +193,14 @@ export default function Sidebar({
           <div className="exa-upgrade-card">
             <div className="exa-upgrade-heading">
               <span className="exa-upgrade-icon">
-                <CircleDollarSign size={18} />
+                <CircleDollarSign
+                  size={18}
+                />
               </span>
 
-              <strong>EXA Pro</strong>
+              <strong>
+                EXA Pro
+              </strong>
             </div>
 
             <p>

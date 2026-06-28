@@ -1,7 +1,6 @@
 import {
   Bell,
   ChevronDown,
-  Menu,
   Moon,
   Search,
   Sparkles,
@@ -19,7 +18,8 @@ import {
 export default function Topbar({
   theme = "dark",
   onToggleTheme,
-  onOpenSidebar,
+  sidebarOpen = false,
+  onToggleSidebar,
   hideDefaultSearch = false,
   topSearch = null,
 }) {
@@ -58,13 +58,31 @@ export default function Topbar({
     <header className="exa-topbar">
       <div className="exa-topbar-left">
         <button
-          type="button"
-          className="exa-mobile-menu-button"
-          aria-label="Open navigation"
-          onClick={onOpenSidebar}
-        >
-          <Menu size={21} />
-        </button>
+  type="button"
+  className="exa-mobile-menu-button exa-sidebar-toggle-button"
+  aria-label={
+    sidebarOpen
+      ? "Hide navigation"
+      : "Open navigation"
+  }
+  title={
+    sidebarOpen
+      ? "Hide sidebar"
+      : "Open sidebar"
+  }
+  onClick={
+    onToggleSidebar
+  }
+>
+  <span
+    className="exa-sidebar-toggle-arrows"
+    aria-hidden="true"
+  >
+    {sidebarOpen
+      ? "‹‹‹"
+      : "›››"}
+  </span>
+</button>
 
         {topSearch ? (
           <div className="exa-topbar-custom-search">

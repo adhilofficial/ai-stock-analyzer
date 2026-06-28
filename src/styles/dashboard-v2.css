@@ -38,7 +38,7 @@
 .exa-sidebar {
   position: sticky;
   top: 0;
-  z-index: 50;
+  /* z-index: 50; */
   width: var(--exa-sidebar-width);
   height: 100vh;
   min-height: 650px;
@@ -3421,5 +3421,1115 @@ body {
     max-height: none !important;
     padding-right: 0 !important;
     overflow: visible !important;
+  }
+}
+
+  /*
+   * Keep all Dashboard searches and suggestions
+   * below the mobile navigation drawer.
+   */
+  .exa-dashboard-research-search,
+  .exa-dashboard-top-search,
+  .exa-dashboard-suggestions,
+  .exa-topbar,
+  .exa-analyze-floating-search {
+    z-index: 100 !important;
+  }
+
+  /* =========================================
+   FINAL RESPONSIVE APP SHELL FIX
+   Desktop sticky sidebar + mobile drawer
+   Keep this at the absolute bottom
+   ========================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+/*
+ * Use clip instead of hidden.
+ * overflow-x: hidden can prevent a sticky
+ * desktop sidebar from working correctly.
+ */
+html,
+body {
+  overflow-x: clip;
+}
+
+#root {
+  min-height: 100%;
+  overflow: visible;
+}
+
+.exa-app-shell {
+  width: 100%;
+  min-width: 0;
+}
+
+.exa-shell-main {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.exa-shell-content {
+  width: 100%;
+  min-width: 0;
+}
+
+/* =========================================
+   DESKTOP
+   ========================================= */
+
+@media (min-width: 901px) {
+  .exa-sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    align-self: flex-start;
+
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    transform: none !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+
+    z-index: 300 !important;
+  }
+
+  .exa-sidebar-overlay {
+    display: none !important;
+  }
+
+  .exa-mobile-menu-button {
+    display: none !important;
+  }
+
+  .exa-shell-main {
+    width: auto !important;
+    margin-left: 0 !important;
+  }
+}
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 900px) {
+  .exa-app-shell {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .exa-shell-main {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  .exa-shell-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .exa-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+
+    width: min(285px, 86vw) !important;
+    max-width: 86vw !important;
+
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    z-index: 2000 !important;
+
+    transform: translate3d(-105%, 0, 0) !important;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+      transform 0.24s ease,
+      visibility 0.24s ease !important;
+  }
+
+  .exa-sidebar.open {
+    transform: translate3d(0, 0, 0) !important;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .exa-sidebar-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+
+    display: none !important;
+
+    width: 100vw !important;
+    height: 100dvh !important;
+
+    border: 0 !important;
+    background: rgba(0, 0, 0, 0.68) !important;
+
+    z-index: 1990 !important;
+
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .exa-sidebar-overlay.visible {
+    display: block !important;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .exa-sidebar-close,
+  .exa-mobile-menu-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /*
+   * Search UI must remain below
+   * the open mobile sidebar.
+   */
+  .exa-dashboard-research-search,
+  .exa-dashboard-top-search,
+  .exa-dashboard-suggestions,
+  .exa-topbar,
+  .exa-analyze-floating-search {
+    z-index: 100 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .exa-shell-content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+/* =========================================
+   LANDSCAPE MOBILE TOPBAR FIX
+   iPhone and small-tablet landscape
+   ========================================= */
+
+@media (
+  max-width: 900px
+) and (
+  orientation: landscape
+) {
+  .exa-topbar {
+    width: 100%;
+    min-width: 0;
+    min-height: 62px;
+    height: 62px;
+
+    padding: 7px 12px;
+    gap: 8px;
+
+    display: flex;
+    align-items: center;
+
+    overflow: visible;
+  }
+
+  .exa-topbar-left {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .exa-mobile-menu-button {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    flex: 0 0 42px;
+  }
+
+  /*
+   * Allow the search to use only the
+   * remaining available space.
+   */
+  .exa-topbar-custom-search,
+  .exa-topbar-search {
+    flex: 1 1 auto;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .exa-topbar-custom-search > *,
+  .exa-topbar-custom-search form,
+  .exa-topbar-custom-search .exa-dashboard-search-form,
+  .exa-topbar-custom-search .exa-dashboard-search-control,
+  .exa-topbar-custom-search .exa-dashboard-search-box {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .exa-topbar-search input,
+  .exa-topbar-custom-search input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .exa-topbar-actions {
+    flex: 0 0 auto;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  /*
+   * Convert Ask EXA AI into an icon-only
+   * button in landscape mode.
+   */
+  .exa-ask-ai-button {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+
+    padding: 0;
+    justify-content: center;
+  }
+
+  .exa-ask-ai-button span {
+    display: none;
+  }
+
+  .exa-topbar-icon-button {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    flex: 0 0 42px;
+  }
+
+  /*
+   * Show only the avatar.
+   * Hide name, role and dropdown arrow.
+   */
+  .exa-profile-button {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+
+    padding: 0;
+    justify-content: center;
+  }
+
+  .exa-profile-copy,
+  .exa-profile-button > svg {
+    display: none;
+  }
+
+  .exa-profile-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+}
+
+@media (
+  max-width: 700px
+) and (
+  orientation: landscape
+) {
+  /*
+   * On extremely narrow landscape screens,
+   * hide the theme button but keep notifications.
+   */
+  .exa-topbar-icon-button:not(
+    .exa-notification-button
+  ) {
+    display: none !important;
+  }
+
+  .exa-topbar {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .exa-topbar-actions {
+    gap: 4px;
+  }
+}
+
+/* =========================================
+   MOBILE & TABLET TOPBAR — MINIMAL ACTIONS
+   Menu + Search + Ask EXA icon + Profile icon
+   ========================================= */
+
+@media (max-width: 900px) {
+  .exa-topbar {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .exa-topbar-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .exa-mobile-menu-button {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    flex: 0 0 42px;
+  }
+
+  .exa-topbar-custom-search,
+  .exa-topbar-search {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .exa-topbar-custom-search > *,
+  .exa-topbar-custom-search form,
+  .exa-topbar-custom-search input,
+  .exa-topbar-search input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .exa-topbar-actions {
+    flex: 0 0 auto;
+    min-width: 0;
+    gap: 7px;
+  }
+
+  /* Ask EXA becomes icon-only */
+  .exa-ask-ai-button {
+    display: inline-flex !important;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    flex: 0 0 42px;
+    padding: 0 !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+  }
+
+  .exa-ask-ai-button span {
+    display: none !important;
+  }
+
+  /* Hide theme and notification buttons */
+  .exa-topbar-icon-button {
+    display: none !important;
+  }
+
+  /* Profile becomes avatar-only */
+  .exa-profile-button {
+    display: inline-flex !important;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    flex: 0 0 42px;
+    padding: 0 !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .exa-profile-copy,
+  .exa-profile-button > svg {
+    display: none !important;
+  }
+
+  .exa-profile-avatar {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .exa-topbar {
+    padding-left: 8px;
+    padding-right: 8px;
+    gap: 6px;
+  }
+
+  .exa-topbar-left,
+  .exa-topbar-actions {
+    gap: 5px;
+  }
+
+  .exa-mobile-menu-button,
+  .exa-ask-ai-button,
+  .exa-profile-button {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    flex-basis: 40px;
+  }
+
+  .exa-profile-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .exa-topbar-search input,
+  .exa-topbar-custom-search input {
+    font-size: 12px;
+  }
+}
+
+/* =========================================
+   FINAL COLLAPSIBLE SIDEBAR SYSTEM
+   Laptop + tablet + mobile
+   ========================================= */
+
+:root {
+  --exa-sidebar-width: 232px;
+}
+
+/* Sidebar and main content sizing */
+
+.exa-app-shell {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.exa-sidebar {
+  width: var(--exa-sidebar-width) !important;
+  max-width: var(--exa-sidebar-width) !important;
+  flex: 0 0 var(--exa-sidebar-width) !important;
+
+  transition:
+    transform 0.24s ease,
+    margin-left 0.24s ease,
+    opacity 0.2s ease !important;
+}
+
+.exa-shell-main {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+/* Keep logo and hide button separated */
+
+.exa-sidebar-brand,
+.exa-sidebar-header {
+  position: relative;
+  padding-right: 48px !important;
+}
+
+/* New arrows inside the sidebar */
+
+.exa-sidebar-collapse-button {
+  position: absolute;
+  top: 18px;
+  right: 12px;
+
+  width: 36px;
+  height: 36px;
+  padding: 0;
+
+  border: 1px solid
+    rgba(96, 165, 250, 0.2);
+  border-radius: 10px;
+
+  color: #93c5fd;
+  background: rgba(
+    15,
+    31,
+    54,
+    0.92
+  );
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  z-index: 5;
+
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.exa-sidebar-collapse-button:hover {
+  color: #ffffff;
+  border-color:
+    rgba(96, 165, 250, 0.5);
+  background:
+    rgba(37, 99, 235, 0.18);
+}
+
+.exa-sidebar-collapse-button span {
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -4px;
+
+  transform: translateX(-2px);
+}
+
+/* Hide the old X button completely */
+
+.exa-sidebar-close {
+  display: none !important;
+}
+
+/* Top navigation arrows */
+
+.exa-sidebar-toggle-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  flex: 0 0 44px;
+
+  padding: 0;
+}
+
+.exa-sidebar-toggle-arrows {
+  display: block;
+
+  color: #93c5fd;
+
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -4px;
+
+  transform: translateX(-2px);
+}
+
+/* =========================================
+   LAPTOP AND DESKTOP
+   ========================================= */
+
+@media (min-width: 901px) {
+  .exa-sidebar {
+    position: sticky !important;
+    top: 0 !important;
+
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+
+    margin-left: 0 !important;
+
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      ) !important;
+
+    opacity: 1;
+    visibility: visible !important;
+    pointer-events: auto !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  /*
+   * Negative margin removes the sidebar
+   * space so the Dashboard expands.
+   */
+  .exa-app-shell.sidebar-closed
+    .exa-sidebar {
+    margin-left:
+      calc(
+        var(--exa-sidebar-width) *
+          -1
+      ) !important;
+
+    transform:
+      translate3d(
+        -100%,
+        0,
+        0
+      ) !important;
+
+    opacity: 0;
+    pointer-events: none !important;
+  }
+
+  .exa-app-shell.sidebar-open
+    .exa-sidebar {
+    margin-left: 0 !important;
+
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      ) !important;
+
+    opacity: 1;
+  }
+
+  .exa-sidebar-overlay {
+    display: none !important;
+  }
+}
+
+/* =========================================
+   TABLET AND MOBILE
+   ========================================= */
+
+@media (max-width: 900px) {
+  .exa-app-shell {
+    display: block !important;
+  }
+
+  .exa-sidebar {
+    position: fixed !important;
+
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+
+    /*
+     * 232px instead of the old wide
+     * 285px / 86vw drawer.
+     */
+    width:
+      min(
+        232px,
+        78vw
+      ) !important;
+
+    max-width:
+      min(
+        232px,
+        78vw
+      ) !important;
+
+    flex-basis:
+      auto !important;
+
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+
+    margin-left: 0 !important;
+
+    transform:
+      translate3d(
+        -105%,
+        0,
+        0
+      ) !important;
+
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+
+    z-index: 2000 !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .exa-app-shell.sidebar-open
+    .exa-sidebar,
+  .exa-sidebar.open {
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      ) !important;
+
+    visibility: visible;
+    pointer-events: auto;
+    opacity: 1;
+  }
+
+  .exa-app-shell.sidebar-closed
+    .exa-sidebar {
+    transform:
+      translate3d(
+        -105%,
+        0,
+        0
+      ) !important;
+  }
+
+  .exa-sidebar-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+
+    width: 100vw !important;
+    height: 100dvh !important;
+
+    background:
+      rgba(
+        0,
+        0,
+        0,
+        0.68
+      ) !important;
+
+    z-index: 1990 !important;
+  }
+
+  .exa-sidebar-brand,
+  .exa-sidebar-header {
+    padding-right: 45px !important;
+  }
+
+  .exa-sidebar-collapse-button {
+    top: 16px;
+    right: 10px;
+
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* =========================================
+   EXA BRAND LOGO
+   ========================================= */
+
+.exa-brand-lockup {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  width: 100%;
+  max-width: 142px;
+  min-width: 0;
+}
+
+.exa-brand-image {
+  display: block;
+
+  width: 100%;
+  height: auto;
+  max-height: 50px;
+
+  object-fit: contain;
+  object-position: left center;
+
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.exa-brand-tagline {
+  display: block;
+
+  margin-top: 1px;
+  padding-left: 2px;
+
+  color: #38bdf8;
+
+  font-size: 8px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+}
+
+/* Smaller logo variation */
+
+.exa-brand-lockup.compact {
+  max-width: 108px;
+}
+
+.exa-brand-lockup.compact
+  .exa-brand-image {
+  max-height: 38px;
+}
+
+/* Sidebar placement */
+
+.exa-sidebar-brand
+  .exa-brand-lockup {
+  max-width: 138px;
+}
+
+@media (max-width: 900px) {
+  .exa-sidebar-brand
+    .exa-brand-lockup {
+    max-width: 126px;
+  }
+
+  .exa-sidebar-brand
+    .exa-brand-image {
+    max-height: 44px;
+  }
+
+  .exa-brand-tagline {
+    font-size: 7px;
+  }
+}
+
+.exa-sidebar-brand {
+  position: relative;
+  min-height: 80px;
+  padding: 14px 48px 13px 15px !important;
+  display: flex;
+  align-items: center;
+}
+
+.exa-sidebar-logo-link {
+  width: 100%;
+  max-width: 150px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.exa-brand-lockup {
+  width: 100%;
+  max-width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.exa-brand-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 50px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.exa-brand-tagline {
+  margin-top: 1px;
+  padding-left: 2px;
+  color: #38bdf8;
+  font-size: 7px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .exa-sidebar-logo-link,
+  .exa-brand-lockup {
+    max-width: 135px;
+  }
+
+  .exa-brand-image {
+    max-height: 44px;
+  }
+}
+
+/* =========================================
+   FINAL EXA LOGO AND SIDEBAR ICON FIX
+   Keep this at the absolute bottom
+   ========================================= */
+
+.exa-sidebar-brand {
+  position: relative !important;
+
+  width: 100%;
+  min-height: 88px;
+
+  padding:
+    14px 48px
+    13px 17px !important;
+
+  display: flex;
+  align-items: center;
+
+  overflow: visible;
+
+  border-bottom: 1px solid
+    rgba(96, 165, 250, 0.12);
+}
+
+.exa-brand-link {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  max-width: 150px;
+  min-width: 0;
+
+  text-decoration: none;
+}
+
+.exa-brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  width: 100% !important;
+  max-width: 150px !important;
+  min-width: 0;
+}
+
+.exa-brand-image {
+  display: block !important;
+
+  width: 150px !important;
+  max-width: 100% !important;
+
+  height: auto !important;
+  max-height: none !important;
+
+  object-fit: contain !important;
+  object-position:
+    left center !important;
+
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.exa-brand-tagline {
+  display: block;
+
+  margin-top: 2px;
+  padding-left: 2px;
+
+  color: #38bdf8;
+
+  font-size: 7px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.015em;
+
+  white-space: nowrap;
+}
+
+.exa-brand-lockup.compact {
+  max-width: 110px !important;
+}
+
+.exa-brand-lockup.compact
+  .exa-brand-image {
+  width: 110px !important;
+}
+
+/* Sidebar hide control */
+
+.exa-sidebar-collapse-button {
+  position: absolute !important;
+
+  top: 25px !important;
+  right: 9px !important;
+
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px;
+
+  padding: 0;
+
+  border: 1px solid
+    rgba(96, 165, 250, 0.22);
+  border-radius: 10px;
+
+  color: #93c5fd;
+  background: #0e1d32;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  z-index: 10;
+}
+
+.exa-sidebar-collapse-button:hover {
+  color: #ffffff;
+
+  border-color:
+    rgba(96, 165, 250, 0.5);
+
+  background:
+    rgba(37, 99, 235, 0.18);
+}
+
+.exa-sidebar-collapse-button span {
+  display: block;
+
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -4px;
+
+  transform: translateX(-2px);
+}
+
+/* Increase sidebar navigation icons */
+
+.exa-sidebar-link svg {
+  width: 19px !important;
+  height: 19px !important;
+
+  min-width: 19px;
+  flex: 0 0 19px;
+
+  stroke-width: 1.8;
+}
+
+.exa-sidebar-link {
+  min-height: 41px;
+}
+
+@media (max-width: 900px) {
+  .exa-sidebar-brand {
+    min-height: 80px;
+
+    padding:
+      12px 45px
+      11px 14px !important;
+  }
+
+  .exa-brand-link,
+  .exa-brand-lockup {
+    max-width: 136px !important;
+  }
+
+  .exa-brand-image {
+    width: 136px !important;
+  }
+
+  .exa-sidebar-collapse-button {
+    top: 22px !important;
+    right: 8px !important;
   }
 }

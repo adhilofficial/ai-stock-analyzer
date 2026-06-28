@@ -15,6 +15,8 @@ import "../../styles/theme.css";
 const THEME_STORAGE_KEY =
   "exa-theme-v1";
 
+const SIDEBAR_BREAKPOINT = 900;
+
 function getInitialTheme() {
   if (
     typeof window ===
@@ -45,25 +47,27 @@ function getInitialTheme() {
     : "dark";
 }
 
+function getInitialSidebarOpen() {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+    return false;
+  }
+
+  /*
+   * Start open on laptops/desktops.
+   * Start closed on tablets and phones.
+   */
+  return (
+    window.innerWidth >
+    SIDEBAR_BREAKPOINT
+  );
+}
+
 export default function AppShell({
   children,
-
-  /*
-   * When true, the permanent default
-   * Topbar search will not be rendered.
-   *
-   * Dashboard uses this because it has
-   * its own large stock-search section.
-   */
   hideDefaultSearch = false,
-
-  /*
-   * Optional custom search component
-   * rendered inside the Topbar.
-   *
-   * Dashboard supplies this only after
-   * its large search scrolls away.
-   */
   topSearch = null,
 }) {
   const location =
@@ -79,12 +83,10 @@ export default function AppShell({
   const [
     sidebarOpen,
     setSidebarOpen,
-  ] = useState(false);
+  ] = useState(
+    getInitialSidebarOpen,
+  );
 
-  /*
-   * Apply the selected theme globally
-   * and save the selection locally.
-   */
   useEffect(() => {
     document.documentElement.setAttribute(
       "data-theme",
@@ -98,35 +100,105 @@ export default function AppShell({
   }, [theme]);
 
   /*
-   * Close the mobile sidebar whenever
-   * the route changes.
+   * Automatically switch sidebar mode when
+   * moving between desktop and mobile widths.
    */
   useEffect(() => {
-    setSidebarOpen(false);
+    const mediaQuery =
+      window.matchMedia(
+        `(min-width: ${
+          SIDEBAR_BREAKPOINT + 1
+        }px)`,
+      );
+
+    function handleBreakpointChange(
+      event,
+    ) {
+      setSidebarOpen(
+        event.matches,
+      );
+    }
+
+    mediaQuery.addEventListener(
+      "change",
+      handleBreakpointChange,
+    );
+
+    return () => {
+      mediaQuery.removeEventListener(
+        "change",
+        handleBreakpointChange,
+      );
+    };
+  }, []);
+
+  /*
+   * Close the drawer after navigation only
+   * on mobile and tablet screens.
+   */
+  useEffect(() => {
+    if (
+      window.innerWidth <=
+      SIDEBAR_BREAKPOINT
+    ) {
+      setSidebarOpen(false);
+    }
   }, [location.pathname]);
 
+  /*
+   * Prevent the page behind the mobile
+   * drawer from scrolling.
+   */
+  useEffect(() => {
+    const previousOverflow =
+      document.body.style.overflow;
+
+    if (
+      sidebarOpen &&
+      window.innerWidth <=
+        SIDEBAR_BREAKPOINT
+    ) {
+      document.body.style.overflow =
+        "hidden";
+    } else {
+      document.body.style.overflow =
+        previousOverflow;
+    }
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+    };
+  }, [sidebarOpen]);
+
   function toggleTheme() {
-    setTheme(
-      (currentTheme) =>
-        currentTheme === "dark"
-          ? "light"
-          : "dark",
+    setTheme((currentTheme) =>
+      currentTheme === "dark"
+        ? "light"
+        : "dark",
     );
   }
 
-  function openSidebar() {
-    setSidebarOpen(true);
-  }
-
-  function closeSidebar() {
-    setSidebarOpen(false);
+  function toggleSidebar() {
+    setSidebarOpen(
+      (currentValue) =>
+        !currentValue,
+    );
   }
 
   return (
-    <div className="exa-app-shell">
+    <div
+      className={`exa-app-shell ${
+        sidebarOpen
+          ? "sidebar-open"
+          : "sidebar-closed"
+      }`}
+    >
       <Sidebar
         isOpen={sidebarOpen}
-        onClose={closeSidebar}
+        onClose={() =>
+          setSidebarOpen(false)
+        }
       />
 
       <div className="exa-shell-main">
@@ -135,8 +207,11 @@ export default function AppShell({
           onToggleTheme={
             toggleTheme
           }
-          onOpenSidebar={
-            openSidebar
+          sidebarOpen={
+            sidebarOpen
+          }
+          onToggleSidebar={
+            toggleSidebar
           }
           hideDefaultSearch={
             hideDefaultSearch
