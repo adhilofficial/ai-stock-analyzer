@@ -1,12 +1,13 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
 import {
-  getMarketAlerts,
-} from "../services/dashboardApi";
+  loadAlertCenterData,
+} from "../services/alertCenter";
 
 import {
   ALERT_CENTER_CACHE_KEY,
@@ -17,10 +18,14 @@ import {
   isAlertRead,
   markAlertRead,
   markAllAlertsRead,
-  mergeAlertCenterCache,
   readAlertCenterCache,
   readAlertCenterState,
 } from "../utils/alertStorage";
+
+import {
+  CUSTOM_ALERT_RULES_STORAGE_KEY,
+  CUSTOM_ALERT_RULES_UPDATED_EVENT,
+} from "../utils/customAlertRules";
 
 const CACHE_MAX_AGE_MS = 5 * 60 * 1000;
 const PREVIEW_ALERT_LIMIT = 5;
@@ -91,9 +96,42 @@ export default function useAlertCenterBadge() {
     getAlertSnapshot,
   );
 
+  const activeRequestRef = useRef(null);
+
   const refreshCount = useCallback(() => {
     setSnapshot(getAlertSnapshot());
   }, []);
+
+  const refreshAllAlerts = useCallback(
+    async ({ refresh = false } = {}) => {
+      if (activeRequestRef.current) {
+        activeRequestRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      activeRequestRef.current = controller;
+
+      try {
+        await loadAlertCenterData({
+          refresh,
+          signal: controller.signal,
+        });
+        refreshCount();
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          console.warn(
+            "Unable to refresh alert badge:",
+            error,
+          );
+        }
+      } finally {
+        if (activeRequestRef.current === controller) {
+          activeRequestRef.current = null;
+        }
+      }
+    },
+    [refreshCount],
+  );
 
   const markAlertAsRead = useCallback(
     (alertId) => {
@@ -118,6 +156,14 @@ export default function useAlertCenterBadge() {
       refreshCount();
     }
 
+    function handleRuleUpdate(event) {
+      refreshCount();
+
+      if (event?.detail?.reason !== "evaluation") {
+        refreshAllAlerts({ refresh: true });
+      }
+    }
+
     function handleStorage(event) {
       if (
         event.key ===
@@ -127,11 +173,19 @@ export default function useAlertCenterBadge() {
       ) {
         refreshCount();
       }
+
+      if (event.key === CUSTOM_ALERT_RULES_STORAGE_KEY) {
+        refreshAllAlerts({ refresh: true });
+      }
     }
 
     window.addEventListener(
       ALERT_CENTER_UPDATED_EVENT,
       handleAlertUpdate,
+    );
+    window.addEventListener(
+      CUSTOM_ALERT_RULES_UPDATED_EVENT,
+      handleRuleUpdate,
     );
     window.addEventListener(
       "storage",
@@ -144,55 +198,34 @@ export default function useAlertCenterBadge() {
         handleAlertUpdate,
       );
       window.removeEventListener(
+        CUSTOM_ALERT_RULES_UPDATED_EVENT,
+        handleRuleUpdate,
+      );
+      window.removeEventListener(
         "storage",
         handleStorage,
       );
     };
-  }, [refreshCount]);
+  }, [refreshAllAlerts, refreshCount]);
 
   useEffect(() => {
     const cache = readAlertCenterCache();
 
-    if (cacheIsFresh(cache.fetchedAt)) {
-      return undefined;
+    if (!cacheIsFresh(cache.fetchedAt)) {
+      refreshAllAlerts();
     }
-
-    const controller = new AbortController();
-
-    async function loadBadgeAlerts() {
-      try {
-        const data = await getMarketAlerts({
-          limit: 20,
-          signal: controller.signal,
-        });
-
-        mergeAlertCenterCache(data.alerts, {
-          fetchedAt: data.fetchedAt,
-          source: data.source,
-        });
-
-        refreshCount();
-      } catch (error) {
-        if (error?.name !== "AbortError") {
-          console.warn(
-            "Unable to refresh alert badge:",
-            error,
-          );
-        }
-      }
-    }
-
-    loadBadgeAlerts();
 
     return () => {
-      controller.abort();
+      activeRequestRef.current?.abort();
+      activeRequestRef.current = null;
     };
-  }, [refreshCount]);
+  }, [refreshAllAlerts]);
 
   return {
     unreadCount: snapshot.unreadCount,
     previewAlerts: snapshot.previewAlerts,
     refreshCount,
+    refreshAllAlerts,
     markAlertAsRead,
     markAllPreviewAlertsRead,
   };

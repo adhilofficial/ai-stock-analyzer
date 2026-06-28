@@ -16,8 +16,17 @@ import {
   writeAlertCenterCache,
 } from "../utils/alertStorage";
 
+import {
+  applyCustomAlertEvaluations,
+  formatCustomAlertRule,
+  formatCustomAlertTarget,
+  getCustomAlertCondition,
+  readCustomAlertRules,
+} from "../utils/customAlertRules";
+
 const MAX_PERSONALIZED_SYMBOLS = 25;
-const MAX_ALERTS = 100;
+const MAX_ALERTS = 120;
+const MAX_CUSTOM_RULE_SYMBOLS = 20;
 
 const SEVERITY_RANK = {
   critical: 4,
@@ -192,8 +201,46 @@ async function readJson(response) {
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error("The Screener API returned an invalid response.");
+    throw new Error("The server returned an invalid response.");
   }
+}
+
+export async function searchAlertRuleStocks(
+  query,
+  { signal } = {},
+) {
+  const cleanedQuery = cleanText(query);
+
+  if (cleanedQuery.length < 2) {
+    return [];
+  }
+
+  const parameters = new URLSearchParams({
+    q: cleanedQuery,
+  });
+
+  const response = await fetch(
+    `/api/stock-search?${parameters}`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+      signal,
+    },
+  );
+
+  const data = await readJson(response);
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error?.message ||
+        "Unable to search Indian stocks.",
+    );
+  }
+
+  return (Array.isArray(data) ? data : [])
+    .filter((stock) => stock?.symbol)
+    .slice(0, 8);
 }
 
 async function fetchScreenerChunk(symbols, signal) {
@@ -522,6 +569,319 @@ function deriveScreenerAlerts({
   return alerts;
 }
 
+function calculateRsi(chart, period = 14) {
+  const closes = (Array.isArray(chart) ? chart : [])
+    .map((item) => safeNumber(item?.close))
+    .filter((value) => value !== null);
+
+  if (closes.length <= period) {
+    return null;
+  }
+
+  const recent = closes.slice(-(period + 1));
+  let gains = 0;
+  let losses = 0;
+
+  for (let index = 1; index < recent.length; index += 1) {
+    const change = recent[index] - recent[index - 1];
+
+    if (change >= 0) {
+      gains += change;
+    } else {
+      losses += Math.abs(change);
+    }
+  }
+
+  const averageGain = gains / period;
+  const averageLoss = losses / period;
+
+  if (averageLoss === 0) {
+    return averageGain === 0 ? 50 : 100;
+  }
+
+  const relativeStrength = averageGain / averageLoss;
+  return 100 - 100 / (1 + relativeStrength);
+}
+
+async function fetchCustomRuleStockData(symbol, signal) {
+  const parameters = new URLSearchParams({
+    symbol,
+    range: "1m",
+  });
+
+  const response = await fetch(
+    `/api/stock-data?${parameters}`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+      signal,
+    },
+  );
+
+  const data = await readJson(response);
+
+  if (!response.ok || !data?.symbol) {
+    throw new Error(
+      data?.error?.message ||
+        `Unable to evaluate ${symbol}.`,
+    );
+  }
+
+  const price = safeNumber(data.price);
+  const week52High = safeNumber(
+    data.week52High ?? data.fiftyTwoWeekHigh,
+  );
+  const week52Low = safeNumber(
+    data.week52Low ?? data.fiftyTwoWeekLow,
+  );
+  const volume = safeNumber(data.volume);
+  const averageVolume = safeNumber(data.averageVolume);
+
+  return {
+    ...data,
+    symbol: normalizeSymbol(data.symbol || symbol),
+    price,
+    changePercent: safeNumber(data.changePercent),
+    rsi: calculateRsi(data.chart),
+    volumeRatio:
+      volume !== null &&
+      averageVolume !== null &&
+      averageVolume > 0
+        ? volume / averageVolume
+        : null,
+    distanceFrom52WeekHigh:
+      price !== null && week52High !== null && week52High > 0
+        ? Math.max(0, ((week52High - price) / week52High) * 100)
+        : null,
+    distanceFrom52WeekLow:
+      price !== null && week52Low !== null && week52Low > 0
+        ? Math.max(0, ((price - week52Low) / week52Low) * 100)
+        : null,
+    week52High,
+    week52Low,
+  };
+}
+
+function evaluateCustomRule(rule, stock) {
+  const target = safeNumber(rule?.targetValue);
+
+  if (target === null) {
+    return { triggered: false, value: null };
+  }
+
+  const values = {
+    price_above: safeNumber(stock?.price),
+    price_below: safeNumber(stock?.price),
+    change_above: safeNumber(stock?.changePercent),
+    change_below: safeNumber(stock?.changePercent),
+    rsi_above: safeNumber(stock?.rsi),
+    rsi_below: safeNumber(stock?.rsi),
+    volume_spike: safeNumber(stock?.volumeRatio),
+    near_52w_high: safeNumber(stock?.distanceFrom52WeekHigh),
+    near_52w_low: safeNumber(stock?.distanceFrom52WeekLow),
+  };
+
+  const value = values[rule?.condition] ?? null;
+
+  if (value === null) {
+    return { triggered: false, value: null };
+  }
+
+  const triggeredByCondition = {
+    price_above: value >= target,
+    price_below: value <= target,
+    change_above: value >= target,
+    change_below: value <= target,
+    rsi_above: value >= target,
+    rsi_below: value <= target,
+    volume_spike: value >= target,
+    near_52w_high: value <= target,
+    near_52w_low: value <= target,
+  };
+
+  return {
+    triggered: Boolean(triggeredByCondition[rule?.condition]),
+    value,
+  };
+}
+
+function formatRuleCurrentValue(rule, metrics = {}) {
+  const value = safeNumber(metrics.currentValue ?? rule?.lastValue);
+
+  if (value === null) {
+    return "latest available data";
+  }
+
+  const condition = getCustomAlertCondition(rule?.condition);
+
+  if (condition.category === "price") {
+    return `₹${value.toLocaleString("en-IN", {
+      maximumFractionDigits: 2,
+    })}`;
+  }
+
+  if (condition.value === "volume_spike") {
+    return `${value.toFixed(1)}× average volume`;
+  }
+
+  if (condition.category === "change" || condition.category === "range") {
+    return `${value.toFixed(1)}%`;
+  }
+
+  return value.toFixed(1);
+}
+
+function getCustomRuleSeverity(rule, value) {
+  const condition = rule?.condition;
+  const numericValue = Math.abs(safeNumber(value, 0));
+
+  if (condition === "change_above" || condition === "change_below") {
+    return numericValue >= 7 ? "critical" : numericValue >= 4 ? "high" : "moderate";
+  }
+
+  if (condition === "rsi_above" || condition === "rsi_below") {
+    return numericValue >= 80 || numericValue <= 20 ? "high" : "moderate";
+  }
+
+  if (condition === "volume_spike") {
+    return numericValue >= 3 ? "high" : "moderate";
+  }
+
+  return "moderate";
+}
+
+function createCustomRuleAlert(rule, fetchedAt) {
+  const condition = getCustomAlertCondition(rule?.condition);
+  const metrics = rule?.lastMetrics || {};
+  const currentValue = formatRuleCurrentValue(rule, metrics);
+
+  return createPersonalizedAlert({
+    id: `custom-rule-${rule.id}-${Math.max(1, safeNumber(rule.triggerCount, 1))}`,
+    type: "custom-rule",
+    category:
+      condition.category === "technical"
+        ? "technical"
+        : condition.category === "volume"
+          ? "volume"
+          : "custom",
+    severity: getCustomRuleSeverity(rule, rule.lastValue),
+    title: `${rule.companyName || rule.symbol} custom alert triggered`,
+    message: `${formatCustomAlertRule(rule)}. The latest measured value is ${currentValue}.`,
+    symbol: rule.symbol,
+    fetchedAt:
+      rule.lastTriggeredAt ||
+      fetchedAt ||
+      new Date().toISOString(),
+    source: "Custom alert rule",
+    metrics: {
+      ...metrics,
+      ruleId: rule.id,
+      targetValue: rule.targetValue,
+      currentValue: rule.lastValue,
+      condition: rule.condition,
+      targetLabel: formatCustomAlertTarget(rule),
+    },
+  });
+}
+
+async function evaluateCustomAlertRules(signal) {
+  const rules = readCustomAlertRules();
+  const triggeredRules = rules.filter(
+    (rule) => rule.status === "triggered",
+  );
+  const activeRules = rules.filter(
+    (rule) => rule.status === "active",
+  );
+
+  const symbols = [
+    ...new Set(activeRules.map((rule) => rule.symbol)),
+  ].slice(0, MAX_CUSTOM_RULE_SYMBOLS);
+
+  const results = await Promise.allSettled(
+    symbols.map((symbol) =>
+      fetchCustomRuleStockData(symbol, signal),
+    ),
+  );
+
+  const stockMap = new Map();
+  let failedSymbols = 0;
+
+  results.forEach((result, index) => {
+    if (result.status === "fulfilled") {
+      stockMap.set(symbols[index], result.value);
+    } else if (result.reason?.name !== "AbortError") {
+      failedSymbols += 1;
+      console.warn(
+        `Unable to evaluate custom alert for ${symbols[index]}:`,
+        result.reason,
+      );
+    }
+  });
+
+  const now = new Date().toISOString();
+  const evaluations = [];
+  const newlyTriggered = [];
+
+  activeRules.forEach((rule) => {
+    const stock = stockMap.get(rule.symbol);
+
+    if (!stock) {
+      return;
+    }
+
+    const evaluation = evaluateCustomRule(rule, stock);
+    const lastMetrics = {
+      price: safeNumber(stock.price),
+      changePercent: safeNumber(stock.changePercent),
+      rsi: safeNumber(stock.rsi),
+      volumeRatio: safeNumber(stock.volumeRatio),
+      distanceFrom52WeekHigh: safeNumber(stock.distanceFrom52WeekHigh),
+      distanceFrom52WeekLow: safeNumber(stock.distanceFrom52WeekLow),
+      marketState: cleanText(stock.marketState),
+      currentValue: evaluation.value,
+    };
+
+    const nextRule = {
+      id: rule.id,
+      lastEvaluatedAt: now,
+      lastValue: evaluation.value,
+      lastMetrics,
+    };
+
+    if (evaluation.triggered) {
+      nextRule.status = "triggered";
+      nextRule.lastTriggeredAt = now;
+      nextRule.triggerCount = safeNumber(rule.triggerCount, 0) + 1;
+      newlyTriggered.push({
+        ...rule,
+        ...nextRule,
+      });
+    }
+
+    evaluations.push(nextRule);
+  });
+
+  const updatedRules = applyCustomAlertEvaluations(evaluations);
+  const triggeredById = new Map(
+    [...triggeredRules, ...newlyTriggered].map((rule) => [
+      rule.id,
+      updatedRules.find((item) => item.id === rule.id) || rule,
+    ]),
+  );
+
+  return {
+    alerts: [...triggeredById.values()].map((rule) =>
+      createCustomRuleAlert(rule, now),
+    ),
+    rules: updatedRules,
+    activeCount: updatedRules.filter((rule) => rule.status === "active").length,
+    pausedCount: updatedRules.filter((rule) => rule.status === "paused").length,
+    triggeredCount: updatedRules.filter((rule) => rule.status === "triggered").length,
+    failedSymbols,
+  };
+}
+
 function dedupeAndSortAlerts(alerts) {
   const byId = new Map();
 
@@ -583,27 +943,38 @@ export async function loadAlertCenterData({
     ]),
   ].slice(0, MAX_PERSONALIZED_SYMBOLS);
 
-  const [marketResult, quoteResult, screenerResult] =
-    await Promise.allSettled([
-      getMarketAlerts({
-        refresh,
-        limit: 30,
-        signal,
-      }),
-      getWatchlistQuotes({
-        symbols: personalizedSymbols,
-        refresh,
-        signal,
-      }),
-      fetchScreenerStocks(personalizedSymbols, signal),
-    ]);
+  const [
+    marketResult,
+    quoteResult,
+    screenerResult,
+    customRulesResult,
+  ] = await Promise.allSettled([
+    getMarketAlerts({
+      refresh,
+      limit: 30,
+      signal,
+    }),
+    getWatchlistQuotes({
+      symbols: personalizedSymbols,
+      refresh,
+      signal,
+    }),
+    fetchScreenerStocks(personalizedSymbols, signal),
+    evaluateCustomAlertRules(signal),
+  ]);
 
   if (
     marketResult.status === "rejected" &&
     quoteResult.status === "rejected" &&
-    screenerResult.status === "rejected"
+    screenerResult.status === "rejected" &&
+    customRulesResult.status === "rejected"
   ) {
-    const error = marketResult.reason || quoteResult.reason || screenerResult.reason;
+    const error =
+      marketResult.reason ||
+      quoteResult.reason ||
+      screenerResult.reason ||
+      customRulesResult.reason;
+
     throw error instanceof Error
       ? error
       : new Error("Unable to load alert-center data.");
@@ -631,6 +1002,18 @@ export async function loadAlertCenterData({
       ? screenerResult.value
       : [];
 
+  const customRulesData =
+    customRulesResult.status === "fulfilled"
+      ? customRulesResult.value
+      : {
+          alerts: [],
+          rules: readCustomAlertRules(),
+          activeCount: 0,
+          pausedCount: 0,
+          triggeredCount: 0,
+          failedSymbols: 0,
+        };
+
   const fetchedAt =
     marketData.fetchedAt ||
     quoteData.fetchedAt ||
@@ -656,7 +1039,12 @@ export async function loadAlertCenterData({
     }),
   ];
 
+  const customRuleAlerts = Array.isArray(customRulesData.alerts)
+    ? customRulesData.alerts
+    : [];
+
   const alerts = dedupeAndSortAlerts([
+    ...customRuleAlerts,
     ...personalizedAlerts,
     ...marketAlerts,
   ]);
@@ -665,6 +1053,7 @@ export async function loadAlertCenterData({
     marketResult.status === "fulfilled" ? "live market alerts" : "",
     quoteResult.status === "fulfilled" ? "watchlist quotes" : "",
     screenerResult.status === "fulfilled" ? "screener snapshot" : "",
+    customRulesData.rules?.length ? "custom rules" : "",
   ].filter(Boolean);
 
   const source =
@@ -685,13 +1074,20 @@ export async function loadAlertCenterData({
     cached: Boolean(marketData.cached),
     watchlistCount: watchlistSet.size,
     portfolioCount: portfolioMap.size,
-    personalizedCount: personalizedAlerts.length,
+    personalizedCount:
+      personalizedAlerts.length + customRuleAlerts.length,
+    customRuleCount: customRulesData.rules?.length || 0,
+    customRuleActiveCount: customRulesData.activeCount || 0,
+    customRulePausedCount: customRulesData.pausedCount || 0,
+    customRuleTriggeredCount: customRulesData.triggeredCount || 0,
     unavailableSymbols: Array.isArray(quoteData.unavailableSymbols)
       ? quoteData.unavailableSymbols
       : [],
     partialFailure:
       marketResult.status === "rejected" ||
       quoteResult.status === "rejected" ||
-      screenerResult.status === "rejected",
+      screenerResult.status === "rejected" ||
+      customRulesResult.status === "rejected" ||
+      customRulesData.failedSymbols > 0,
   };
 }
