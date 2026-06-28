@@ -44,6 +44,25 @@ const DETAIL_CONCURRENCY = 3;
 const QUOTE_BATCH_SIZE = 25;
 const CHART_LOOKBACK_DAYS = 220;
 
+const MARKET_INDEX_CONFIG = [
+  {
+    symbol: "^NSEI",
+    name: "NIFTY 50",
+  },
+  {
+    symbol: "^BSESN",
+    name: "SENSEX",
+  },
+  {
+    symbol: "^NSEBANK",
+    name: "BANK NIFTY",
+  },
+  {
+    symbol: "^CNXIT",
+    name: "NIFTY IT",
+  },
+];
+
 /*
 |--------------------------------------------------------------------------
 | General helpers
@@ -633,6 +652,124 @@ async function fetchQuoteMap(
   return quoteMap;
 }
 
+
+async function fetchMarketIndexSnapshot() {
+  try {
+    const result =
+      await withRetry(
+        () =>
+          yahooFinance.quote(
+            MARKET_INDEX_CONFIG.map(
+              (index) =>
+                index.symbol,
+            ),
+          ),
+        {
+          attempts: 3,
+          delayMs: 700,
+          label:
+            "Market index snapshot",
+        },
+      );
+
+    const quotes =
+      Array.isArray(result)
+        ? result
+        : result
+          ? [result]
+          : [];
+
+    const quoteMap =
+      new Map(
+        quotes
+          .filter(
+            (quote) =>
+              quote?.symbol,
+          )
+          .map(
+            (quote) => [
+              normalizeSymbol(
+                quote.symbol,
+              ),
+              quote,
+            ],
+          ),
+      );
+
+    return MARKET_INDEX_CONFIG
+      .map((index) => {
+        const quote =
+          quoteMap.get(
+            normalizeSymbol(
+              index.symbol,
+            ),
+          );
+
+        if (!quote) {
+          return null;
+        }
+
+        return {
+          symbol:
+            index.symbol,
+
+          name:
+            index.name,
+
+          value:
+            safeNumber(
+              quote
+                ?.regularMarketPrice,
+            ),
+
+          previousClose:
+            safeNumber(
+              quote
+                ?.regularMarketPreviousClose,
+            ),
+
+          change:
+            safeNumber(
+              quote
+                ?.regularMarketChange,
+            ),
+
+          changePercent:
+            safeNumber(
+              quote
+                ?.regularMarketChangePercent,
+            ),
+
+          dayLow:
+            safeNumber(
+              quote
+                ?.regularMarketDayLow,
+            ),
+
+          dayHigh:
+            safeNumber(
+              quote
+                ?.regularMarketDayHigh,
+            ),
+
+          marketState:
+            quote?.marketState ||
+            null,
+        };
+      })
+      .filter(Boolean);
+  } catch (error) {
+    console.warn(
+      "Market index snapshot unavailable:",
+      error instanceof Error
+        ? error.message
+        : error,
+    );
+
+    return [];
+  }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Fetch fundamentals and chart history
@@ -1204,11 +1341,128 @@ function buildSnapshotRow(
 
 /*
 |--------------------------------------------------------------------------
-| Phase 9B market-pulse aggregates and history
+| Phase 9C historical market trends and comparisons
 |--------------------------------------------------------------------------
 */
 
 const MARKET_PULSE_HISTORY_LIMIT = 30;
+
+function calculatePulseSentiment(
+  pulse,
+  indices,
+) {
+  const indexChanges =
+    (Array.isArray(indices)
+      ? indices
+      : [])
+      .map(
+        (index) =>
+          safeNumber(
+            index?.changePercent,
+          ),
+      )
+      .filter(
+        (value) =>
+          value !== null,
+      );
+
+  const indexAverage =
+    indexChanges.length > 0
+      ? indexChanges.reduce(
+          (sum, value) =>
+            sum + value,
+          0,
+        ) /
+        indexChanges.length
+      : 0;
+
+  const indexScore =
+    clampNumber(
+      50 +
+        indexAverage *
+          18,
+      0,
+      100,
+    );
+
+  const breadthScore =
+    clampNumber(
+      pulse
+        ?.advancingPercent,
+      0,
+      100,
+    );
+
+  const sectorScore =
+    clampNumber(
+      pulse
+        ?.sectorParticipationPercent,
+      0,
+      100,
+    );
+
+  const volumeScore =
+    clampNumber(
+      pulse
+        ?.upVolumeShare,
+      0,
+      100,
+    );
+
+  return roundNumber(
+    indexScore * 0.35 +
+      breadthScore * 0.35 +
+      sectorScore * 0.2 +
+      volumeScore * 0.1,
+    1,
+  );
+}
+
+function derivePulseRiskLevel(
+  pulse,
+) {
+  const declining =
+    safeNumber(
+      pulse
+        ?.decliningPercent,
+    ) ?? 50;
+
+  const downVolume =
+    safeNumber(
+      pulse
+        ?.downVolumeShare,
+    ) ?? 50;
+
+  const above50 =
+    safeNumber(
+      pulse?.above50DMA,
+    ) ?? 50;
+
+  const sectorParticipation =
+    safeNumber(
+      pulse
+        ?.sectorParticipationPercent,
+    ) ?? 50;
+
+  if (
+    declining >= 60 ||
+    downVolume >= 70 ||
+    above50 < 30
+  ) {
+    return "high";
+  }
+
+  if (
+    declining >= 52 ||
+    downVolume >= 60 ||
+    above50 < 40 ||
+    sectorParticipation < 35
+  ) {
+    return "moderate";
+  }
+
+  return "low";
+}
 
 function clampNumber(
   value,
@@ -1446,6 +1700,7 @@ function buildSectorPulse(
 function buildMarketPulse(
   stocks,
   generatedAt,
+  indices = [],
 ) {
   const validStocks =
     Array.isArray(stocks)
@@ -1698,7 +1953,7 @@ function buildMarketPulse(
       100,
     );
 
-  return {
+  const pulse = {
     generatedAt,
 
     date:
@@ -1787,7 +2042,27 @@ function buildMarketPulse(
         1,
       ),
 
+    indices:
+      Array.isArray(indices)
+        ? indices
+        : [],
+
     sectors,
+  };
+
+  return {
+    ...pulse,
+
+    sentimentScore:
+      calculatePulseSentiment(
+        pulse,
+        indices,
+      ),
+
+    riskLevel:
+      derivePulseRiskLevel(
+        pulse,
+      ),
   };
 }
 
@@ -2007,10 +2282,18 @@ async function main() {
   const generatedAt =
     new Date().toISOString();
 
+  console.log(
+    "Loading historical index comparison values...",
+  );
+
+  const marketIndices =
+    await fetchMarketIndexSnapshot();
+
   const marketPulse =
     buildMarketPulse(
       stocks,
       generatedAt,
+      marketIndices,
     );
 
   const marketPulseHistory =
@@ -2020,7 +2303,7 @@ async function main() {
     );
 
   const snapshot = {
-    version: 2,
+    version: 3,
 
     generatedAt,
 

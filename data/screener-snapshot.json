@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "generatedAt": "2026-06-28T08:35:13.242Z",
   "source": "Yahoo Finance",
   "universeCount": 150,
@@ -8866,7 +8866,10 @@
         "volumeRatio": 63.06,
         "momentumScore": 12.1
       }
-    ]
+    ],
+    "indices": [],
+    "sentimentScore": 43.3,
+    "riskLevel": "high"
   },
   "marketPulseHistory": [
     {
@@ -9016,7 +9019,10 @@
           "volumeRatio": 63.06,
           "momentumScore": 12.1
         }
-      ]
+      ],
+      "indices": [],
+      "sentimentScore": 43.3,
+      "riskLevel": "high"
     }
   ]
 }

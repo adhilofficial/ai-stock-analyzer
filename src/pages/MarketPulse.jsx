@@ -15,6 +15,9 @@ import {
   CheckCircle2,
   CircleDot,
   Clock3,
+  CalendarDays,
+  Database,
+  Download,
   Gauge,
   Layers3,
   LoaderCircle,
@@ -22,6 +25,7 @@ import {
   RotateCcw,
   ShieldAlert,
   Sparkles,
+  Trophy,
   TrendingDown,
   TrendingUp,
   TriangleAlert,
@@ -73,7 +77,44 @@ const MAIN_INDEX_SYMBOLS = [
 ];
 
 const MAX_52_WEEK_ITEMS = 5;
-const MAX_TREND_POINTS = 14;
+const MAX_TREND_POINTS = 30;
+
+const HISTORY_RANGE_OPTIONS = [7, 30];
+
+const HISTORICAL_INDEX_SERIES = [
+  {
+    key: "nifty50",
+    symbol: "^NSEI",
+    name: "NIFTY 50",
+    stroke: "#60a5fa",
+  },
+  {
+    key: "sensex",
+    symbol: "^BSESN",
+    name: "SENSEX",
+    stroke: "#a78bfa",
+  },
+  {
+    key: "bankNifty",
+    symbol: "^NSEBANK",
+    name: "BANK NIFTY",
+    stroke: "#22c55e",
+  },
+  {
+    key: "niftyIt",
+    symbol: "^CNXIT",
+    name: "NIFTY IT",
+    stroke: "#f59e0b",
+  },
+];
+
+const SECTOR_HISTORY_COLORS = [
+  "#60a5fa",
+  "#22c55e",
+  "#f59e0b",
+  "#a78bfa",
+  "#fb7185",
+];
 
 const MARKET_PULSE_STYLES = `
   .exa-pulse-page {
@@ -961,11 +1002,253 @@ const MARKET_PULSE_STYLES = `
     text-align: center;
   }
 
+
+  .exa-pulse-history-section {
+    margin-bottom: 16px;
+  }
+
+  .exa-pulse-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .exa-pulse-history-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .exa-pulse-range-control {
+    display: inline-flex;
+    padding: 3px;
+    border: 1px solid #21334c;
+    border-radius: 10px;
+    background: #081321;
+  }
+
+  .exa-pulse-range-control button {
+    min-width: 48px;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #71839d;
+    font-size: 9px;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .exa-pulse-range-control button.active {
+    background: #17345e;
+    color: #dbeafe;
+  }
+
+  .exa-pulse-history-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .exa-pulse-history-meta {
+    padding: 13px;
+    border: 1px solid #1b2d45;
+    border-radius: 12px;
+    background: rgba(8, 19, 33, 0.72);
+  }
+
+  .exa-pulse-history-meta span {
+    display: block;
+    color: #62748e;
+    font-size: 8px;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .exa-pulse-history-meta strong {
+    display: block;
+    margin-top: 6px;
+    color: #e8eef8;
+    font-size: 12px;
+  }
+
+  .exa-pulse-history-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .exa-pulse-history-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .exa-pulse-history-summary > div {
+    padding: 12px;
+    border: 1px solid #1b2d45;
+    border-radius: 11px;
+    background: rgba(8, 19, 33, 0.66);
+  }
+
+  .exa-pulse-history-summary span {
+    display: block;
+    color: #65758d;
+    font-size: 8px;
+  }
+
+  .exa-pulse-history-summary strong {
+    display: block;
+    margin-top: 5px;
+    color: #e8eef8;
+    font-size: 11px;
+  }
+
+  .exa-pulse-history-empty {
+    min-height: 280px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #60728d;
+    text-align: center;
+  }
+
+  .exa-pulse-history-empty strong {
+    margin-top: 10px;
+    color: #dbeafe;
+    font-size: 11px;
+  }
+
+  .exa-pulse-history-empty p {
+    max-width: 410px;
+    margin: 7px 0 0;
+    font-size: 9px;
+    line-height: 1.55;
+  }
+
+  .exa-pulse-session-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .exa-pulse-session-card {
+    padding: 14px;
+    border: 1px solid #1b2d45;
+    border-radius: 12px;
+    background: rgba(8, 19, 33, 0.72);
+  }
+
+  .exa-pulse-session-card.best {
+    border-color: rgba(34, 197, 94, 0.28);
+  }
+
+  .exa-pulse-session-card.weakest {
+    border-color: rgba(244, 63, 94, 0.28);
+  }
+
+  .exa-pulse-session-card span {
+    color: #64748b;
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .exa-pulse-session-card strong {
+    display: block;
+    margin-top: 7px;
+    color: #e8eef8;
+    font-size: 12px;
+  }
+
+  .exa-pulse-session-card p {
+    margin: 5px 0 0;
+    color: #71839d;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .exa-pulse-risk-timeline {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .exa-pulse-risk-row {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    font-size: 9px;
+  }
+
+  .exa-pulse-risk-row > span:first-child {
+    color: #64748b;
+  }
+
+  .exa-pulse-risk-track {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #122139;
+  }
+
+  .exa-pulse-risk-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+  .exa-pulse-risk-track span.low { background: #22c55e; }
+  .exa-pulse-risk-track span.moderate { background: #f59e0b; }
+  .exa-pulse-risk-track span.high { background: #f43f5e; }
+
+  .exa-pulse-risk-row strong {
+    min-width: 58px;
+    color: #dbeafe;
+    font-size: 8px;
+    text-align: right;
+    text-transform: uppercase;
+  }
+
+  .exa-pulse-sector-history-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .exa-pulse-sector-history-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #70829b;
+    font-size: 8px;
+  }
+
+  .exa-pulse-sector-history-legend i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+  }
+
   @media (max-width: 1180px) {
     .exa-pulse-index-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .exa-pulse-main-grid,
     .exa-pulse-intelligence-grid,
-    .exa-pulse-risk-grid { grid-template-columns: 1fr; }
+    .exa-pulse-risk-grid,
+    .exa-pulse-history-grid { grid-template-columns: 1fr; }
     .exa-pulse-sector-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .exa-pulse-three-grid { grid-template-columns: 1fr; }
   }
@@ -980,6 +1263,9 @@ const MARKET_PULSE_STYLES = `
     .exa-pulse-sentiment-layout { grid-template-columns: 1fr; }
     .exa-pulse-sector-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .exa-pulse-highlow-grid { grid-template-columns: 1fr; }
+    .exa-pulse-history-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .exa-pulse-history-header { align-items: flex-start; }
+    .exa-pulse-history-actions { width: 100%; }
     .exa-pulse-rotation-row {
       grid-template-columns: minmax(110px, 1fr) minmax(80px, 0.7fr) auto;
     }
@@ -992,7 +1278,10 @@ const MARKET_PULSE_STYLES = `
     .exa-pulse-breadth-summary,
     .exa-pulse-breadth-details,
     .exa-pulse-comparison-grid,
-    .exa-pulse-volume-grid { grid-template-columns: 1fr; }
+    .exa-pulse-volume-grid,
+    .exa-pulse-history-meta-grid,
+    .exa-pulse-history-summary,
+    .exa-pulse-session-grid { grid-template-columns: 1fr; }
     .exa-pulse-sector-grid { grid-template-columns: 1fr; }
     .exa-pulse-chart-shell { height: 260px; }
     .exa-pulse-rotation-row { grid-template-columns: minmax(0, 1fr) auto; }
@@ -1377,6 +1666,257 @@ function buildTrendRows(history, currentPulse) {
     }));
 }
 
+
+function getHistoricalPulseDate(item) {
+  return item?.date || String(item?.generatedAt || "").slice(0, 10);
+}
+
+function getHistoricalIndexValue(item, symbol) {
+  const indices = Array.isArray(item?.indices) ? item.indices : [];
+  const match = indices.find((index) => {
+    const candidate = String(index?.symbol || index?.ticker || "").toUpperCase();
+    return candidate === String(symbol || "").toUpperCase();
+  });
+
+  return safeNumber(match?.value ?? match?.price ?? match?.regularMarketPrice);
+}
+
+function calculateHistoricalSentiment(item) {
+  const storedScore = safeNumber(item?.sentimentScore);
+  if (storedScore !== null) return clamp(storedScore, 0, 100);
+
+  const indexChanges = (Array.isArray(item?.indices) ? item.indices : [])
+    .map((index) => safeNumber(index?.changePercent))
+    .filter((value) => value !== null);
+
+  const indexAverage = indexChanges.length
+    ? indexChanges.reduce((sum, value) => sum + value, 0) / indexChanges.length
+    : 0;
+
+  const indexScore = clamp(50 + indexAverage * 18, 0, 100);
+  const breadthScore = clamp(safeNumber(item?.advancingPercent, 50), 0, 100);
+  const sectorScore = clamp(safeNumber(item?.sectorParticipationPercent, 50), 0, 100);
+  const volumeScore = clamp(safeNumber(item?.upVolumeShare, 50), 0, 100);
+
+  return Math.round(
+    indexScore * 0.35 +
+    breadthScore * 0.35 +
+    sectorScore * 0.2 +
+    volumeScore * 0.1,
+  );
+}
+
+function deriveHistoricalRisk(item) {
+  const stored = String(item?.riskLevel || "").toLowerCase();
+  if (["low", "moderate", "high"].includes(stored)) return stored;
+
+  const declining = safeNumber(item?.decliningPercent, 50);
+  const downVolume = safeNumber(item?.downVolumeShare, 50);
+  const above50 = safeNumber(item?.above50DMA, 50);
+  const sectorParticipation = safeNumber(item?.sectorParticipationPercent, 50);
+
+  if (
+    declining >= 60 ||
+    downVolume >= 70 ||
+    above50 < 30
+  ) {
+    return "high";
+  }
+
+  if (
+    declining >= 52 ||
+    downVolume >= 60 ||
+    above50 < 40 ||
+    sectorParticipation < 35
+  ) {
+    return "moderate";
+  }
+
+  return "low";
+}
+
+function buildHistoricalRows(history, currentPulse, range) {
+  const byDate = new Map();
+
+  [...(Array.isArray(history) ? history : []), currentPulse]
+    .filter(Boolean)
+    .forEach((item) => {
+      const date = getHistoricalPulseDate(item);
+      if (!date) return;
+      byDate.set(date, { ...item, date });
+    });
+
+  const rows = [...byDate.values()]
+    .sort((first, second) => String(first.date).localeCompare(String(second.date)))
+    .slice(-range)
+    .map((item) => {
+      const row = {
+        date: item.date,
+        label: formatTrendDate(item.date),
+        sentiment: calculateHistoricalSentiment(item),
+        participation: safeNumber(item?.marketParticipationScore, 50),
+        advancing: safeNumber(item?.advancingPercent, 0),
+        declining: safeNumber(item?.decliningPercent, 0),
+        above50DMA: safeNumber(item?.above50DMA, 0),
+        upVolume: safeNumber(item?.upVolumeShare, 50),
+        downVolume: safeNumber(item?.downVolumeShare, 50),
+        adRatio: safeNumber(item?.advanceDeclineRatio, 0),
+        sectorParticipation: safeNumber(item?.sectorParticipationPercent, 50),
+        risk: deriveHistoricalRisk(item),
+      };
+
+      HISTORICAL_INDEX_SERIES.forEach((series) => {
+        row[series.key] = getHistoricalIndexValue(item, series.symbol);
+      });
+
+      return row;
+    });
+
+  const normalizedRows = rows.map((row) => ({ ...row }));
+
+  HISTORICAL_INDEX_SERIES.forEach((series) => {
+    const base = rows
+      .map((row) => safeNumber(row[series.key]))
+      .find((value) => value !== null && value > 0);
+
+    normalizedRows.forEach((row) => {
+      const value = safeNumber(row[series.key]);
+      row[`${series.key}Normalized`] =
+        base && value !== null
+          ? ((value / base) - 1) * 100
+          : null;
+    });
+  });
+
+  return normalizedRows;
+}
+
+function buildSectorHistory(history, currentPulse, range) {
+  const byDate = new Map();
+
+  [...(Array.isArray(history) ? history : []), currentPulse]
+    .filter(Boolean)
+    .forEach((item) => {
+      const date = getHistoricalPulseDate(item);
+      if (!date) return;
+      byDate.set(date, { ...item, date });
+    });
+
+  const pulses = [...byDate.values()]
+    .sort((first, second) => String(first.date).localeCompare(String(second.date)))
+    .slice(-range);
+
+  const latestSectors = Array.isArray(pulses[pulses.length - 1]?.sectors)
+    ? pulses[pulses.length - 1].sectors
+    : [];
+
+  const names = [...latestSectors]
+    .sort(
+      (first, second) =>
+        safeNumber(second?.momentumScore, 0) -
+        safeNumber(first?.momentumScore, 0),
+    )
+    .slice(0, 5)
+    .map((sector) => sector?.sector)
+    .filter(Boolean);
+
+  const rows = pulses.map((pulse) => {
+    const row = {
+      date: pulse.date,
+      label: formatTrendDate(pulse.date),
+    };
+
+    const lookup = new Map(
+      (Array.isArray(pulse?.sectors) ? pulse.sectors : [])
+        .map((sector) => [String(sector?.sector || ""), sector]),
+    );
+
+    names.forEach((name) => {
+      row[name] = safeNumber(lookup.get(name)?.averageChangePercent);
+    });
+
+    return row;
+  });
+
+  return { rows, names };
+}
+
+function getHistoricalHighlights(rows) {
+  const validRows = rows.filter((row) => Number.isFinite(Number(row?.sentiment)));
+
+  if (!validRows.length) {
+    return {
+      best: null,
+      weakest: null,
+      latest: null,
+      previous: null,
+    };
+  }
+
+  const best = [...validRows].sort((a, b) => b.sentiment - a.sentiment)[0];
+  const weakest = [...validRows].sort((a, b) => a.sentiment - b.sentiment)[0];
+  const latest = validRows[validRows.length - 1];
+  const previous = validRows.length > 1 ? validRows[validRows.length - 2] : null;
+
+  return { best, weakest, latest, previous };
+}
+
+function escapeCsvValue(value) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function exportMarketHistoryCsv(rows) {
+  if (!rows.length || typeof document === "undefined") return;
+
+  const headers = [
+    "Date",
+    "Sentiment Score",
+    "Participation Score",
+    "Advancing %",
+    "Declining %",
+    "Advance Decline Ratio",
+    "Above 50 DMA %",
+    "Up Volume %",
+    "Down Volume %",
+    "Sector Participation %",
+    "Risk Level",
+    ...HISTORICAL_INDEX_SERIES.map((series) => `${series.name} Value`),
+    ...HISTORICAL_INDEX_SERIES.map((series) => `${series.name} Normalized %`),
+  ];
+
+  const csvRows = rows.map((row) => [
+    row.date,
+    row.sentiment,
+    row.participation,
+    row.advancing,
+    row.declining,
+    row.adRatio,
+    row.above50DMA,
+    row.upVolume,
+    row.downVolume,
+    row.sectorParticipation,
+    row.risk,
+    ...HISTORICAL_INDEX_SERIES.map((series) => row[series.key]),
+    ...HISTORICAL_INDEX_SERIES.map((series) => row[`${series.key}Normalized`]),
+  ]);
+
+  const csv = [
+    headers.map(escapeCsvValue).join(","),
+    ...csvRows.map((row) => row.map(escapeCsvValue).join(",")),
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `exa-market-history-${rows[0]?.date || "start"}-${rows[rows.length - 1]?.date || "latest"}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function deriveSectorRotation(currentSectors, previousSectors) {
   const previousLookup = new Map(
     (Array.isArray(previousSectors) ? previousSectors : []).map((sector) => [
@@ -1655,6 +2195,7 @@ export default function MarketPulse() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [warning, setWarning] = useState("");
+  const [historyRange, setHistoryRange] = useState(7);
 
   const loadMarketPulse = useCallback(async ({ refresh = false, signal } = {}) => {
     if (refresh) setRefreshing(true);
@@ -1801,6 +2342,49 @@ export default function MarketPulse() {
     [analyticsData, currentPulse],
   );
 
+  const historicalRows = useMemo(
+    () => buildHistoricalRows(
+      analyticsData?.history || [],
+      currentPulse,
+      historyRange,
+    ),
+    [analyticsData, currentPulse, historyRange],
+  );
+
+  const sectorHistory = useMemo(
+    () => buildSectorHistory(
+      analyticsData?.history || [],
+      currentPulse,
+      historyRange,
+    ),
+    [analyticsData, currentPulse, historyRange],
+  );
+
+  const historicalHighlights = useMemo(
+    () => getHistoricalHighlights(historicalRows),
+    [historicalRows],
+  );
+
+  const historicalIndexSeries = useMemo(
+    () => HISTORICAL_INDEX_SERIES.filter((series) =>
+      historicalRows.filter((row) =>
+        Number.isFinite(Number(row?.[`${series.key}`])),
+      ).length >= 2,
+    ),
+    [historicalRows],
+  );
+
+  const historyStartDate = historicalRows[0]?.date || null;
+  const historyEndDate = historicalRows[historicalRows.length - 1]?.date || null;
+  const hasComparableHistory = historicalRows.length >= 2;
+  const hasIndexHistory =
+    historicalIndexSeries.length > 0 &&
+    historicalRows.some((row) =>
+      historicalIndexSeries.some((series) =>
+        Number.isFinite(Number(row?.[`${series.key}Normalized`])),
+      ),
+    );
+
   const previousPulse = useMemo(() => {
     const history = (analyticsData?.history || [])
       .filter(Boolean)
@@ -1864,10 +2448,10 @@ export default function MarketPulse() {
         <div className="exa-pulse-container">
           <section className="exa-pulse-header">
             <div>
-              <p className="exa-pulse-eyebrow">EXA MARKET INTELLIGENCE · PHASE 9B</p>
+              <p className="exa-pulse-eyebrow">EXA MARKET INTELLIGENCE · PHASE 9C</p>
               <h1>Market Pulse</h1>
               <p className="exa-pulse-header-copy">
-                Track Indian market direction, participation, breadth trends, sector rotation, volume strength and internal risk alerts. The intelligence layer compares the latest scheduled Screener snapshot with previously stored snapshots.
+                Track Indian market direction, breadth, sector rotation and historical regime changes. Phase 9C adds rolling market sentiment, normalized index comparisons, sector leadership history, risk timelines and CSV export.
               </p>
             </div>
 
@@ -1926,7 +2510,7 @@ export default function MarketPulse() {
               <div className="exa-pulse-loading">
                 <LoaderCircle size={31} className="exa-pulse-spinner" color="#60a5fa" />
                 <strong>Building market intelligence</strong>
-                <p>Loading indices, breadth, sector rotation, volume participation, market movers and snapshot history.</p>
+                <p>Loading indices, breadth, sector rotation, historical comparisons, risk timelines and market movers.</p>
               </div>
             </section>
           ) : (
@@ -2168,6 +2752,346 @@ export default function MarketPulse() {
                     </div>
                   </div>
                 </article>
+              </section>
+
+              <section className="exa-pulse-card exa-pulse-history-section">
+                <header className="exa-pulse-card-header exa-pulse-history-header">
+                  <div className="exa-pulse-card-title">
+                    <span><CalendarDays size={18} /></span>
+                    <div>
+                      <h2>Historical market trends</h2>
+                      <p>Rolling sentiment, index performance, breadth, sector leadership and risk regime</p>
+                    </div>
+                  </div>
+
+                  <div className="exa-pulse-history-actions">
+                    <div className="exa-pulse-range-control" aria-label="Historical range">
+                      {HISTORY_RANGE_OPTIONS.map((range) => (
+                        <button
+                          key={range}
+                          type="button"
+                          className={historyRange === range ? "active" : ""}
+                          onClick={() => setHistoryRange(range)}
+                        >
+                          {range}D
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      className="exa-pulse-button"
+                      disabled={!historicalRows.length}
+                      onClick={() => exportMarketHistoryCsv(historicalRows)}
+                    >
+                      <Download size={14} />
+                      Export CSV
+                    </button>
+                  </div>
+                </header>
+
+                <div className="exa-pulse-card-body">
+                  <div className="exa-pulse-history-meta-grid">
+                    <div className="exa-pulse-history-meta">
+                      <span>Stored sessions</span>
+                      <strong>{historicalRows.length} / {historyRange}</strong>
+                    </div>
+                    <div className="exa-pulse-history-meta">
+                      <span>History start</span>
+                      <strong>{historyStartDate ? formatTrendDate(historyStartDate) : "Building"}</strong>
+                    </div>
+                    <div className="exa-pulse-history-meta">
+                      <span>Latest session</span>
+                      <strong>{historyEndDate ? formatTrendDate(historyEndDate) : "Not available"}</strong>
+                    </div>
+                    <div className="exa-pulse-history-meta">
+                      <span>Data status</span>
+                      <strong>{hasComparableHistory ? "Comparison ready" : "Baseline only"}</strong>
+                    </div>
+                  </div>
+
+                  {!hasComparableHistory && (
+                    <div className="exa-pulse-notice" style={{ marginBottom: 0 }}>
+                      <Database size={16} />
+                      <span>
+                        Historical tracking currently has one stored session. The scheduled snapshot workflow will add one point per Indian-market date, and all comparisons will activate automatically.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="exa-pulse-history-grid">
+                <article className="exa-pulse-card">
+                  <header className="exa-pulse-card-header">
+                    <div className="exa-pulse-card-title">
+                      <span><Gauge size={18} /></span>
+                      <div>
+                        <h2>Sentiment history</h2>
+                        <p>Composite market condition versus participation score</p>
+                      </div>
+                    </div>
+                  </header>
+
+                  <div className="exa-pulse-card-body">
+                    <div className="exa-pulse-chart-shell">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={historicalRows} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
+                          <CartesianGrid stroke="#17283f" strokeDasharray="3 3" />
+                          <XAxis dataKey="label" stroke="#60728d" tick={{ fontSize: 9 }} />
+                          <YAxis domain={[0, 100]} stroke="#60728d" tick={{ fontSize: 9 }} />
+                          <Tooltip
+                            contentStyle={{ background: "#081321", border: "1px solid #243752", borderRadius: 10, fontSize: 10 }}
+                            labelStyle={{ color: "#dbeafe" }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: 9 }} />
+                          <Line type="monotone" dataKey="sentiment" name="Sentiment score" stroke="#60a5fa" strokeWidth={2.2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="participation" name="Participation" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="sectorParticipation" name="Sector participation" stroke="#f59e0b" strokeWidth={1.8} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="exa-pulse-history-summary">
+                      <div>
+                        <span>Latest score</span>
+                        <strong>{formatNumber(historicalHighlights.latest?.sentiment, 0)}/100</strong>
+                      </div>
+                      <div>
+                        <span>Session change</span>
+                        <strong className={getMoveClass(
+                          historicalHighlights.previous
+                            ? historicalHighlights.latest?.sentiment - historicalHighlights.previous?.sentiment
+                            : 0
+                        )}>
+                          {historicalHighlights.previous
+                            ? `${historicalHighlights.latest?.sentiment - historicalHighlights.previous?.sentiment >= 0 ? "+" : ""}${formatNumber(
+                                historicalHighlights.latest?.sentiment - historicalHighlights.previous?.sentiment,
+                                0,
+                              )}`
+                            : "Baseline"}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>Latest risk</span>
+                        <strong style={{ textTransform: "capitalize" }}>{historicalHighlights.latest?.risk || "Not available"}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+
+                <article className="exa-pulse-card">
+                  <header className="exa-pulse-card-header">
+                    <div className="exa-pulse-card-title">
+                      <span><TrendingUp size={18} /></span>
+                      <div>
+                        <h2>Normalized index performance</h2>
+                        <p>Percentage performance from the first available session in the selected range</p>
+                      </div>
+                    </div>
+                  </header>
+
+                  <div className="exa-pulse-card-body">
+                    {hasIndexHistory ? (
+                      <>
+                        <div className="exa-pulse-chart-shell">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={historicalRows} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
+                              <CartesianGrid stroke="#17283f" strokeDasharray="3 3" />
+                              <XAxis dataKey="label" stroke="#60728d" tick={{ fontSize: 9 }} />
+                              <YAxis
+                                stroke="#60728d"
+                                tick={{ fontSize: 9 }}
+                                tickFormatter={(value) => `${formatNumber(value, 1)}%`}
+                              />
+                              <Tooltip
+                                formatter={(value) => [`${formatNumber(value, 2)}%`, ""]}
+                                contentStyle={{ background: "#081321", border: "1px solid #243752", borderRadius: 10, fontSize: 10 }}
+                                labelStyle={{ color: "#dbeafe" }}
+                              />
+                              <Legend wrapperStyle={{ fontSize: 9 }} />
+                              {historicalIndexSeries.map((series) => (
+                                <Line
+                                  key={series.key}
+                                  type="monotone"
+                                  dataKey={`${series.key}Normalized`}
+                                  name={series.name}
+                                  stroke={series.stroke}
+                                  strokeWidth={2}
+                                  connectNulls
+                                  dot={{ r: 2.5 }}
+                                />
+                              ))}
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="exa-pulse-history-empty">
+                        <TrendingUp size={28} />
+                        <strong>Index history starts with the next snapshot</strong>
+                        <p>
+                          Phase 9C now stores NIFTY 50, SENSEX, BANK NIFTY and NIFTY IT values in each scheduled snapshot. Two stored sessions are required for normalized comparison.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              </section>
+
+              <section className="exa-pulse-history-grid">
+                <article className="exa-pulse-card">
+                  <header className="exa-pulse-card-header">
+                    <div className="exa-pulse-card-title">
+                      <span><Waves size={18} /></span>
+                      <div>
+                        <h2>Breadth and volume history</h2>
+                        <p>Advance–decline ratio, 50-DMA participation and directional volume</p>
+                      </div>
+                    </div>
+                  </header>
+
+                  <div className="exa-pulse-card-body">
+                    <div className="exa-pulse-chart-shell">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={historicalRows} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
+                          <CartesianGrid stroke="#17283f" strokeDasharray="3 3" />
+                          <XAxis dataKey="label" stroke="#60728d" tick={{ fontSize: 9 }} />
+                          <YAxis yAxisId="percent" domain={[0, 100]} stroke="#60728d" tick={{ fontSize: 9 }} />
+                          <YAxis yAxisId="ratio" orientation="right" stroke="#60728d" tick={{ fontSize: 9 }} />
+                          <Tooltip
+                            contentStyle={{ background: "#081321", border: "1px solid #243752", borderRadius: 10, fontSize: 10 }}
+                            labelStyle={{ color: "#dbeafe" }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: 9 }} />
+                          <Line yAxisId="percent" type="monotone" dataKey="above50DMA" name="Above 50 DMA %" stroke="#60a5fa" strokeWidth={2} dot={{ r: 2.5 }} />
+                          <Line yAxisId="percent" type="monotone" dataKey="upVolume" name="Up-volume %" stroke="#22c55e" strokeWidth={2} dot={{ r: 2.5 }} />
+                          <Line yAxisId="percent" type="monotone" dataKey="downVolume" name="Down-volume %" stroke="#fb7185" strokeWidth={1.8} dot={false} />
+                          <Line yAxisId="ratio" type="monotone" dataKey="adRatio" name="A/D ratio" stroke="#f59e0b" strokeWidth={2} dot={{ r: 2.5 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </article>
+
+                <article className="exa-pulse-card">
+                  <header className="exa-pulse-card-header">
+                    <div className="exa-pulse-card-title">
+                      <span><ShieldAlert size={18} /></span>
+                      <div>
+                        <h2>Historical risk timeline</h2>
+                        <p>Rule-based internal market risk classification by stored session</p>
+                      </div>
+                    </div>
+                  </header>
+
+                  <div className="exa-pulse-card-body">
+                    <div className="exa-pulse-risk-timeline">
+                      {historicalRows.slice(-10).reverse().map((row) => {
+                        const width =
+                          row.risk === "high"
+                            ? 100
+                            : row.risk === "moderate"
+                              ? 66
+                              : 33;
+
+                        return (
+                          <div className="exa-pulse-risk-row" key={`risk-${row.date}`}>
+                            <span>{row.label}</span>
+                            <div className="exa-pulse-risk-track">
+                              <span className={row.risk} style={{ width: `${width}%` }} />
+                            </div>
+                            <strong>{row.risk}</strong>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="exa-pulse-session-grid" style={{ marginTop: 16 }}>
+                      <div className="exa-pulse-session-card best">
+                        <span>Best stored session</span>
+                        <strong>{historicalHighlights.best?.label || "Building"}</strong>
+                        <p>
+                          Sentiment {formatNumber(historicalHighlights.best?.sentiment, 0)}/100 ·
+                          {" "}{formatNumber(historicalHighlights.best?.advancing, 1)}% advancing
+                        </p>
+                      </div>
+
+                      <div className="exa-pulse-session-card weakest">
+                        <span>Weakest stored session</span>
+                        <strong>{historicalHighlights.weakest?.label || "Building"}</strong>
+                        <p>
+                          Sentiment {formatNumber(historicalHighlights.weakest?.sentiment, 0)}/100 ·
+                          {" "}{formatNumber(historicalHighlights.weakest?.declining, 1)}% declining
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </section>
+
+              <section className="exa-pulse-card" style={{ marginBottom: 16 }}>
+                <header className="exa-pulse-card-header">
+                  <div className="exa-pulse-card-title">
+                    <span><Trophy size={18} /></span>
+                    <div>
+                      <h2>Sector leadership history</h2>
+                      <p>Daily average sector performance for the latest leading groups</p>
+                    </div>
+                  </div>
+                </header>
+
+                <div className="exa-pulse-card-body">
+                  {sectorHistory.names.length > 0 ? (
+                    <>
+                      <div className="exa-pulse-chart-shell">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={sectorHistory.rows} margin={{ top: 8, right: 8, left: -18, bottom: 4 }}>
+                            <CartesianGrid stroke="#17283f" strokeDasharray="3 3" />
+                            <XAxis dataKey="label" stroke="#60728d" tick={{ fontSize: 9 }} />
+                            <YAxis
+                              stroke="#60728d"
+                              tick={{ fontSize: 9 }}
+                              tickFormatter={(value) => `${formatNumber(value, 1)}%`}
+                            />
+                            <Tooltip
+                              formatter={(value) => [`${formatNumber(value, 2)}%`, ""]}
+                              contentStyle={{ background: "#081321", border: "1px solid #243752", borderRadius: 10, fontSize: 10 }}
+                              labelStyle={{ color: "#dbeafe" }}
+                            />
+                            {sectorHistory.names.map((name, index) => (
+                              <Line
+                                key={name}
+                                type="monotone"
+                                dataKey={name}
+                                name={name}
+                                stroke={SECTOR_HISTORY_COLORS[index % SECTOR_HISTORY_COLORS.length]}
+                                strokeWidth={2}
+                                connectNulls
+                                dot={{ r: 2.5 }}
+                              />
+                            ))}
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      <div className="exa-pulse-sector-history-legend">
+                        {sectorHistory.names.map((name, index) => (
+                          <span key={`legend-${name}`}>
+                            <i style={{ background: SECTOR_HISTORY_COLORS[index % SECTOR_HISTORY_COLORS.length] }} />
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="exa-pulse-history-empty">
+                      <Layers3 size={28} />
+                      <strong>Sector history is still building</strong>
+                      <p>The scheduled snapshot will preserve sector performance for each Indian-market date.</p>
+                    </div>
+                  )}
+                </div>
               </section>
 
               <section className="exa-pulse-card" style={{ marginBottom: 16 }}>

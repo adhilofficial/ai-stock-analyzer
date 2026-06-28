@@ -890,7 +890,7 @@ export default async function handler(
 
     /*
     |-----------------------------------------------------------------------
-    | Phase 9B market-pulse history request
+    | Phase 9C historical market trends request
     |-----------------------------------------------------------------------
     |
     | Example:
@@ -961,6 +961,19 @@ export default async function handler(
 
           marketPulseHistory:
             history,
+
+          historyCount:
+            history.length,
+
+          historyStartDate:
+            history[0]?.date ||
+            null,
+
+          historyEndDate:
+            history[
+              history.length - 1
+            ]?.date ||
+            null,
         });
     }
 
