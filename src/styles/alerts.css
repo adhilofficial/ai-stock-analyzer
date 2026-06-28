@@ -610,26 +610,3 @@
     height: 36px;
   }
 }
-
-/* =========================================
-   ALERT SUMMARY ICON ALIGNMENT FIX
-   ========================================= */
-
-.exa-alert-summary-card {
-  align-items: center;
-}
-
-.exa-alert-summary-icon {
-  align-self: center;
-}
-
-.exa-alert-summary-icon svg {
-  display: block;
-  margin: 0;
-}
-
-.exa-alert-summary-card > div {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
