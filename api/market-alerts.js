@@ -264,6 +264,49 @@ function isUsableQuote(quote) {
   );
 }
 
+
+function normalizeDateTime(value) {
+  const date =
+    value instanceof Date
+      ? value
+      : value
+        ? new Date(value)
+        : new Date();
+
+  return Number.isNaN(date.getTime())
+    ? new Date().toISOString()
+    : date.toISOString();
+}
+
+function inferAlertCategory(type, title) {
+  const text = `${type || ""} ${title || ""}`.toLowerCase();
+
+  if (text.includes("volume")) {
+    return "volume";
+  }
+
+  if (text.includes("sector")) {
+    return "sector";
+  }
+
+  if (
+    text.includes("risk") ||
+    text.includes("vix") ||
+    text.includes("breadth")
+  ) {
+    return "risk";
+  }
+
+  if (
+    text.includes("momentum") ||
+    text.includes("trend") ||
+    text.includes("52-week")
+  ) {
+    return "technical";
+  }
+
+  return "market";
+}
 function createAlert({
   id,
   type,
@@ -273,14 +316,19 @@ function createAlert({
   time,
   severity = "information",
   priority = 0,
+  category = "",
 }) {
   return {
     id,
     type,
+    category:
+      category ||
+      inferAlertCategory(type, title),
     title,
     message,
     symbol,
     time: formatTime(time),
+    occurredAt: normalizeDateTime(time),
     severity,
     priority,
   };
@@ -1050,7 +1098,7 @@ async function loadMarketAlerts() {
   const alerts =
     selectAlerts(
       candidates,
-      6,
+      50,
     );
 
   const unavailableSymbols =
@@ -1094,6 +1142,25 @@ async function loadMarketAlerts() {
   };
 }
 
+function createLimitedPayload(
+  data,
+  limit,
+  cached = false,
+) {
+  const alerts =
+    (Array.isArray(data?.alerts)
+      ? data.alerts
+      : []
+    ).slice(0, limit);
+
+  return {
+    ...data,
+    alerts,
+    alertCount: alerts.length,
+    cached,
+  };
+}
+
 export default async function handler(
   request,
   response,
@@ -1122,6 +1189,23 @@ export default async function handler(
           ?.refresh || "",
       ) === "1";
 
+    const requestedLimit =
+      Number(
+        request.query
+          ?.limit,
+      );
+
+    const limit =
+      Number.isFinite(requestedLimit)
+        ? Math.min(
+            Math.max(
+              Math.trunc(requestedLimit),
+              1,
+            ),
+            50,
+          )
+        : 6;
+
     const cacheIsValid =
       cachedData &&
       Date.now() - cachedAt <
@@ -1138,10 +1222,13 @@ export default async function handler(
 
       return response
         .status(200)
-        .json({
-          ...cachedData,
-          cached: true,
-        });
+        .json(
+          createLimitedPayload(
+            cachedData,
+            limit,
+            true,
+          ),
+        );
     }
 
     const result =
@@ -1157,10 +1244,13 @@ export default async function handler(
 
     return response
       .status(200)
-      .json({
-        ...result,
-        cached: false,
-      });
+      .json(
+        createLimitedPayload(
+          result,
+          limit,
+          false,
+        ),
+      );
   } catch (error) {
     console.error(
       "Market alerts API error:",

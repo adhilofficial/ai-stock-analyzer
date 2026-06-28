@@ -748,19 +748,50 @@ function normalizeMarketAlert(alert) {
     severity:
       alert?.severity ||
       "information",
+
+    category:
+      alert?.category ||
+      "market",
+
+    occurredAt:
+      alert?.occurredAt ||
+      alert?.createdAt ||
+      null,
   };
 }
 
 export async function getMarketAlerts({
   refresh = false,
+  limit = 6,
   signal,
 } = {}) {
-  const refreshQuery =
-    refresh ? "?refresh=1" : "";
+  const parameters =
+    new URLSearchParams();
+
+  if (refresh) {
+    parameters.set("refresh", "1");
+  }
+
+  const parsedLimit = Number(limit);
+
+  if (Number.isFinite(parsedLimit)) {
+    parameters.set(
+      "limit",
+      String(
+        Math.min(
+          Math.max(Math.trunc(parsedLimit), 1),
+          50,
+        ),
+      ),
+    );
+  }
+
+  const query =
+    parameters.toString();
 
   const response = await fetch(
     buildApiUrl(
-      `/api/market-alerts${refreshQuery}`,
+      `/api/market-alerts${query ? `?${query}` : ""}`,
     ),
     {
       method: "GET",
