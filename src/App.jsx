@@ -35,9 +35,14 @@ const ComingSoon = lazy(() =>
   import("./pages/ComingSoon"),
 );
 
+const Alerts = lazy(() =>
+  import("./pages/Alerts"),
+);
+
 import Screener from "./pages/Screener";
 import Compare from "./pages/Compare";
 import Portfolio from "./pages/Portfolio";
+
 
 function PageLoader() {
   return (
@@ -122,10 +127,8 @@ function AppRoutes() {
         />
 
         <Route
-          path="/alerts"
-          element={
-            <PremiumComingSoon />
-          }
+        path="/alerts"
+        element={<Alerts />}
         />
 
         <Route
