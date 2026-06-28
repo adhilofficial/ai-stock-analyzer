@@ -7,7 +7,9 @@ import {
 } from "react";
 
 import {
+  Activity,
   AlertCircle,
+  AlertTriangle,
   ArrowRight,
   BarChart3,
   BriefcaseBusiness,
@@ -16,16 +18,33 @@ import {
   Download,
   Edit3,
   History,
+  Layers3,
   LoaderCircle,
   Plus,
   RefreshCw,
   Search,
+  ShieldCheck,
+  Target,
   Trash2,
   TrendingDown,
   TrendingUp,
+  Trophy,
   WalletCards,
   X,
 } from "lucide-react";
+
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import {
   useNavigate,
@@ -52,6 +71,17 @@ import "../styles/dashboard-v2.css";
 
 const MAX_TRANSACTIONS = 2000;
 const SYMBOL_BATCH_SIZE = 5;
+
+const PORTFOLIO_CHART_COLORS = [
+  "#60a5fa",
+  "#818cf8",
+  "#22c55e",
+  "#f59e0b",
+  "#f43f5e",
+  "#14b8a6",
+  "#a78bfa",
+  "#38bdf8",
+];
 
 const SORT_OPTIONS = [
   {
@@ -980,6 +1010,473 @@ const PORTFOLIO_STYLES = `
     }
   }
 
+  .exa-portfolio-analytics {
+    margin-top: 28px;
+  }
+
+  .exa-analytics-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .exa-analytics-heading p {
+    margin: 0 0 5px;
+    color: #60a5fa;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.13em;
+  }
+
+  .exa-analytics-heading h2 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 20px;
+  }
+
+  .exa-diversification-badge {
+    min-width: 150px;
+    padding: 10px 12px;
+    border: 1px solid #29405f;
+    border-radius: 12px;
+    background: #0b1729;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .exa-diversification-badge > strong {
+    width: 42px;
+    height: 42px;
+    border: 4px solid rgba(96, 165, 250, 0.26);
+    border-radius: 50%;
+    color: #bfdbfe;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  .exa-diversification-badge span {
+    display: block;
+    color: #e2e8f0;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .exa-diversification-badge small {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 8px;
+  }
+
+  .exa-risk-overview-grid {
+    display: grid;
+    grid-template-columns: 1.25fr repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .exa-risk-panel,
+  .exa-analytics-metric,
+  .exa-analytics-card,
+  .exa-performance-list-card,
+  .exa-cashflow-card {
+    min-width: 0;
+    border: 1px solid #1e3350;
+    border-radius: 15px;
+    background:
+      linear-gradient(
+        145deg,
+        rgba(14, 29, 50, 0.98),
+        rgba(8, 20, 37, 0.98)
+      );
+  }
+
+  .exa-risk-panel {
+    padding: 16px;
+  }
+
+  .exa-risk-panel-top {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .exa-risk-panel-top svg {
+    color: #60a5fa;
+  }
+
+  .exa-risk-panel-top strong {
+    color: #f8fafc;
+    font-size: 12px;
+  }
+
+  .exa-risk-panel > p {
+    margin: 9px 0 0;
+    color: #94a3b8;
+    font-size: 9px;
+    line-height: 1.6;
+  }
+
+  .exa-risk-meter {
+    height: 7px;
+    margin-top: 13px;
+    border-radius: 999px;
+    background: #14243a;
+    overflow: hidden;
+  }
+
+  .exa-risk-meter span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #2563eb, #22c55e);
+  }
+
+  .exa-analytics-metric {
+    padding: 15px;
+  }
+
+  .exa-analytics-metric svg {
+    color: #60a5fa;
+  }
+
+  .exa-analytics-metric span {
+    display: block;
+    margin-top: 10px;
+    color: #64748b;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .exa-analytics-metric strong {
+    display: block;
+    margin-top: 6px;
+    overflow: hidden;
+    color: #f8fafc;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .exa-analytics-metric small {
+    display: block;
+    margin-top: 4px;
+    color: #94a3b8;
+    font-size: 8px;
+  }
+
+  .exa-risk-warning-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .exa-risk-warning {
+    padding: 11px 12px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 11px;
+    color: #fcd34d;
+    background: rgba(245, 158, 11, 0.06);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .exa-risk-warning.healthy {
+    border-color: rgba(34, 197, 94, 0.2);
+    color: #bbf7d0;
+    background: rgba(34, 197, 94, 0.06);
+  }
+
+  .exa-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .exa-analytics-card {
+    padding: 16px;
+  }
+
+  .exa-analytics-card.wide {
+    grid-column: 1 / -1;
+  }
+
+  .exa-analytics-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .exa-analytics-card-header strong {
+    display: block;
+    color: #f8fafc;
+    font-size: 12px;
+  }
+
+  .exa-analytics-card-header span {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 8px;
+  }
+
+  .exa-analytics-card-header svg {
+    color: #60a5fa;
+    flex-shrink: 0;
+  }
+
+  .exa-chart-shell {
+    width: 100%;
+    height: 290px;
+    min-width: 0;
+  }
+
+  .exa-chart-shell.compact {
+    height: 250px;
+  }
+
+  .exa-allocation-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 0.8fr);
+    gap: 14px;
+    align-items: center;
+  }
+
+  .exa-allocation-legend {
+    max-height: 250px;
+    padding-right: 4px;
+    overflow-y: auto;
+  }
+
+  .exa-allocation-legend-row {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(41, 64, 95, 0.55);
+    display: grid;
+    grid-template-columns: 9px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .exa-allocation-legend-row:last-child {
+    border-bottom: 0;
+  }
+
+  .exa-allocation-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .exa-allocation-legend-row strong {
+    overflow: hidden;
+    color: #cbd5e1;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .exa-allocation-legend-row span {
+    color: #93c5fd;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .exa-performance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .exa-performance-list-card {
+    padding: 15px;
+  }
+
+  .exa-performance-list-card > strong {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #f8fafc;
+    font-size: 11px;
+  }
+
+  .exa-performance-list-card > strong svg {
+    color: #60a5fa;
+  }
+
+  .exa-performance-row {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(41, 64, 95, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .exa-performance-row:last-child {
+    border-bottom: 0;
+  }
+
+  .exa-performance-row div {
+    min-width: 0;
+  }
+
+  .exa-performance-row div strong {
+    display: block;
+    overflow: hidden;
+    color: #cbd5e1;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .exa-performance-row div small {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 8px;
+  }
+
+  .exa-performance-row > strong {
+    flex-shrink: 0;
+    font-size: 10px;
+  }
+
+  .exa-cashflow-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .exa-cashflow-card {
+    padding: 14px;
+  }
+
+  .exa-cashflow-card span {
+    display: block;
+    color: #64748b;
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .exa-cashflow-card strong {
+    display: block;
+    margin-top: 7px;
+    color: #f8fafc;
+    font-size: 14px;
+  }
+
+  .exa-cashflow-card small {
+    display: block;
+    margin-top: 4px;
+    color: #94a3b8;
+    font-size: 8px;
+  }
+
+  .exa-analytics-empty {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    text-align: center;
+    font-size: 9px;
+  }
+
+  .exa-analytics-empty strong {
+    margin-top: 8px;
+    color: #cbd5e1;
+    font-size: 11px;
+  }
+
+  .exa-recharts-tooltip {
+    padding: 9px 10px;
+    border: 1px solid #29405f;
+    border-radius: 9px;
+    color: #e2e8f0;
+    background: #0b1729;
+    font-size: 9px;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+  }
+
+  @media (max-width: 1180px) {
+    .exa-risk-overview-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .exa-risk-panel {
+      grid-column: span 2;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .exa-analytics-grid,
+    .exa-performance-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .exa-analytics-card.wide {
+      grid-column: auto;
+    }
+
+    .exa-risk-warning-list {
+      grid-template-columns: 1fr;
+    }
+
+    .exa-cashflow-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 700px) {
+    .exa-analytics-heading {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .exa-diversification-badge {
+      width: 100%;
+    }
+
+    .exa-risk-overview-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .exa-risk-panel {
+      grid-column: 1 / -1;
+    }
+
+    .exa-allocation-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 460px) {
+    .exa-risk-overview-grid,
+    .exa-cashflow-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .exa-chart-shell {
+      height: 250px;
+    }
+  }
+
 `;
 
 function cleanText(value) {
@@ -1849,6 +2346,67 @@ function escapeCsvValue(value) {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
+function truncateChartLabel(value, maximumLength = 16) {
+  const text = cleanText(value);
+
+  if (text.length <= maximumLength) {
+    return text;
+  }
+
+  return `${text.slice(0, Math.max(1, maximumLength - 1))}…`;
+}
+
+function formatCompactCurrency(value) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "₹0";
+  }
+
+  const absolute = Math.abs(number);
+  const sign = number < 0 ? "-" : "";
+
+  if (absolute >= 10000000) {
+    return `${sign}₹${(absolute / 10000000).toFixed(1)}Cr`;
+  }
+
+  if (absolute >= 100000) {
+    return `${sign}₹${(absolute / 100000).toFixed(1)}L`;
+  }
+
+  if (absolute >= 1000) {
+    return `${sign}₹${(absolute / 1000).toFixed(1)}K`;
+  }
+
+  return `${sign}₹${absolute.toFixed(0)}`;
+}
+
+function PortfolioChartTooltip({
+  active,
+  payload,
+  label,
+  valueType = "currency",
+}) {
+  if (!active || !Array.isArray(payload) || payload.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="exa-recharts-tooltip">
+      {label && <strong>{label}</strong>}
+      {payload.map((entry) => (
+        <div key={`${entry.dataKey}-${entry.name}`}>
+          {entry.name}: {
+            valueType === "percent"
+              ? formatPercent(entry.value)
+              : formatCurrency(entry.value, 0)
+          }
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Portfolio() {
   const navigate = useNavigate();
 
@@ -2219,6 +2777,267 @@ export default function Portfolio() {
       dayChangeValue,
     };
   }, [rows, allPositions]);
+
+  const portfolioAnalytics = useMemo(() => {
+    const rowMap = new Map(
+      rows.map((row) => [row.symbol, row]),
+    );
+
+    const allocationRows = rows
+      .map((row) => ({
+        ...row,
+        allocationValue:
+          row.currentValue === null
+            ? row.investedValue
+            : row.currentValue,
+      }))
+      .filter((row) => row.allocationValue > 0);
+
+    const allocationTotal = allocationRows.reduce(
+      (sum, row) => sum + row.allocationValue,
+      0,
+    );
+
+    const companyAllocation = [...allocationRows]
+      .sort(
+        (first, second) =>
+          second.allocationValue - first.allocationValue,
+      )
+      .map((row) => ({
+        name: row.name,
+        symbol: row.symbol,
+        value: row.allocationValue,
+        percentage:
+          allocationTotal > 0
+            ? (row.allocationValue / allocationTotal) * 100
+            : 0,
+      }));
+
+    const sectorMap = new Map();
+
+    allocationRows.forEach((row) => {
+      const sector = cleanText(row.sector) || "Unclassified";
+      sectorMap.set(
+        sector,
+        (sectorMap.get(sector) || 0) + row.allocationValue,
+      );
+    });
+
+    const sectorAllocation = [...sectorMap.entries()]
+      .map(([name, value]) => ({
+        name,
+        chartName: truncateChartLabel(name, 18),
+        value,
+        percentage:
+          allocationTotal > 0 ? (value / allocationTotal) * 100 : 0,
+      }))
+      .sort((first, second) => second.value - first.value);
+
+    const valueComparison = [...allocationRows]
+      .sort(
+        (first, second) =>
+          second.allocationValue - first.allocationValue,
+      )
+      .slice(0, 10)
+      .map((row) => ({
+        name: truncateChartLabel(row.name, 13),
+        symbol: row.symbol,
+        invested: row.investedValue,
+        current:
+          row.currentValue === null
+            ? row.investedValue
+            : row.currentValue,
+      }));
+
+    const performanceRows = rows
+      .filter((row) => row.returnPercent !== null)
+      .sort(
+        (first, second) =>
+          second.returnPercent - first.returnPercent,
+      );
+
+    const topPerformers = performanceRows.slice(0, 3);
+    const worstPerformers = [...performanceRows]
+      .sort(
+        (first, second) =>
+          first.returnPercent - second.returnPercent,
+      )
+      .slice(0, 3);
+
+    const profitLossContribution = allPositions
+      .map((position) => {
+        const row = rowMap.get(position.symbol);
+        const unrealized = row?.profitLoss ?? 0;
+        const contribution =
+          position.realizedProfitLoss + unrealized;
+
+        return {
+          name: truncateChartLabel(position.name, 15),
+          fullName: position.name,
+          symbol: position.symbol,
+          contribution,
+        };
+      })
+      .filter((item) => Math.abs(item.contribution) > 0.005)
+      .sort(
+        (first, second) =>
+          Math.abs(second.contribution) -
+          Math.abs(first.contribution),
+      )
+      .slice(0, 10);
+
+    const profitLossBreakdown = [
+      {
+        name: "Realized",
+        profitLoss: totals.realizedProfitLoss,
+      },
+      {
+        name: "Unrealized",
+        profitLoss: totals.unrealizedProfitLoss ?? 0,
+      },
+    ];
+
+    const cashFlow = transactions.reduce(
+      (summary, transaction) => {
+        const gross = transaction.quantity * transaction.price;
+
+        if (transaction.type === "BUY") {
+          summary.buyOutflow += gross + transaction.charges;
+          summary.buyCount += 1;
+        } else {
+          summary.sellInflow += gross - transaction.charges;
+          summary.sellCount += 1;
+        }
+
+        summary.totalCharges += transaction.charges;
+        return summary;
+      },
+      {
+        buyOutflow: 0,
+        sellInflow: 0,
+        totalCharges: 0,
+        buyCount: 0,
+        sellCount: 0,
+      },
+    );
+
+    cashFlow.netCashInvested =
+      cashFlow.buyOutflow - cashFlow.sellInflow;
+
+    const totalReturnPercent =
+      totals.totalProfitLoss === null || cashFlow.netCashInvested <= 0
+        ? null
+        : (totals.totalProfitLoss / cashFlow.netCashInvested) * 100;
+
+    const companyWeights = companyAllocation.map(
+      (item) => item.percentage / 100,
+    );
+    const sectorWeights = sectorAllocation.map(
+      (item) => item.percentage / 100,
+    );
+    const companyCount = companyWeights.length;
+    const sectorCount = sectorWeights.length;
+    const companyHhi = companyWeights.reduce(
+      (sum, weight) => sum + weight * weight,
+      0,
+    );
+    const sectorHhi = sectorWeights.reduce(
+      (sum, weight) => sum + weight * weight,
+      0,
+    );
+    const companyBalance =
+      companyCount <= 1
+        ? 0
+        : ((1 - companyHhi) / (1 - 1 / companyCount)) * 100;
+    const sectorBalance =
+      sectorCount <= 1
+        ? 0
+        : ((1 - sectorHhi) / (1 - 1 / sectorCount)) * 100;
+    const breadthScore = Math.min(100, (companyCount / 8) * 100);
+    const diversificationScore = Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(
+          companyBalance * 0.5 +
+            sectorBalance * 0.3 +
+            breadthScore * 0.2,
+        ),
+      ),
+    );
+
+    const largestPositions = companyAllocation.slice(0, 5);
+    const topPosition = companyAllocation[0] || null;
+    const topSector = sectorAllocation[0] || null;
+    const topThreeWeight = companyAllocation
+      .slice(0, 3)
+      .reduce((sum, item) => sum + item.percentage, 0);
+    const warnings = [];
+
+    if (companyCount > 0 && companyCount < 3) {
+      warnings.push(
+        "The portfolio has fewer than three open holdings, so company-specific risk is high.",
+      );
+    }
+
+    if (topPosition?.percentage >= 35) {
+      warnings.push(
+        `${topPosition.name} represents ${topPosition.percentage.toFixed(1)}% of portfolio value.`,
+      );
+    }
+
+    if (topThreeWeight >= 75 && companyCount > 3) {
+      warnings.push(
+        `The three largest holdings represent ${topThreeWeight.toFixed(1)}% of portfolio value.`,
+      );
+    }
+
+    if (topSector?.percentage >= 50) {
+      warnings.push(
+        `${topSector.name} represents ${topSector.percentage.toFixed(1)}% of portfolio value.`,
+      );
+    }
+
+    const quoteCoverage =
+      rows.length === 0
+        ? 0
+        : (
+            rows.filter((row) => row.currentValue !== null).length /
+            rows.length
+          ) * 100;
+
+    return {
+      allocationTotal,
+      companyAllocation,
+      sectorAllocation,
+      valueComparison,
+      topPerformers,
+      worstPerformers,
+      largestPositions,
+      profitLossContribution,
+      profitLossBreakdown,
+      cashFlow,
+      totalReturnPercent,
+      diversificationScore,
+      diversificationLabel:
+        diversificationScore >= 75
+          ? "Well diversified"
+          : diversificationScore >= 50
+            ? "Moderately diversified"
+            : "Concentrated",
+      topPosition,
+      topSector,
+      topThreeWeight,
+      warnings,
+      quoteCoverage,
+      winners: performanceRows.filter(
+        (row) => row.returnPercent >= 0,
+      ).length,
+      losers: performanceRows.filter(
+        (row) => row.returnPercent < 0,
+      ).length,
+    };
+  }, [rows, allPositions, transactions, totals]);
 
   const availableQuantity = useMemo(() => {
     const symbol = form.selectedStock?.symbol;
@@ -2671,6 +3490,565 @@ export default function Portfolio() {
               display N/A until market data becomes available.
             </div>
           )}
+
+          <section className="exa-portfolio-analytics">
+            <div className="exa-analytics-heading">
+              <div>
+                <p>PORTFOLIO INTELLIGENCE</p>
+                <h2>Allocation, risk and performance</h2>
+              </div>
+
+              <div className="exa-diversification-badge">
+                <strong>{portfolioAnalytics.diversificationScore}</strong>
+                <div>
+                  <span>{portfolioAnalytics.diversificationLabel}</span>
+                  <small>Diversification score out of 100</small>
+                </div>
+              </div>
+            </div>
+
+            <div className="exa-risk-overview-grid">
+              <article className="exa-risk-panel">
+                <div className="exa-risk-panel-top">
+                  <ShieldCheck size={17} />
+                  <strong>Concentration assessment</strong>
+                </div>
+                <p>
+                  The score combines company balance, sector balance and the
+                  number of open holdings. It is a portfolio-structure indicator,
+                  not an investment recommendation.
+                </p>
+                <div className="exa-risk-meter">
+                  <span
+                    style={{
+                      width: `${portfolioAnalytics.diversificationScore}%`,
+                    }}
+                  />
+                </div>
+              </article>
+
+              <article className="exa-analytics-metric">
+                <Target size={16} />
+                <span>Largest holding</span>
+                <strong>
+                  {portfolioAnalytics.topPosition?.name || "No holdings"}
+                </strong>
+                <small>
+                  {portfolioAnalytics.topPosition
+                    ? `${portfolioAnalytics.topPosition.percentage.toFixed(1)}% of value`
+                    : "Add a BUY transaction"}
+                </small>
+              </article>
+
+              <article className="exa-analytics-metric">
+                <Layers3 size={16} />
+                <span>Largest sector</span>
+                <strong>
+                  {portfolioAnalytics.topSector?.name || "No sectors"}
+                </strong>
+                <small>
+                  {portfolioAnalytics.topSector
+                    ? `${portfolioAnalytics.topSector.percentage.toFixed(1)}% of value`
+                    : "Sector data unavailable"}
+                </small>
+              </article>
+
+              <article className="exa-analytics-metric">
+                <Activity size={16} />
+                <span>Market-data coverage</span>
+                <strong>
+                  {portfolioAnalytics.quoteCoverage.toFixed(0)}%
+                </strong>
+                <small>Open holdings with a current quote</small>
+              </article>
+
+              <article className="exa-analytics-metric">
+                <Trophy size={16} />
+                <span>Winners / losers</span>
+                <strong>
+                  {portfolioAnalytics.winners} / {portfolioAnalytics.losers}
+                </strong>
+                <small>Based on unrealized return</small>
+              </article>
+
+              <article className="exa-analytics-metric">
+                <CircleDollarSign size={16} />
+                <span>Total portfolio return</span>
+                <strong
+                  className={
+                    portfolioAnalytics.totalReturnPercent === null
+                      ? ""
+                      : portfolioAnalytics.totalReturnPercent >= 0
+                        ? "exa-portfolio-positive"
+                        : "exa-portfolio-negative"
+                  }
+                >
+                  {formatPercent(portfolioAnalytics.totalReturnPercent)}
+                </strong>
+                <small>Total P/L divided by net cash invested</small>
+              </article>
+            </div>
+
+            <div className="exa-risk-warning-list">
+              {portfolioAnalytics.warnings.length > 0 ? (
+                portfolioAnalytics.warnings.map((warning) => (
+                  <div key={warning} className="exa-risk-warning">
+                    <AlertTriangle size={14} />
+                    <span>{warning}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="exa-risk-warning healthy">
+                  <ShieldCheck size={14} />
+                  <span>
+                    No major company or sector concentration warning was
+                    detected under the current thresholds.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="exa-analytics-grid">
+              <article className="exa-analytics-card">
+                <div className="exa-analytics-card-header">
+                  <div>
+                    <strong>Company allocation</strong>
+                    <span>Current value, or invested value when quote is unavailable</span>
+                  </div>
+                  <Target size={16} />
+                </div>
+
+                {portfolioAnalytics.companyAllocation.length === 0 ? (
+                  <div className="exa-analytics-empty">
+                    <BriefcaseBusiness size={28} />
+                    <strong>No allocation data yet</strong>
+                    <span>Record a BUY transaction to create a holding.</span>
+                  </div>
+                ) : (
+                  <div className="exa-allocation-layout">
+                    <div className="exa-chart-shell compact">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={portfolioAnalytics.companyAllocation}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius="58%"
+                            outerRadius="88%"
+                            paddingAngle={2}
+                            stroke="none"
+                          >
+                            {portfolioAnalytics.companyAllocation.map(
+                              (item, index) => (
+                                <Cell
+                                  key={item.symbol}
+                                  fill={
+                                    PORTFOLIO_CHART_COLORS[
+                                      index % PORTFOLIO_CHART_COLORS.length
+                                    ]
+                                  }
+                                />
+                              ),
+                            )}
+                          </Pie>
+                          <Tooltip
+                            content={<PortfolioChartTooltip />}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="exa-allocation-legend">
+                      {portfolioAnalytics.companyAllocation
+                        .slice(0, 8)
+                        .map((item, index) => (
+                          <div
+                            key={item.symbol}
+                            className="exa-allocation-legend-row"
+                          >
+                            <span
+                              className="exa-allocation-dot"
+                              style={{
+                                background:
+                                  PORTFOLIO_CHART_COLORS[
+                                    index % PORTFOLIO_CHART_COLORS.length
+                                  ],
+                              }}
+                            />
+                            <strong title={item.name}>{item.name}</strong>
+                            <span>{item.percentage.toFixed(1)}%</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </article>
+
+              <article className="exa-analytics-card">
+                <div className="exa-analytics-card-header">
+                  <div>
+                    <strong>Sector allocation</strong>
+                    <span>Portfolio value grouped by available sector classification</span>
+                  </div>
+                  <Layers3 size={16} />
+                </div>
+
+                {portfolioAnalytics.sectorAllocation.length === 0 ? (
+                  <div className="exa-analytics-empty">
+                    <Layers3 size={28} />
+                    <strong>No sector allocation yet</strong>
+                  </div>
+                ) : (
+                  <div className="exa-chart-shell compact">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={portfolioAnalytics.sectorAllocation.slice(0, 8)}
+                        layout="vertical"
+                        margin={{ top: 4, right: 12, bottom: 4, left: 12 }}
+                      >
+                        <CartesianGrid
+                          stroke="rgba(100,116,139,0.13)"
+                          horizontal={false}
+                        />
+                        <XAxis
+                          type="number"
+                          tickFormatter={formatCompactCurrency}
+                          tick={{ fill: "#64748b", fontSize: 8 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          type="category"
+                          dataKey="chartName"
+                          width={92}
+                          tick={{ fill: "#94a3b8", fontSize: 8 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip content={<PortfolioChartTooltip />} />
+                        <Bar
+                          dataKey="value"
+                          name="Value"
+                          fill="#60a5fa"
+                          radius={[0, 5, 5, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </article>
+
+              <article className="exa-analytics-card wide">
+                <div className="exa-analytics-card-header">
+                  <div>
+                    <strong>Invested versus current value</strong>
+                    <span>Largest holdings by portfolio value, up to ten companies</span>
+                  </div>
+                  <BarChart3 size={16} />
+                </div>
+
+                {portfolioAnalytics.valueComparison.length === 0 ? (
+                  <div className="exa-analytics-empty">
+                    <BarChart3 size={28} />
+                    <strong>No value comparison available</strong>
+                  </div>
+                ) : (
+                  <div className="exa-chart-shell">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={portfolioAnalytics.valueComparison}
+                        margin={{ top: 8, right: 12, bottom: 38, left: 4 }}
+                      >
+                        <CartesianGrid
+                          stroke="rgba(100,116,139,0.13)"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          angle={-25}
+                          textAnchor="end"
+                          interval={0}
+                          height={56}
+                          tick={{ fill: "#64748b", fontSize: 8 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tickFormatter={formatCompactCurrency}
+                          tick={{ fill: "#64748b", fontSize: 8 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip content={<PortfolioChartTooltip />} />
+                        <Bar
+                          dataKey="invested"
+                          name="Invested"
+                          fill="#64748b"
+                          radius={[5, 5, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="current"
+                          name="Current"
+                          fill="#60a5fa"
+                          radius={[5, 5, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </article>
+
+              <article className="exa-analytics-card">
+                <div className="exa-analytics-card-header">
+                  <div>
+                    <strong>Profit/loss contribution</strong>
+                    <span>Realized plus unrealized contribution by company</span>
+                  </div>
+                  <TrendingUp size={16} />
+                </div>
+
+                {portfolioAnalytics.profitLossContribution.length === 0 ? (
+                  <div className="exa-analytics-empty">
+                    <Activity size={28} />
+                    <strong>No profit/loss contribution yet</strong>
+                  </div>
+                ) : (
+                  <div className="exa-chart-shell compact">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={portfolioAnalytics.profitLossContribution}
+                        layout="vertical"
+                        margin={{ top: 4, right: 12, bottom: 4, left: 12 }}
+                      >
+                        <CartesianGrid
+                          stroke="rgba(100,116,139,0.13)"
+                          horizontal={false}
+                        />
+                        <XAxis
+                          type="number"
+                          tickFormatter={formatCompactCurrency}
+                          tick={{ fill: "#64748b", fontSize: 8 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={96}
+                          tick={{ fill: "#94a3b8", fontSize: 8 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip content={<PortfolioChartTooltip />} />
+                        <Bar
+                          dataKey="contribution"
+                          name="Contribution"
+                          radius={[5, 5, 5, 5]}
+                        >
+                          {portfolioAnalytics.profitLossContribution.map(
+                            (item) => (
+                              <Cell
+                                key={item.symbol}
+                                fill={
+                                  item.contribution >= 0
+                                    ? "#22c55e"
+                                    : "#f43f5e"
+                                }
+                              />
+                            ),
+                          )}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </article>
+
+              <article className="exa-analytics-card">
+                <div className="exa-analytics-card-header">
+                  <div>
+                    <strong>Realized versus unrealized P/L</strong>
+                    <span>Signed portfolio performance components</span>
+                  </div>
+                  <Activity size={16} />
+                </div>
+
+                <div className="exa-chart-shell compact">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={portfolioAnalytics.profitLossBreakdown}
+                      margin={{ top: 12, right: 12, bottom: 8, left: 4 }}
+                    >
+                      <CartesianGrid
+                        stroke="rgba(100,116,139,0.13)"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fill: "#94a3b8", fontSize: 9 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tickFormatter={formatCompactCurrency}
+                        tick={{ fill: "#64748b", fontSize: 8 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip content={<PortfolioChartTooltip />} />
+                      <Bar
+                        dataKey="profitLoss"
+                        name="P/L"
+                        radius={[6, 6, 0, 0]}
+                      >
+                        {portfolioAnalytics.profitLossBreakdown.map(
+                          (item) => (
+                            <Cell
+                              key={item.name}
+                              fill={
+                                item.profitLoss >= 0
+                                  ? "#22c55e"
+                                  : "#f43f5e"
+                              }
+                            />
+                          ),
+                        )}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </article>
+            </div>
+
+            <div className="exa-performance-grid">
+              <article className="exa-performance-list-card">
+                <strong>
+                  <TrendingUp size={14} />
+                  Top performers
+                </strong>
+                {portfolioAnalytics.topPerformers.length === 0 ? (
+                  <div className="exa-analytics-empty">No quoted holdings</div>
+                ) : (
+                  portfolioAnalytics.topPerformers.map((row) => (
+                    <div key={row.symbol} className="exa-performance-row">
+                      <div>
+                        <strong title={row.name}>{row.name}</strong>
+                        <small>{row.symbol}</small>
+                      </div>
+                      <strong
+                        className={
+                          row.returnPercent >= 0
+                            ? "exa-portfolio-positive"
+                            : "exa-portfolio-negative"
+                        }
+                      >
+                        {formatPercent(row.returnPercent)}
+                      </strong>
+                    </div>
+                  ))
+                )}
+              </article>
+
+              <article className="exa-performance-list-card">
+                <strong>
+                  <TrendingDown size={14} />
+                  Weakest performers
+                </strong>
+                {portfolioAnalytics.worstPerformers.length === 0 ? (
+                  <div className="exa-analytics-empty">No quoted holdings</div>
+                ) : (
+                  portfolioAnalytics.worstPerformers.map((row) => (
+                    <div key={row.symbol} className="exa-performance-row">
+                      <div>
+                        <strong title={row.name}>{row.name}</strong>
+                        <small>{row.symbol}</small>
+                      </div>
+                      <strong
+                        className={
+                          row.returnPercent >= 0
+                            ? "exa-portfolio-positive"
+                            : "exa-portfolio-negative"
+                        }
+                      >
+                        {formatPercent(row.returnPercent)}
+                      </strong>
+                    </div>
+                  ))
+                )}
+              </article>
+
+              <article className="exa-performance-list-card">
+                <strong>
+                  <Target size={14} />
+                  Largest positions
+                </strong>
+                {portfolioAnalytics.largestPositions.length === 0 ? (
+                  <div className="exa-analytics-empty">No open positions</div>
+                ) : (
+                  portfolioAnalytics.largestPositions.map((item) => (
+                    <div key={item.symbol} className="exa-performance-row">
+                      <div>
+                        <strong title={item.name}>{item.name}</strong>
+                        <small>{formatCurrency(item.value, 0)}</small>
+                      </div>
+                      <strong>{item.percentage.toFixed(1)}%</strong>
+                    </div>
+                  ))
+                )}
+              </article>
+            </div>
+
+            <div className="exa-analytics-card wide" style={{ marginTop: 12 }}>
+              <div className="exa-analytics-card-header">
+                <div>
+                  <strong>Transaction cash-flow summary</strong>
+                  <span>Gross BUY outflows, SELL inflows and entered charges</span>
+                </div>
+                <WalletCards size={16} />
+              </div>
+
+              <div className="exa-cashflow-grid">
+                <article className="exa-cashflow-card">
+                  <span>BUY outflow</span>
+                  <strong>
+                    {formatCurrency(portfolioAnalytics.cashFlow.buyOutflow, 0)}
+                  </strong>
+                  <small>
+                    {portfolioAnalytics.cashFlow.buyCount} BUY transactions
+                  </small>
+                </article>
+                <article className="exa-cashflow-card">
+                  <span>SELL inflow</span>
+                  <strong>
+                    {formatCurrency(portfolioAnalytics.cashFlow.sellInflow, 0)}
+                  </strong>
+                  <small>
+                    {portfolioAnalytics.cashFlow.sellCount} SELL transactions
+                  </small>
+                </article>
+                <article className="exa-cashflow-card">
+                  <span>Net cash invested</span>
+                  <strong>
+                    {formatCurrency(
+                      portfolioAnalytics.cashFlow.netCashInvested,
+                      0,
+                    )}
+                  </strong>
+                  <small>BUY outflow minus SELL inflow</small>
+                </article>
+                <article className="exa-cashflow-card">
+                  <span>Total charges</span>
+                  <strong>
+                    {formatCurrency(
+                      portfolioAnalytics.cashFlow.totalCharges,
+                      0,
+                    )}
+                  </strong>
+                  <small>All entered brokerage and charges</small>
+                </article>
+              </div>
+            </div>
+          </section>
 
           <section className="exa-portfolio-section-header">
             <div>
