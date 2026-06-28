@@ -1,0 +1,157 @@
+name: Refresh Screener Snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 11:30 UTC = 5:00 PM IST, Monday to Friday.
+    - cron: "30 11 * * 1-5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-screener-snapshot
+  cancel-in-progress: false
+
+jobs:
+  refresh-snapshot:
+    name: Build and commit screener snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build screener snapshot
+        run: npm run build:screener-snapshot
+
+      - name: Validate generated snapshot
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+
+          const filePath = "data/screener-snapshot.json";
+
+          if (!fs.existsSync(filePath)) {
+            throw new Error(`${filePath} was not generated.`);
+          }
+
+          const snapshot = JSON.parse(
+            fs.readFileSync(filePath, "utf8"),
+          );
+
+          if (!snapshot || typeof snapshot !== "object") {
+            throw new Error("Snapshot must be a JSON object.");
+          }
+
+          if (!Array.isArray(snapshot.stocks)) {
+            throw new Error("Snapshot stocks must be an array.");
+          }
+
+          const universeCount = Number(snapshot.universeCount);
+          const stockCount = snapshot.stocks.length;
+
+          const minimumRequired = Number.isFinite(universeCount)
+            ? Math.max(20, Math.floor(universeCount * 0.7))
+            : 20;
+
+          if (stockCount < minimumRequired) {
+            throw new Error(
+              `Snapshot validation failed: ${stockCount} stocks generated; ` +
+              `at least ${minimumRequired} are required.`,
+            );
+          }
+
+          const generatedAt = new Date(snapshot.generatedAt);
+
+          if (Number.isNaN(generatedAt.getTime())) {
+            throw new Error("Snapshot generatedAt is missing or invalid.");
+          }
+
+          const ageMinutes =
+            (Date.now() - generatedAt.getTime()) / 60_000;
+
+          if (ageMinutes < -10 || ageMinutes > 180) {
+            throw new Error(
+              `Snapshot timestamp is not recent. Age: ${ageMinutes.toFixed(1)} minutes.`,
+            );
+          }
+
+          const invalidRows = snapshot.stocks.filter(
+            (stock) =>
+              !stock ||
+              typeof stock !== "object" ||
+              !String(stock.symbol || "").trim() ||
+              !String(stock.name || "").trim(),
+          );
+
+          if (invalidRows.length > 0) {
+            throw new Error(
+              `Snapshot contains ${invalidRows.length} invalid stock records.`,
+            );
+          }
+
+          console.log(
+            `Snapshot valid: ${stockCount} stocks generated at ${snapshot.generatedAt}.`,
+          );
+          NODE
+
+      - name: Commit refreshed snapshot
+        id: commit
+        shell: bash
+        run: |
+          if git diff --quiet -- data/screener-snapshot.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Snapshot contains no changes."
+            exit 0
+          fi
+
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+          git add data/screener-snapshot.json
+          git commit -m "Refresh screener market snapshot"
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push refreshed snapshot
+        if: steps.commit.outputs.changed == 'true'
+        run: git push origin HEAD:main
+
+      - name: Write workflow summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f data/screener-snapshot.json ]; then
+            node <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          const fs = require("node:fs");
+          const snapshot = JSON.parse(
+            fs.readFileSync(
+              "data/screener-snapshot.json",
+              "utf8",
+            ),
+          );
+
+          console.log("## Screener snapshot refresh");
+          console.log("");
+          console.log(`- Generated at: ${snapshot.generatedAt || "Unavailable"}`);
+          console.log(`- Stocks: ${snapshot.stocks?.length ?? 0}`);
+          console.log(`- Universe: ${snapshot.universeCount ?? "Unavailable"}`);
+          console.log(`- Source: ${snapshot.source || "Unavailable"}`);
+          NODE
+          fi

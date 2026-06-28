@@ -17,9 +17,13 @@
       "source": "/dashboard",
       "destination": "/index.html"
     },
-    {
+    {   
       "source": "/screener",
       "destination": "/index.html"
+    },
+    {
+  "source": "/compare",
+  "destination": "/index.html"
     },
     {
       "source": "/portfolio",
