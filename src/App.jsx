@@ -27,9 +27,14 @@ const Analyze = lazy(() =>
   import("./pages/Analyze"),
 );
 
+const MarketPulse = lazy(() =>
+  import("./pages/MarketPulse"),
+);
+
 const ComingSoon = lazy(() =>
   import("./pages/ComingSoon"),
 );
+
 import Screener from "./pages/Screener";
 import Compare from "./pages/Compare";
 import Portfolio from "./pages/Portfolio";
@@ -94,21 +99,19 @@ function AppRoutes() {
           element={<Analyze />}
         />
 
-       <Route
-  path="/portfolio"
-  element={<Portfolio />}
-/>
+        <Route
+          path="/portfolio"
+          element={<Portfolio />}
+        />
 
         <Route
-  path="/screener"
-  element={<Screener />}
-/>
+          path="/screener"
+          element={<Screener />}
+        />
 
         <Route
           path="/market-pulse"
-          element={
-            <PremiumComingSoon />
-          }
+          element={<MarketPulse />}
         />
 
         <Route
@@ -140,9 +143,9 @@ function AppRoutes() {
         />
 
         <Route
-  path="/compare"
-  element={<Compare />}
-/>
+          path="/compare"
+          element={<Compare />}
+        />
 
         <Route
           path="*"
