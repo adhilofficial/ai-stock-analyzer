@@ -34,6 +34,8 @@ import {
 } from "../services/financeApi";
 
 import AppShell from "../components/layout/AppShell";
+import DataStatusBadge from "../components/data/DataStatusBadge";
+import DataTimestamp from "../components/data/DataTimestamp";
 
 import useDashboardStorage from "../hooks/useDashboardStorage";
 
@@ -2302,21 +2304,25 @@ const loadMarketNewsData =
   5 * 60 * 1000,
 );
 
-  function getMarketDataLabel() {
-    if (marketLoading) {
-      return "Loading live data";
-    }
-
-    if (marketError) {
-      return "Fallback data";
-    }
-
-    if (liveMarketData?.cached) {
-      return "Live · cached";
-    }
-
-    return "Live data";
+ function getMarketDataStatus() {
+  if (marketLoading) {
+    return "loading";
   }
+
+  if (marketError) {
+    return "fallback";
+  }
+
+  if (!liveIndicesAvailable) {
+    return "unavailable";
+  }
+
+  if (liveMarketData?.cached) {
+    return "cached";
+  }
+
+  return "live";
+}
 
   return (
     <AppShell
@@ -2539,7 +2545,29 @@ const loadMarketNewsData =
                       : "exa-market-data-badge live"
                   }
                 >
-                  {getMarketDataLabel()}
+                  <div className="exa-data-status-row">
+  <DataStatusBadge
+    status={getMarketDataStatus()}
+    compact
+  />
+
+  <DataTimestamp
+    value={liveMarketData?.fetchedAt}
+    source={
+      marketError
+        ? "Local fallback data"
+        : liveMarketData?.source
+    }
+    fallbackText={
+      marketLoading
+        ? "Fetching market data"
+        : marketError
+          ? "Live update unavailable"
+          : "Update time unavailable"
+    }
+    compact
+  />
+</div>
                 </span>
               </div>
 

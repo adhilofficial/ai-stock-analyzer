@@ -4,6 +4,7 @@ import './index.css';
 import "./styles/legal.css";
 import App from './App.jsx';
 import "./styles/about.css";
+import "./styles/data-status.css";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
