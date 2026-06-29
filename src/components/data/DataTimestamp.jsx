@@ -21,6 +21,25 @@ function formatTimestamp(value) {
   }).format(date);
 }
 
+function getPublicSourceLabel(source) {
+  const value = String(source || "").trim();
+
+  if (!value) {
+    return "";
+  }
+
+  const normalizedValue = value.toLowerCase();
+
+  if (
+    normalizedValue.includes("yahoo") ||
+    normalizedValue.includes("yahoo-finance2")
+  ) {
+    return "Market data";
+  }
+
+  return value;
+}
+
 export default function DataTimestamp({
   value,
   source,
@@ -29,9 +48,10 @@ export default function DataTimestamp({
   className = "",
 }) {
   const formattedTimestamp = formatTimestamp(value);
+  const publicSource = getPublicSourceLabel(source);
 
   const parts = [
-    source,
+    publicSource,
     formattedTimestamp
       ? `Updated ${formattedTimestamp}`
       : fallbackText,

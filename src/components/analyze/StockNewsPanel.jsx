@@ -230,24 +230,21 @@ export default function StockNewsPanel({
         <div className="exa-stock-news-message">
           <Newspaper size={20} />
           <strong>No recent news found</strong>
-          <p>Yahoo Finance has not returned recent coverage for this stock.</p>
+          <p>
+          Recent coverage is currently unavailable for this stock.
+         </p>
         </div>
       )}
 
       {typeof onViewAll === "function" ? (
-        <button
-          type="button"
-          className="exa-stock-news-footer"
-          onClick={onViewAll}
-          style={{
-            width: "100%",
-            border: 0,
-            cursor: "pointer",
-          }}
-        >
-          View all stock news
-          <Newspaper size={12} />
-        </button>
+       <button
+  type="button"
+  className="exa-stock-news-footer-button"
+  onClick={onViewAll}
+>
+  <span>View all stock news</span>
+  <Newspaper size={13} aria-hidden="true" />
+</button>
       ) : (
         <a
           className="exa-stock-news-footer"

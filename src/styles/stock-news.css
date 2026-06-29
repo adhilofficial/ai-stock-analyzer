@@ -291,3 +291,89 @@
     border-radius: 16px;
   }
 }
+/* =========================================
+   STOCK NEWS LAYOUT FIX
+   ========================================= */
+
+.exa-stock-news-card {
+  padding: 20px;
+}
+
+.exa-stock-news-list {
+  margin-top: 16px;
+}
+
+.exa-stock-news-item {
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 13px;
+  padding: 14px 0;
+}
+
+.exa-stock-news-item img,
+.exa-news-image-fallback {
+  width: 84px;
+  height: 58px;
+  border-radius: 10px;
+}
+
+.exa-stock-news-copy h4 {
+  color: #c7d2e3;
+  font-size: 11px;
+  line-height: 1.45;
+  -webkit-line-clamp: 2;
+}
+
+.exa-stock-news-meta {
+  margin-top: 7px;
+  font-size: 8px;
+}
+
+.exa-stock-news-footer-button {
+  appearance: none;
+  width: fit-content;
+  min-height: 36px;
+  margin: 16px auto 0;
+  padding: 8px 14px;
+
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 10px;
+
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.1);
+
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.exa-stock-news-footer-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.42);
+  color: #dbeafe;
+  background: rgba(37, 99, 235, 0.18);
+}
+
+@media (max-width: 480px) {
+  .exa-stock-news-item {
+    grid-template-columns: 70px minmax(0, 1fr);
+  }
+
+  .exa-stock-news-item img,
+  .exa-news-image-fallback {
+    width: 70px;
+    height: 52px;
+  }
+}

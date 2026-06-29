@@ -1508,3 +1508,116 @@ body:has(.exa-analyze-page)
     padding-left: 55px;
   }
 }
+/* =========================================
+   ANALYZE HEADER ALIGNMENT FIX
+   ========================================= */
+
+.exa-stock-overview-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 20px;
+}
+
+.exa-stock-company {
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.exa-stock-company-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.exa-stock-company-name-row {
+  align-items: flex-start;
+}
+
+.exa-stock-company-name-row h2 {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: normal;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.25;
+}
+
+.exa-stock-watch-button {
+  margin-top: 1px;
+}
+
+.exa-stock-status-stack {
+  display: flex;
+  max-width: 440px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px 12px;
+}
+
+.exa-stock-status-stack .exa-analyze-market-status {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .exa-stock-overview-top {
+    grid-template-columns: 1fr;
+  }
+
+  .exa-stock-status-stack {
+    width: 100%;
+    max-width: none;
+    justify-content: flex-start;
+  }
+
+  .exa-stock-status-stack .exa-analyze-market-status {
+    justify-content: flex-start;
+  }
+}
+/* 52-week range should never truncate */
+
+.exa-stock-range-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.exa-stock-range-values > div {
+  min-width: 0;
+}
+
+.exa-stock-range-values span {
+  display: block;
+  margin-bottom: 2px;
+  color: #64748b;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.exa-stock-range-values strong {
+  display: block;
+  margin: 0;
+  overflow: visible;
+  color: #e5edf9;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .exa-stock-range-values {
+    grid-template-columns: 1fr;
+  }
+}

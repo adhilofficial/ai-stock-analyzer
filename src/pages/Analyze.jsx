@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import useIsMobile from "../hooks/useIsMobile";
 import ResearchDisclaimer from "../components/legal/ResearchDisclaimer";
+import MarketDataStatus from "../components/data/MarketDataStatus";
 import {
   Area,
   AreaChart,
@@ -2547,7 +2548,9 @@ export default function Analyze() {
             </div>
           </section>
 
+          {!result?.symbol && !result?.ticker && !loading && (
           <ResearchDisclaimer compact />
+          )}
                     {error && (
             <div className="exa-analyze-message error">
               <AlertTriangle
@@ -2672,7 +2675,9 @@ export default function Analyze() {
 
                       <div className="exa-stock-company-copy">
                         <div className="exa-stock-company-name-row">
-                          <h2>{result.company}</h2>
+                          <h2 title={result.company}>
+                           {result.company}
+                          </h2>
 
                           <button
                             type="button"
@@ -2721,9 +2726,23 @@ export default function Analyze() {
                       <span>
                         {result.aiAvailable
                           ? `AI view: ${sig.label}`
+                          
                           : "AI view unavailable"}
                       </span>
                     </div>
+                    <MarketDataStatus
+                 loading={loading}
+                   error={error}
+                  symbol={result.symbol}
+                   price={result.price}
+                 lastUpdated={result.lastUpdated}
+                 source={
+                    result.source || "Yahoo Finance"
+                  }
+                  marketState={result.marketState}
+                    compact
+                  className="exa-analyze-market-status"
+                  />
                   </div>
 
                   <div className="exa-stock-price-section">
@@ -2761,21 +2780,21 @@ export default function Analyze() {
                       </div>
 
                       <p className="exa-stock-price-caption">
-                        Today · Live market data
+                        Latest available market quote
                       </p>
                     </div>
 
-                    <div className="exa-stock-data-status">
+                    {/* <div className="exa-stock-data-status">
                       <span className="exa-live-dot" />
 
                       <div>
-                        <strong>Live data</strong>
+                        <strong>Market source</strong>
 
                         <small>
                           {result.source || "Yahoo Finance"}
                         </small>
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                 </section>
 
@@ -2822,11 +2841,23 @@ export default function Analyze() {
                     <div>
                       <p>52-week range</p>
 
-                      <strong className="exa-stock-range-value">
-                        ₹{formatMetric(result.week52Low)}
-                        <span>—</span>
-                        ₹{formatMetric(result.week52High)}
-                      </strong>
+                     <div className="exa-stock-range-values">
+  <div>
+    <span>Low</span>
+
+    <strong>
+      ₹{formatMetric(result.week52Low)}
+    </strong>
+  </div>
+
+  <div>
+    <span>High</span>
+
+    <strong>
+      ₹{formatMetric(result.week52High)}
+    </strong>
+  </div>
+</div>
 
                       <small>Annual price range</small>
                     </div>
@@ -2894,11 +2925,7 @@ export default function Analyze() {
                         </span>
                       </div>
                     </div>
-
-                    <div className="exa-chart-live-status">
-                      <span />
-                      Live market data
-                    </div>
+                                        
                   </div>
 
                   <div className="exa-chart-timeframes">
@@ -3120,8 +3147,7 @@ export default function Analyze() {
                   <div className="exa-price-chart-footer">
                     <span>
                       Source:{" "}
-                      {result.source ||
-                        "Yahoo Finance"}
+                      {result.source || "Market data"}
                     </span>
 
                     <span>
