@@ -55,7 +55,8 @@ import AppShell from
 
 import SnapshotFreshnessBanner from
   "../components/data/SnapshotFreshnessBanner";
-
+import DataStatusBadge from "../components/data/DataStatusBadge";
+import DataTimestamp from "../components/data/DataTimestamp";
 import {
   getDashboardMarketData,
   getMarketBreadth,
@@ -1453,7 +1454,7 @@ async function fetchScreenerList(sort, limit, signal) {
       ? data.stocks.map(normalizeScreenerStock)
       : [],
     generatedAt: data?.generatedAt || null,
-    source: data?.source || "Yahoo Finance",
+    source: data?.source || "Market data",
   };
 }
 
@@ -1470,7 +1471,7 @@ async function fetchMarketPulseAnalytics(signal) {
 
   return {
     generatedAt: data?.generatedAt || null,
-    source: data?.source || "Yahoo Finance",
+    source: data?.source || "Market data",
     marketPulse: data?.marketPulse || null,
     history: Array.isArray(data?.marketPulseHistory)
       ? data.marketPulseHistory
@@ -2189,7 +2190,7 @@ export default function MarketPulse() {
   const [nearLows, setNearLows] = useState([]);
   const [snapshotMetadata, setSnapshotMetadata] = useState({
     generatedAt: null,
-    source: "Yahoo Finance",
+    source: "Market data",
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -2427,6 +2428,81 @@ export default function MarketPulse() {
   const fetchedAt = marketData?.fetchedAt || moversData?.fetchedAt || breadthData?.fetchedAt;
   const marketStatus = marketData?.marketStatus || {};
   const isOpen = Boolean(marketStatus?.isOpen);
+  const marketPulseUsesFallback = String(
+  marketData?.source || "",
+)
+  .toLowerCase()
+  .includes("fallback");
+
+function getMarketPulsePresentation() {
+  if (loading) {
+    return {
+      status: "loading",
+      label: "Loading",
+      description:
+        "Building current market intelligence.",
+      fallbackText:
+        "Fetching the latest market snapshot",
+    };
+  }
+
+  if (error || marketPulseUsesFallback) {
+    return {
+      status: "fallback",
+      label: "Fallback data",
+      description:
+        "Some sections are using locally available reference data.",
+      fallbackText:
+        "Live market services are unavailable",
+    };
+  }
+
+  if (warning) {
+    return {
+      status: "delayed",
+      label: "Partial data",
+      description:
+        "Some market sections could not be refreshed.",
+      fallbackText:
+        "Some sections may be delayed",
+    };
+  }
+
+  if (marketData?.cached) {
+    return {
+      status: "cached",
+      label: "Cached",
+      description: isOpen
+        ? "Showing the latest cached trading-session snapshot."
+        : "Showing the latest cached completed-session snapshot.",
+      fallbackText:
+        "Cached update time unavailable",
+    };
+  }
+
+  if (isOpen) {
+    return {
+      status: "live",
+      label: "Market open",
+      description:
+        "Changes represent the current Indian trading session.",
+      fallbackText:
+        "Current-session update time unavailable",
+    };
+  }
+
+  return {
+    status: "delayed",
+    label: "Market closed",
+    description:
+      "Changes represent the latest completed Indian trading session.",
+    fallbackText:
+      "Latest-session update time unavailable",
+  };
+}
+
+const marketPulsePresentation =
+  getMarketPulsePresentation();
 
   const pulseAdvancing = safeNumber(currentPulse?.advancingPercent, advancing / breadthTotal * 100);
   const pulseDeclining = safeNumber(currentPulse?.decliningPercent, declining / breadthTotal * 100);
@@ -2476,12 +2552,26 @@ export default function MarketPulse() {
                 {isOpen ? <Activity size={19} /> : <Clock3 size={19} />}
               </span>
               <div>
-                <strong>{marketStatus?.label || (isOpen ? "Indian market is open" : "Indian market is closed")}</strong>
-                <span>
-                  {isOpen
-                    ? "Changes represent the current trading session."
-                    : "Changes represent the latest completed trading session."}
-                </span>
+                <div className="exa-market-pulse-status">
+  <div className="exa-market-pulse-status__main">
+    <DataStatusBadge
+      status={marketPulsePresentation.status}
+      label={marketPulsePresentation.label}
+    />
+
+    <p>
+      {marketPulsePresentation.description}
+    </p>
+  </div>
+
+  <DataTimestamp
+    value={fetchedAt}
+    source="Market data"
+    fallbackText={
+      marketPulsePresentation.fallbackText
+    }
+  />
+</div>
               </div>
             </div>
 
