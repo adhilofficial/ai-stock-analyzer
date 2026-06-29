@@ -1,0 +1,240 @@
+.exa-about-page {
+  width: 100%;
+  padding-bottom: 28px;
+}
+
+.exa-about-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 28px;
+  align-items: center;
+  padding: 42px;
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  border-radius: 24px;
+  background:
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(79, 70, 229, 0.2),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 10% 100%,
+      rgba(14, 165, 233, 0.12),
+      transparent 35%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(10, 25, 48, 0.98),
+      rgba(5, 14, 28, 0.99)
+    );
+}
+
+.exa-about-eyebrow,
+.exa-about-section-heading span,
+.exa-about-mission span {
+  color: #60a5fa;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.exa-about-hero h1 {
+  max-width: 760px;
+  margin: 12px 0 16px;
+  color: #f8fafc;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.08;
+}
+
+.exa-about-hero__content p {
+  max-width: 690px;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.exa-about-hero__content strong {
+  color: #dbeafe;
+}
+
+.exa-about-hero__visual {
+  display: flex;
+  min-height: 230px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 28px;
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  border-radius: 20px;
+  text-align: center;
+  background: rgba(4, 13, 27, 0.48);
+}
+
+.exa-about-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 21px;
+  color: #93c5fd;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(37, 99, 235, 0.25),
+      rgba(79, 70, 229, 0.18)
+    );
+}
+
+.exa-about-hero__visual strong {
+  color: #f8fafc;
+  font-size: 1.25rem;
+}
+
+.exa-about-hero__visual span {
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.exa-about-introduction {
+  display: grid;
+  grid-template-columns: 0.7fr 1.3fr;
+  gap: 40px;
+  margin-top: 24px;
+  padding: 34px;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  border-radius: 20px;
+  background: rgba(10, 22, 40, 0.66);
+}
+
+.exa-about-section-heading h2 {
+  margin: 8px 0 0;
+  color: #f1f5f9;
+  font-size: 1.75rem;
+}
+
+.exa-about-introduction__content p {
+  margin: 0;
+  color: #94a3b8;
+  line-height: 1.75;
+}
+
+.exa-about-introduction__content p + p {
+  margin-top: 16px;
+}
+
+.exa-about-mission {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 24px;
+  padding: 30px 34px;
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.11),
+      rgba(5, 14, 28, 0.9)
+    );
+}
+
+.exa-about-mission__icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.15);
+}
+
+.exa-about-mission h2 {
+  max-width: 760px;
+  margin: 7px 0 10px;
+  color: #f1f5f9;
+  font-size: 1.45rem;
+}
+
+.exa-about-mission p {
+  max-width: 850px;
+  margin: 0;
+  color: #94a3b8;
+  line-height: 1.7;
+}
+
+.exa-about-platform {
+  margin-top: 34px;
+}
+
+.exa-about-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.exa-about-feature {
+  padding: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.11);
+  border-radius: 17px;
+  background: rgba(10, 22, 40, 0.68);
+}
+
+.exa-about-feature__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.exa-about-feature h3 {
+  margin: 0 0 9px;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.exa-about-feature p {
+  margin: 0;
+  color: #7f8ea3;
+  font-size: 0.79rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 1000px) {
+  .exa-about-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .exa-about-hero,
+  .exa-about-introduction {
+    grid-template-columns: 1fr;
+  }
+
+  .exa-about-hero {
+    padding: 25px;
+  }
+
+  .exa-about-introduction,
+  .exa-about-mission {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .exa-about-feature-grid {
+    grid-template-columns: 1fr;
+  }
+}

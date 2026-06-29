@@ -1,0 +1,265 @@
+.research-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(245, 158, 11, 0.08),
+      rgba(15, 23, 42, 0.35)
+    );
+}
+
+.research-disclaimer--compact {
+  padding: 12px 14px;
+}
+
+.research-disclaimer__icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.research-disclaimer__content {
+  min-width: 0;
+}
+
+.research-disclaimer__content strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #f8fafc;
+  font-size: 0.9rem;
+}
+
+.research-disclaimer__content p {
+  margin: 0;
+  color: #aeb9ca;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.research-disclaimer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 9px;
+}
+
+.research-disclaimer__links a {
+  color: #8eb5ff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.research-disclaimer__links a:hover {
+  text-decoration: underline;
+}
+
+.exa-company-footer {
+  width: 100%;
+  margin-top: 48px;
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(37, 99, 235, 0.13),
+      transparent 34%
+    ),
+    linear-gradient(
+      150deg,
+      rgba(9, 23, 44, 0.99),
+      rgba(4, 13, 26, 0.99)
+    );
+}
+
+.exa-company-footer__top {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 2.1fr);
+  gap: 50px;
+  padding: 40px;
+}
+
+.exa-company-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.exa-company-footer__brand-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 16px;
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.exa-company-footer__brand strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 1.08rem;
+}
+
+.exa-company-footer__brand span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.exa-company-footer__identity > p {
+  max-width: 340px;
+  margin: 18px 0;
+  color: #8090a6;
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+.exa-company-footer__email {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #8eb5ff;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.exa-company-footer__groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.exa-company-footer__group h3 {
+  margin: 0 0 15px;
+  color: #8b5cf6;
+  font-size: 0.96rem;
+}
+
+.exa-company-footer__group nav {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.exa-company-footer__group a {
+  color: #a6b1c2;
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition:
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.exa-company-footer__group a:hover {
+  color: #f1f5f9;
+  transform: translateX(3px);
+}
+
+.exa-company-footer__social {
+  display: flex;
+  justify-content: center;
+  padding: 8px 40px 24px;
+}
+
+.exa-company-footer__social-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.exa-company-footer__social-icons a {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  border-radius: 50%;
+  color: #7da8ff;
+  background: rgba(255, 255, 255, 0.035);
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.exa-company-footer__social-icons a:hover {
+  transform: translateY(-3px);
+  background: rgba(37, 99, 235, 0.13);
+}
+
+.exa-company-footer__risk {
+  padding: 17px 30px;
+  border-top: 1px solid rgba(148, 163, 184, 0.09);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.09);
+  color: #d2d9e5;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: center;
+  background: rgba(3, 10, 21, 0.38);
+}
+
+.exa-company-footer__legal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  padding: 18px 30px;
+}
+
+.exa-company-footer__legal p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.exa-company-footer__legal p:last-child {
+  max-width: 760px;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .exa-company-footer__top {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .exa-company-footer__groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .exa-company-footer__legal {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .exa-company-footer__legal p:last-child {
+    text-align: left;
+  }
+}
+
+@media (max-width: 500px) {
+  .exa-company-footer__top {
+    padding: 26px 22px;
+  }
+
+  .exa-company-footer__groups {
+    grid-template-columns: 1fr;
+  }
+}

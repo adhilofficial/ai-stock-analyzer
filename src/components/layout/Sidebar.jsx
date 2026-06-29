@@ -3,6 +3,7 @@ import {
   Bell,
   BookOpen,
   BriefcaseBusiness,
+  Building2,
   ChartCandlestick,
   CircleDollarSign,
   Gauge,
@@ -12,9 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import {
-  NavLink,
-} from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 import ExaBrandLogo from "./ExaBrandLogo";
 
@@ -59,6 +58,11 @@ const NAVIGATION_ITEMS = [
     path: "/learn",
     icon: BookOpen,
   },
+  {
+    label: "About",
+    path: "/about",
+    icon: Building2,
+  },
 ];
 
 export default function Sidebar({
@@ -66,20 +70,12 @@ export default function Sidebar({
   onClose,
 }) {
   function closeSidebar() {
-    if (
-      typeof onClose === "function"
-    ) {
+    if (typeof onClose === "function") {
       onClose();
     }
   }
 
   function handleNavigationClick() {
-    /*
-     * Close the drawer after selecting a
-     * page on phones and tablets.
-     *
-     * Keep it open on desktop.
-     */
     if (
       typeof window !== "undefined" &&
       window.innerWidth <= 900
@@ -107,32 +103,17 @@ export default function Sidebar({
             ? "exa-sidebar open"
             : "exa-sidebar"
         }
+        aria-label="Application sidebar"
       >
         <div className="exa-sidebar-brand">
           <NavLink
             to="/dashboard"
             className="exa-brand-link"
-            onClick={
-              handleNavigationClick
-            }
-            aria-label="Open EXA Dashboard"
+            onClick={handleNavigationClick}
+            aria-label="Open Markets by exa dashboard"
           >
-            <ExaBrandLogo
-              showTagline
-            />
+            <ExaBrandLogo showTagline />
           </NavLink>
-
-          {/* <button
-            type="button"
-            className="exa-sidebar-collapse-button"
-            onClick={closeSidebar}
-            aria-label="Hide sidebar"
-            title="Hide sidebar"
-          >
-            <span aria-hidden="true">
-              ‹‹‹
-            </span>
-          </button> */}
         </div>
 
         <nav
@@ -152,12 +133,9 @@ export default function Sidebar({
               <NavLink
                 key={path}
                 to={path}
-                onClick={
-                  handleNavigationClick
-                }
-                className={({
-                  isActive,
-                }) =>
+                end={path === "/dashboard"}
+                onClick={handleNavigationClick}
+                className={({ isActive }) =>
                   isActive
                     ? "exa-sidebar-link active"
                     : "exa-sidebar-link"
@@ -166,6 +144,7 @@ export default function Sidebar({
                 <Icon
                   size={19}
                   strokeWidth={1.8}
+                  aria-hidden="true"
                 />
 
                 <span>{label}</span>
@@ -177,14 +156,17 @@ export default function Sidebar({
         <div className="exa-sidebar-bottom">
           <NavLink
             to="/settings"
-            className="exa-sidebar-link"
-            onClick={
-              handleNavigationClick
+            onClick={handleNavigationClick}
+            className={({ isActive }) =>
+              isActive
+                ? "exa-sidebar-link active"
+                : "exa-sidebar-link"
             }
           >
             <Settings
               size={19}
               strokeWidth={1.8}
+              aria-hidden="true"
             />
 
             <span>Settings</span>
@@ -195,12 +177,11 @@ export default function Sidebar({
               <span className="exa-upgrade-icon">
                 <CircleDollarSign
                   size={18}
+                  aria-hidden="true"
                 />
               </span>
 
-              <strong>
-                EXA Pro
-              </strong>
+              <strong>EXA Pro</strong>
             </div>
 
             <p>
@@ -210,7 +191,10 @@ export default function Sidebar({
             </p>
 
             <button type="button">
-              <LineChart size={15} />
+              <LineChart
+                size={15}
+                aria-hidden="true"
+              />
               Explore Pro
             </button>
           </div>

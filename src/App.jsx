@@ -42,10 +42,18 @@ const Alerts = lazy(() =>
 const AIResearch = lazy(() =>
   import("./pages/AIResearch"),
 );
+const Disclaimer = lazy(
+  () => import("./pages/Disclaimer"),
+);
+
+const Methodology = lazy(
+  () => import("./pages/Methodology"),
+);
 
 import Screener from "./pages/Screener";
 import Compare from "./pages/Compare";
 import Portfolio from "./pages/Portfolio";
+const About = lazy(() => import("./pages/About"));
 
 function PageLoader() {
   return (
@@ -101,6 +109,10 @@ function AppRoutes() {
           path="/dashboard"
           element={<Dashboard />}
         />
+        <Route
+  path="/about"
+  element={<About />}
+/>
 
         <Route
           path="/analyze"
@@ -150,6 +162,15 @@ function AppRoutes() {
           path="/compare"
           element={<Compare />}
         />
+        <Route
+  path="/disclaimer"
+  element={<Disclaimer />}
+/>
+
+<Route
+  path="/methodology"
+  element={<Methodology />}
+/>
 
         <Route
           path="*"
@@ -158,6 +179,7 @@ function AppRoutes() {
               to="/dashboard"
               replace
             />
+            
           }
         />
       </Routes>

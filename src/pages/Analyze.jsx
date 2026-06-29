@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import useIsMobile from "../hooks/useIsMobile";
+import ResearchDisclaimer from "../components/legal/ResearchDisclaimer";
 import {
   Area,
   AreaChart,
@@ -2537,7 +2538,7 @@ export default function Analyze() {
                     opportunities and key risks.
                   </p>
                 </div>
-
+                
                 <span className="exa-analyze-ai-badge">
                   <Sparkles size={14} />
                   AI-assisted research
@@ -2546,7 +2547,8 @@ export default function Analyze() {
             </div>
           </section>
 
-          {error && (
+          <ResearchDisclaimer compact />
+                    {error && (
             <div className="exa-analyze-message error">
               <AlertTriangle
                 size={16}
@@ -2563,6 +2565,7 @@ export default function Analyze() {
             </div>
           )}
 
+          
           {aiNotice && (
             <div className="exa-analyze-message notice">
               <Sparkles
@@ -2576,7 +2579,7 @@ export default function Analyze() {
               </div>
             </div>
           )}
-
+          
           {loading && !result && (
             <div className="exa-analyze-loading-state">
               <LoaderCircle
@@ -2619,7 +2622,7 @@ export default function Analyze() {
                     <strong>
                       Live market metrics
                     </strong>
-
+                    
                     <span>
                       Price, market cap, valuation, volume and
                       52-week range.
@@ -2654,7 +2657,7 @@ export default function Analyze() {
                 </div>
               </section>
             )}
-
+            
           {result && sig && (
             <section className="exa-analyze-results-layout">
               <div className="exa-analyze-main-column">
@@ -2679,7 +2682,7 @@ export default function Analyze() {
                             <Star size={16} />
                           </button>
                         </div>
-
+                        
                         <div className="exa-stock-company-meta">
                           <span className="exa-stock-ticker">
                             {result.ticker}
@@ -2701,7 +2704,7 @@ export default function Analyze() {
                         </div>
                       </div>
                     </div>
-
+                    
                     <div
                       className="exa-stock-ai-view"
                       style={{

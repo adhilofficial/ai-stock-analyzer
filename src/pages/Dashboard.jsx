@@ -2654,15 +2654,7 @@ const loadMarketNewsData =
           />
         </section>
 
-        <p className="exa-dashboard-note">
-          Live market prices are provided
-          through Yahoo Finance. EXA Market
-          Pulse and Important Alerts are
-          generated from live market data.
-          Information is provided for
-          educational research and does not
-          represent investment advice.
-        </p>
+        
       </main>
     </AppShell>
   );

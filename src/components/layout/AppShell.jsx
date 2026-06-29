@@ -202,29 +202,19 @@ export default function AppShell({
       />
 
       <div className="exa-shell-main">
-        <Topbar
-          theme={theme}
-          onToggleTheme={
-            toggleTheme
-          }
-          sidebarOpen={
-            sidebarOpen
-          }
-          onToggleSidebar={
-            toggleSidebar
-          }
-          hideDefaultSearch={
-            hideDefaultSearch
-          }
-          topSearch={
-            topSearch
-          }
-        />
+  <Topbar
+    theme={theme}
+    onToggleTheme={toggleTheme}
+    sidebarOpen={sidebarOpen}
+    onToggleSidebar={toggleSidebar}
+    hideDefaultSearch={hideDefaultSearch}
+    topSearch={topSearch}
+  />
 
-        <div className="exa-shell-content">
-          {children}
-        </div>
-      </div>
+  <div className="exa-shell-content">
+  {children}
+</div>
+</div>
     </div>
   );
 }
