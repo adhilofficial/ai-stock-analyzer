@@ -10,12 +10,14 @@ import {
   ArrowRight,
   BarChart3,
   Bell,
+  BellRing,
   Bookmark,
   BriefcaseBusiness,
   Check,
   CheckCheck,
   Clock3,
   Gauge,
+  History,
   Inbox,
   LoaderCircle,
   Pause,
@@ -30,6 +32,8 @@ import {
   Sparkles,
   Target,
   Trash2,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 
@@ -73,6 +77,22 @@ import {
   upsertCustomAlertRule,
 } from "../utils/customAlertRules";
 
+import {
+  ALERT_HISTORY_STORAGE_KEY,
+  ALERT_NOTIFICATION_PREFERENCES_KEY,
+  ALERT_NOTIFICATION_UPDATED_EVENT,
+  clearAlertHistory,
+  deleteAlertHistoryEntry,
+  getBrowserNotificationStatus,
+  getUnreadAlertHistoryCount,
+  markAlertHistoryRead,
+  markAllAlertHistoryRead,
+  readAlertHistory,
+  readNotificationPreferences,
+  requestBrowserNotificationPermission,
+  writeNotificationPreferences,
+} from "../utils/alertNotifications";
+
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
 import "../styles/alerts.css";
@@ -102,6 +122,19 @@ const STATUS_OPTIONS = [
   ["unread", "Unread"],
   ["read", "Read"],
   ["personalized", "Personalized"],
+];
+
+const HISTORY_TYPE_OPTIONS = [
+  ["all", "All history"],
+  ["custom", "Custom alerts"],
+  ["market", "Market alerts"],
+  ["personalized", "Personalized"],
+];
+
+const HISTORY_STATUS_OPTIONS = [
+  ["all", "All statuses"],
+  ["unread", "Unread"],
+  ["read", "Read"],
 ];
 
 function cleanText(value) {
@@ -144,6 +177,71 @@ function formatCompactTimestamp(value) {
     minute: "2-digit",
     timeZone: "Asia/Kolkata",
   }).format(date);
+}
+
+function getHistoryKindLabel(kind) {
+  if (kind === "custom") {
+    return "Custom";
+  }
+
+  if (kind === "personalized") {
+    return "Personalized";
+  }
+
+  return "Market";
+}
+
+function formatHistoryValue(entry) {
+  const value = Number(entry?.currentValue);
+
+  if (!Number.isFinite(value)) {
+    return "";
+  }
+
+  const condition = cleanText(entry?.condition).toLowerCase();
+
+  if (condition.startsWith("price_")) {
+    return `₹${value.toLocaleString("en-IN", {
+      maximumFractionDigits: 2,
+    })}`;
+  }
+
+  if (condition === "volume_spike") {
+    return `${value.toFixed(1)}× average`;
+  }
+
+  if (
+    condition.startsWith("change_") ||
+    condition.startsWith("near_52w_")
+  ) {
+    return `${value.toFixed(1)}%`;
+  }
+
+  return value.toFixed(1);
+}
+
+function getNotificationStatusLabel(status, enabled) {
+  if (!status.supported) {
+    return "Not supported";
+  }
+
+  if (!status.secureContext) {
+    return "HTTPS required";
+  }
+
+  if (status.permission === "denied") {
+    return "Permission blocked";
+  }
+
+  if (status.permission === "granted" && enabled) {
+    return "Enabled";
+  }
+
+  if (status.permission === "granted") {
+    return "Paused";
+  }
+
+  return "Permission needed";
 }
 
 function getAlertVisual(alert) {
@@ -778,6 +876,18 @@ export default function Alerts() {
   const [ruleEditorOpen, setRuleEditorOpen] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
 
+  const [history, setHistory] = useState(readAlertHistory);
+  const [historyTypeFilter, setHistoryTypeFilter] = useState("all");
+  const [historyStatusFilter, setHistoryStatusFilter] = useState("all");
+  const [notificationPreferences, setNotificationPreferences] = useState(
+    readNotificationPreferences,
+  );
+  const [notificationStatus, setNotificationStatus] = useState(
+    getBrowserNotificationStatus,
+  );
+  const [notificationBusy, setNotificationBusy] = useState(false);
+  const [notificationError, setNotificationError] = useState("");
+
   const loadAlerts = useCallback(
     async ({ refresh = false, signal } = {}) => {
       if (refresh) {
@@ -797,6 +907,9 @@ export default function Alerts() {
         setAlerts(data.alerts);
         setMetadata(data);
         setRules(readCustomAlertRules());
+        setHistory(readAlertHistory());
+        setNotificationPreferences(readNotificationPreferences());
+        setNotificationStatus(getBrowserNotificationStatus());
       } catch (caughtError) {
         if (caughtError?.name === "AbortError") {
           return;
@@ -848,6 +961,12 @@ export default function Alerts() {
       setRules(readCustomAlertRules());
     }
 
+    function handleNotificationUpdate() {
+      setHistory(readAlertHistory());
+      setNotificationPreferences(readNotificationPreferences());
+      setNotificationStatus(getBrowserNotificationStatus());
+    }
+
     function handleStorage(event) {
       if (event.key === ALERT_CENTER_STATE_KEY) {
         setAlertState(readAlertCenterState());
@@ -855,6 +974,13 @@ export default function Alerts() {
 
       if (event.key === CUSTOM_ALERT_RULES_STORAGE_KEY) {
         setRules(readCustomAlertRules());
+      }
+
+      if (
+        event.key === ALERT_HISTORY_STORAGE_KEY ||
+        event.key === ALERT_NOTIFICATION_PREFERENCES_KEY
+      ) {
+        handleNotificationUpdate();
       }
     }
 
@@ -866,7 +992,12 @@ export default function Alerts() {
       CUSTOM_ALERT_RULES_UPDATED_EVENT,
       handleRulesUpdate,
     );
+    window.addEventListener(
+      ALERT_NOTIFICATION_UPDATED_EVENT,
+      handleNotificationUpdate,
+    );
     window.addEventListener("storage", handleStorage);
+    window.addEventListener("focus", handleNotificationUpdate);
 
     return () => {
       window.removeEventListener(
@@ -877,7 +1008,12 @@ export default function Alerts() {
         CUSTOM_ALERT_RULES_UPDATED_EVENT,
         handleRulesUpdate,
       );
+      window.removeEventListener(
+        ALERT_NOTIFICATION_UPDATED_EVENT,
+        handleNotificationUpdate,
+      );
       window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("focus", handleNotificationUpdate);
     };
   }, []);
 
@@ -910,6 +1046,32 @@ export default function Alerts() {
     }),
     [rules],
   );
+
+  const unreadHistoryCount = useMemo(
+    () => getUnreadAlertHistoryCount(history),
+    [history],
+  );
+
+  const filteredHistory = useMemo(() =>
+    history.filter((entry) => {
+      if (
+        historyTypeFilter !== "all" &&
+        entry.kind !== historyTypeFilter
+      ) {
+        return false;
+      }
+
+      if (historyStatusFilter === "unread" && entry.isRead) {
+        return false;
+      }
+
+      if (historyStatusFilter === "read" && !entry.isRead) {
+        return false;
+      }
+
+      return true;
+    }),
+  [history, historyStatusFilter, historyTypeFilter]);
 
   const filteredAlerts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -1047,6 +1209,70 @@ export default function Alerts() {
     loadAlerts({ refresh: true });
   }
 
+  async function handleEnableBrowserNotifications() {
+    setNotificationBusy(true);
+    setNotificationError("");
+
+    try {
+      const status = await requestBrowserNotificationPermission();
+      setNotificationStatus(status);
+      setNotificationPreferences(readNotificationPreferences());
+    } catch (caughtError) {
+      setNotificationError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Unable to enable browser notifications.",
+      );
+    } finally {
+      setNotificationBusy(false);
+    }
+  }
+
+  function handleBrowserNotificationToggle(event) {
+    const enabled = event.target.checked;
+    const preferences = writeNotificationPreferences({
+      browserNotifications: enabled,
+    });
+
+    setNotificationPreferences(preferences);
+  }
+
+  function handleSoundToggle(event) {
+    const preferences = writeNotificationPreferences({
+      soundEnabled: event.target.checked,
+    });
+
+    setNotificationPreferences(preferences);
+  }
+
+  function handleHistoryToggleRead(entry) {
+    setHistory(
+      markAlertHistoryRead(entry.historyId, !entry.isRead),
+    );
+  }
+
+  function handleMarkAllHistoryRead() {
+    setHistory(markAllAlertHistoryRead());
+  }
+
+  function handleDeleteHistoryEntry(entry) {
+    setHistory(deleteAlertHistoryEntry(entry.historyId));
+  }
+
+  function handleClearHistory() {
+    if (history.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Clear the complete alert history? This cannot be undone.",
+    );
+
+    if (confirmed) {
+      setHistory(clearAlertHistory());
+    }
+  }
+
   const dismissedCount = alertState.dismissedIds.length;
 
   return (
@@ -1152,6 +1378,90 @@ export default function Alerts() {
             />
           </section>
 
+          <section className="exa-alert-notification-panel">
+            <div className="exa-alert-notification-copy">
+              <span className="exa-alert-notification-icon">
+                <BellRing size={19} />
+              </span>
+
+              <div>
+                <p>BROWSER NOTIFICATIONS</p>
+                <h2>Get notified when a custom rule triggers</h2>
+                <span>
+                  Notifications work on HTTPS and localhost. EXA stores
+                  permission choices and duplicate protection in this browser.
+                </span>
+              </div>
+            </div>
+
+            <div className="exa-alert-notification-controls">
+              <span
+                className={`exa-notification-permission permission-${
+                  notificationStatus.permission
+                }`}
+              >
+                {getNotificationStatusLabel(
+                  notificationStatus,
+                  notificationPreferences.browserNotifications,
+                )}
+              </span>
+
+              {notificationStatus.permission === "granted" ? (
+                <label className="exa-alert-toggle">
+                  <input
+                    type="checkbox"
+                    checked={
+                      notificationPreferences.browserNotifications
+                    }
+                    onChange={handleBrowserNotificationToggle}
+                  />
+                  <span>Desktop alerts</span>
+                </label>
+              ) : (
+                <button
+                  type="button"
+                  className="exa-enable-notification-button"
+                  onClick={handleEnableBrowserNotifications}
+                  disabled={
+                    notificationBusy ||
+                    !notificationStatus.supported ||
+                    !notificationStatus.secureContext ||
+                    notificationStatus.permission === "denied"
+                  }
+                >
+                  <BellRing size={14} />
+                  {notificationBusy ? "Requesting" : "Enable notifications"}
+                </button>
+              )}
+
+              <label className="exa-alert-toggle">
+                <input
+                  type="checkbox"
+                  checked={notificationPreferences.soundEnabled}
+                  onChange={handleSoundToggle}
+                  disabled={
+                    notificationStatus.permission !== "granted" ||
+                    !notificationPreferences.browserNotifications
+                  }
+                />
+                {notificationPreferences.soundEnabled ? (
+                  <Volume2 size={14} />
+                ) : (
+                  <VolumeX size={14} />
+                )}
+                <span>Sound</span>
+              </label>
+            </div>
+
+            {(notificationError ||
+              notificationStatus.permission === "denied") && (
+              <p className="exa-alert-notification-message">
+                {notificationError ||
+                  "Permission is blocked. Open the browser site settings for EXA NEXUS and allow notifications."}
+              </p>
+            )}
+          </section>
+
           <section className="exa-custom-rules-panel">
             <header className="exa-custom-rules-header">
               <div>
@@ -1199,6 +1509,177 @@ export default function Alerts() {
                     }
                   />
                 ))}
+              </div>
+            )}
+          </section>
+
+          <section className="exa-alert-history-panel">
+            <header className="exa-alert-history-header">
+              <div className="exa-alert-history-heading">
+                <span>
+                  <History size={18} />
+                </span>
+                <div>
+                  <p>TRIGGER LOG</p>
+                  <h2>Alert history</h2>
+                  <small>
+                    {history.length} saved event{history.length === 1 ? "" : "s"}
+                    {unreadHistoryCount > 0
+                      ? ` · ${unreadHistoryCount} unread`
+                      : " · all read"}
+                  </small>
+                </div>
+              </div>
+
+              <div className="exa-alert-history-actions">
+                <button
+                  type="button"
+                  onClick={handleMarkAllHistoryRead}
+                  disabled={unreadHistoryCount === 0}
+                >
+                  <CheckCheck size={14} />
+                  Mark all read
+                </button>
+
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={handleClearHistory}
+                  disabled={history.length === 0}
+                >
+                  <Trash2 size={14} />
+                  Clear history
+                </button>
+              </div>
+            </header>
+
+            <div className="exa-alert-history-filters">
+              <select
+                value={historyTypeFilter}
+                onChange={(event) =>
+                  setHistoryTypeFilter(event.target.value)
+                }
+                aria-label="Filter alert history by type"
+              >
+                {HISTORY_TYPE_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={historyStatusFilter}
+                onChange={(event) =>
+                  setHistoryStatusFilter(event.target.value)
+                }
+                aria-label="Filter alert history by read status"
+              >
+                {HISTORY_STATUS_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {filteredHistory.length === 0 ? (
+              <div className="exa-alert-history-empty">
+                <History size={24} />
+                <strong>No history for this filter</strong>
+                <span>
+                  Newly detected market, personalized and custom alerts
+                  will be recorded here.
+                </span>
+              </div>
+            ) : (
+              <div className="exa-alert-history-list">
+                {filteredHistory.map((entry) => {
+                  const { Icon } = getAlertVisual(entry);
+                  const currentValue = formatHistoryValue(entry);
+
+                  return (
+                    <article
+                      key={entry.historyId}
+                      className={`exa-alert-history-item ${
+                        entry.isRead ? "read" : "unread"
+                      }`}
+                    >
+                      <span className="exa-alert-history-item-icon">
+                        <Icon size={17} />
+                      </span>
+
+                      <div className="exa-alert-history-item-content">
+                        <div className="exa-alert-history-item-top">
+                          <div>
+                            <span className={`kind-${entry.kind}`}>
+                              {getHistoryKindLabel(entry.kind)}
+                            </span>
+                            <span>{entry.severity}</span>
+                            {!entry.isRead && <b>New</b>}
+                          </div>
+
+                          <time>{formatTimestamp(entry.occurredAt)}</time>
+                        </div>
+
+                        <h3>{entry.title}</h3>
+                        <p>{entry.message}</p>
+
+                        <div className="exa-alert-history-item-footer">
+                          <span>
+                            {entry.symbol || entry.source}
+                            {currentValue
+                              ? ` · Trigger value ${currentValue}`
+                              : ""}
+                          </span>
+
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => handleHistoryToggleRead(entry)}
+                              title={
+                                entry.isRead ? "Mark unread" : "Mark read"
+                              }
+                            >
+                              {entry.isRead ? (
+                                <Bell size={13} />
+                              ) : (
+                                <Check size={13} />
+                              )}
+                            </button>
+
+                            <button
+                              type="button"
+                              className="danger"
+                              onClick={() => handleDeleteHistoryEntry(entry)}
+                              title="Delete history item"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+
+                            {entry.symbol && (
+                              <button
+                                type="button"
+                                className="analyze"
+                                onClick={() => {
+                                  markAlertHistoryRead(entry.historyId, true);
+                                  navigate(
+                                    `/analyze?query=${encodeURIComponent(
+                                      entry.symbol,
+                                    )}`,
+                                  );
+                                }}
+                              >
+                                Analyze
+                                <ArrowRight size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>

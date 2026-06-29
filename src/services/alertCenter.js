@@ -17,6 +17,10 @@ import {
 } from "../utils/alertStorage";
 
 import {
+  syncAlertHistory,
+} from "../utils/alertNotifications";
+
+import {
   applyCustomAlertEvaluations,
   formatCustomAlertRule,
   formatCustomAlertTarget,
@@ -243,32 +247,43 @@ export async function searchAlertRuleStocks(
     .slice(0, 8);
 }
 
-async function fetchScreenerChunk(symbols, signal) {
-  if (symbols.length === 0) {
-    return [];
+async function fetchSingleScreenerStock(symbol, signal) {
+  const requested = normalizeSymbol(symbol);
+
+  if (!requested) {
+    return null;
   }
 
-  if (symbols.length === 1) {
-    const requested = symbols[0];
-    const baseSymbol = requested.replace(/\.(NS|BO)$/i, "");
-    const parameters = new URLSearchParams({
-      q: baseSymbol,
-      page: "1",
-      limit: "20",
-      sort: "marketCap-desc",
-    });
+  const baseSymbol = requested.replace(/\.(NS|BO)$/i, "");
+  const parameters = new URLSearchParams({
+    q: baseSymbol,
+    page: "1",
+    limit: "20",
+    sort: "marketCap-desc",
+  });
 
-    const response = await fetch(`/api/screener?${parameters}`, {
-      headers: {
-        Accept: "application/json",
-      },
-      signal,
-    });
+  const response = await fetch(`/api/screener?${parameters.toString()}`, {
+    headers: {
+      Accept: "application/json",
+    },
+    signal,
+  });
 
-    const data = await readJson(response);
-    const stocks = Array.isArray(data?.stocks) ? data.stocks : [];
+  const data = await readJson(response);
 
-    const exact = stocks.find((stock) => {
+  if (!response.ok) {
+    const message =
+      data?.error?.message ||
+      data?.error ||
+      `Unable to load Screener data for ${requested}.`;
+
+    throw new Error(String(message));
+  }
+
+  const stocks = Array.isArray(data?.stocks) ? data.stocks : [];
+
+  return (
+    stocks.find((stock) => {
       const values = [
         stock?.symbol,
         stock?.yahooSymbol,
@@ -279,25 +294,28 @@ async function fetchScreenerChunk(symbols, signal) {
         .filter(Boolean);
 
       return values.includes(requested);
-    });
+    }) || null
+  );
+}
 
-    return exact ? [exact] : [];
+async function fetchScreenerChunk(symbols, signal) {
+  if (!Array.isArray(symbols) || symbols.length === 0) {
+    return [];
   }
 
-  const parameters = new URLSearchParams({
-    symbols: symbols.join(","),
+  const results = await Promise.allSettled(
+    symbols.map((symbol) =>
+      fetchSingleScreenerStock(symbol, signal),
+    ),
+  );
+
+  return results.flatMap((result) => {
+    if (result.status !== "fulfilled" || !result.value) {
+      return [];
+    }
+
+    return [result.value];
   });
-
-  const response = await fetch(`/api/screener?${parameters}`, {
-    headers: {
-      Accept: "application/json",
-    },
-    signal,
-  });
-
-  const data = await readJson(response);
-
-  return Array.isArray(data?.stocks) ? data.stocks : [];
 }
 
 async function fetchScreenerStocks(symbols, signal) {
@@ -870,14 +888,25 @@ async function evaluateCustomAlertRules(signal) {
     ]),
   );
 
+  const alerts = [...triggeredById.values()].map((rule) =>
+    createCustomRuleAlert(rule, now),
+  );
+
+  const newlyTriggeredRuleIds = new Set(
+    newlyTriggered.map((rule) => rule.id),
+  );
+
   return {
-    alerts: [...triggeredById.values()].map((rule) =>
-      createCustomRuleAlert(rule, now),
-    ),
+    alerts,
     rules: updatedRules,
     activeCount: updatedRules.filter((rule) => rule.status === "active").length,
     pausedCount: updatedRules.filter((rule) => rule.status === "paused").length,
     triggeredCount: updatedRules.filter((rule) => rule.status === "triggered").length,
+    newlyTriggeredAlertIds: alerts
+      .filter((alert) =>
+        newlyTriggeredRuleIds.has(alert?.metrics?.ruleId),
+      )
+      .map((alert) => alert.id),
     failedSymbols,
   };
 }
@@ -1011,6 +1040,7 @@ export async function loadAlertCenterData({
           activeCount: 0,
           pausedCount: 0,
           triggeredCount: 0,
+          newlyTriggeredAlertIds: [],
           failedSymbols: 0,
         };
 
@@ -1061,6 +1091,10 @@ export async function loadAlertCenterData({
       ? sourceParts.join(" + ")
       : "EXA alert center";
 
+  const historySync = syncAlertHistory(alerts, {
+    notifyAlertIds: customRulesData.newlyTriggeredAlertIds,
+  });
+
   writeAlertCenterCache({
     alerts,
     fetchedAt,
@@ -1080,6 +1114,7 @@ export async function loadAlertCenterData({
     customRuleActiveCount: customRulesData.activeCount || 0,
     customRulePausedCount: customRulesData.pausedCount || 0,
     customRuleTriggeredCount: customRulesData.triggeredCount || 0,
+    historyAddedCount: historySync.added.length,
     unavailableSymbols: Array.isArray(quoteData.unavailableSymbols)
       ? quoteData.unavailableSymbols
       : [],
