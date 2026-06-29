@@ -39,10 +39,13 @@ const Alerts = lazy(() =>
   import("./pages/Alerts"),
 );
 
+const AIResearch = lazy(() =>
+  import("./pages/AIResearch"),
+);
+
 import Screener from "./pages/Screener";
 import Compare from "./pages/Compare";
 import Portfolio from "./pages/Portfolio";
-
 
 function PageLoader() {
   return (
@@ -121,14 +124,12 @@ function AppRoutes() {
 
         <Route
           path="/research"
-          element={
-            <PremiumComingSoon />
-          }
+          element={<AIResearch />}
         />
 
         <Route
-        path="/alerts"
-        element={<Alerts />}
+          path="/alerts"
+          element={<Alerts />}
         />
 
         <Route
