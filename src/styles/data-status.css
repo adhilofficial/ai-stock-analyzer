@@ -117,6 +117,10 @@
    MARKET PULSE STATUS
    ========================================= */
 
+/* =========================================
+   MARKET PULSE STATUS - CLEAN VERSION
+   ========================================= */
+
 .exa-market-pulse-status {
   display: flex;
   align-items: center;
@@ -124,48 +128,57 @@
   gap: 18px;
 
   width: 100%;
-  margin-top: 14px;
-  padding: 14px 16px;
+  margin-top: 18px;
+  padding: 16px 18px;
 
   border: 1px solid rgba(96, 165, 250, 0.14);
-  border-radius: 14px;
+  border-radius: 16px;
 
   background:
     linear-gradient(
       135deg,
-      rgba(15, 31, 55, 0.82),
-      rgba(7, 18, 35, 0.82)
+      rgba(11, 26, 48, 0.92),
+      rgba(7, 18, 35, 0.9)
     );
 }
 
 .exa-market-pulse-status__main {
   display: flex;
-  min-width: 0;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .exa-market-pulse-status__main p {
   margin: 0;
-  color: #8391a6;
-  font-size: 0.75rem;
+  color: #8ea2bf;
+  font-size: 0.92rem;
   line-height: 1.5;
 }
 
 .exa-market-pulse-status .exa-data-timestamp {
   flex: 0 0 auto;
+  color: #93a4bd;
 }
 
-@media (max-width: 760px) {
+.exa-market-pulse-status .exa-data-status-badge {
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
   .exa-market-pulse-status {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
   }
 
   .exa-market-pulse-status__main {
     align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
+    gap: 10px;
+  }
+
+  .exa-market-pulse-status .exa-data-timestamp {
+    width: 100%;
   }
 }

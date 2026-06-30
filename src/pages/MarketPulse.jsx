@@ -6,7 +6,6 @@ import {
 } from "react";
 
 import {
-  Activity,
   AlertCircle,
   ArrowDownRight,
   ArrowRight,
@@ -14,7 +13,6 @@ import {
   BarChart3,
   CheckCircle2,
   CircleDot,
-  Clock3,
   CalendarDays,
   Database,
   Download,
@@ -55,7 +53,6 @@ import AppShell from
 
 import SnapshotFreshnessBanner from
   "../components/data/SnapshotFreshnessBanner";
-import DataStatusBadge from "../components/data/DataStatusBadge";
 import DataTimestamp from "../components/data/DataTimestamp";
 import {
   getDashboardMarketData,
@@ -69,6 +66,7 @@ import {
 
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
+import "../styles/market-pulse.css";
 
 const MAIN_INDEX_SYMBOLS = [
   "^NSEI",
@@ -117,1179 +115,6 @@ const SECTOR_HISTORY_COLORS = [
   "#fb7185",
 ];
 
-const MARKET_PULSE_STYLES = `
-  .exa-pulse-page {
-    min-height: 100vh;
-    padding: 28px;
-    color: #e2e8f0;
-  }
-
-  .exa-pulse-container {
-    width: min(1480px, 100%);
-    margin: 0 auto;
-  }
-
-  .exa-pulse-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 22px;
-    margin-bottom: 20px;
-  }
-
-  .exa-pulse-eyebrow {
-    margin: 0 0 7px;
-    color: #60a5fa;
-    font-size: 10px;
-    font-weight: 850;
-    letter-spacing: 0.14em;
-  }
-
-  .exa-pulse-header h1 {
-    margin: 0;
-    color: #f8fafc;
-    font-size: clamp(27px, 3vw, 40px);
-    line-height: 1.08;
-    letter-spacing: -0.035em;
-  }
-
-  .exa-pulse-header-copy {
-    max-width: 810px;
-    margin: 10px 0 0;
-    color: #8ea0bc;
-    font-size: 13px;
-    line-height: 1.7;
-  }
-
-  .exa-pulse-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
-  .exa-pulse-button {
-    min-height: 38px;
-    padding: 0 14px;
-    border: 1px solid #243752;
-    border-radius: 11px;
-    background: #0b1526;
-    color: #dbeafe;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 11px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: 160ms ease;
-  }
-
-  .exa-pulse-button:hover:not(:disabled) {
-    transform: translateY(-1px);
-    border-color: #3b82f6;
-    background: #10203a;
-  }
-
-  .exa-pulse-button:disabled {
-    opacity: 0.62;
-    cursor: not-allowed;
-  }
-
-  .exa-pulse-spinner {
-    animation: exaPulseSpin 0.9s linear infinite;
-  }
-
-  @keyframes exaPulseSpin {
-    to { transform: rotate(360deg); }
-  }
-
-  .exa-pulse-status-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 14px;
-    align-items: stretch;
-    margin-bottom: 16px;
-  }
-
-  .exa-pulse-market-status,
-  .exa-pulse-update-card {
-    border: 1px solid #1c2d45;
-    border-radius: 14px;
-    background: linear-gradient(145deg, rgba(12, 24, 42, 0.96), rgba(7, 15, 28, 0.96));
-  }
-
-  .exa-pulse-market-status {
-    min-height: 62px;
-    padding: 13px 15px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .exa-pulse-status-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .exa-pulse-market-status.open .exa-pulse-status-icon {
-    color: #4ade80;
-    background: rgba(34, 197, 94, 0.11);
-  }
-
-  .exa-pulse-market-status.closed .exa-pulse-status-icon {
-    color: #facc15;
-    background: rgba(234, 179, 8, 0.11);
-  }
-
-  .exa-pulse-market-status strong {
-    display: block;
-    color: #f8fafc;
-    font-size: 12px;
-  }
-
-  .exa-pulse-market-status span {
-    display: block;
-    margin-top: 4px;
-    color: #7f91ad;
-    font-size: 10px;
-  }
-
-  .exa-pulse-update-card {
-    min-width: 220px;
-    padding: 12px 15px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: right;
-  }
-
-  .exa-pulse-update-card span {
-    color: #64748b;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .exa-pulse-update-card strong {
-    margin-top: 5px;
-    color: #cbd5e1;
-    font-size: 10px;
-  }
-
-  .exa-pulse-notice {
-    margin-bottom: 16px;
-    padding: 12px 14px;
-    border: 1px solid rgba(245, 158, 11, 0.28);
-    border-radius: 12px;
-    background: rgba(120, 53, 15, 0.08);
-    color: #fcd34d;
-    display: flex;
-    align-items: flex-start;
-    gap: 9px;
-    font-size: 10px;
-    line-height: 1.55;
-  }
-
-  .exa-pulse-index-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 13px;
-    margin-bottom: 16px;
-  }
-
-  .exa-pulse-index-card {
-    position: relative;
-    overflow: hidden;
-    min-height: 126px;
-    padding: 16px;
-    border: 1px solid #1c2d45;
-    border-radius: 15px;
-    background: linear-gradient(145deg, #0c182b, #07111f);
-  }
-
-  .exa-pulse-index-card::after {
-    content: "";
-    position: absolute;
-    right: -28px;
-    bottom: -42px;
-    width: 110px;
-    height: 110px;
-    border-radius: 999px;
-    background: rgba(59, 130, 246, 0.06);
-  }
-
-  .exa-pulse-index-top,
-  .exa-pulse-index-price,
-  .exa-pulse-index-range {
-    position: relative;
-    z-index: 1;
-  }
-
-  .exa-pulse-index-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .exa-pulse-index-top strong {
-    color: #dbeafe;
-    font-size: 11px;
-  }
-
-  .exa-pulse-index-symbol {
-    color: #52657f;
-    font-size: 8px;
-  }
-
-  .exa-pulse-index-price {
-    margin-top: 19px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .exa-pulse-index-price > strong {
-    color: #f8fafc;
-    font-size: clamp(19px, 2.1vw, 27px);
-    letter-spacing: -0.035em;
-  }
-
-  .exa-pulse-move {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: 850;
-  }
-
-  .exa-pulse-move.positive { color: #4ade80; }
-  .exa-pulse-move.negative { color: #fb7185; }
-  .exa-pulse-move.neutral { color: #94a3b8; }
-  .exa-pulse-rotation-metric strong.positive { color: #4ade80; }
-  .exa-pulse-rotation-metric strong.negative { color: #fb7185; }
-  .exa-pulse-rotation-metric strong.neutral { color: #94a3b8; }
-
-  .exa-pulse-index-range {
-    margin-top: 11px;
-    display: flex;
-    justify-content: space-between;
-    color: #5f718c;
-    font-size: 8px;
-  }
-
-  .exa-pulse-main-grid,
-  .exa-pulse-intelligence-grid,
-  .exa-pulse-risk-grid {
-    display: grid;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .exa-pulse-main-grid {
-    grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
-  }
-
-  .exa-pulse-intelligence-grid {
-    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
-  }
-
-  .exa-pulse-risk-grid {
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-  }
-
-  .exa-pulse-card {
-    border: 1px solid #1c2d45;
-    border-radius: 16px;
-    background: linear-gradient(145deg, rgba(12, 24, 43, 0.98), rgba(6, 14, 26, 0.98));
-    overflow: hidden;
-  }
-
-  .exa-pulse-card-header {
-    min-height: 62px;
-    padding: 15px 17px;
-    border-bottom: 1px solid #16263c;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-  }
-
-  .exa-pulse-card-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .exa-pulse-card-title > span {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: rgba(59, 130, 246, 0.1);
-    color: #60a5fa;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .exa-pulse-card-title h2 {
-    margin: 0;
-    color: #f8fafc;
-    font-size: 13px;
-  }
-
-  .exa-pulse-card-title p {
-    margin: 4px 0 0;
-    color: #65758d;
-    font-size: 9px;
-  }
-
-  .exa-pulse-card-body {
-    padding: 17px;
-  }
-
-  .exa-pulse-sentiment-layout {
-    display: grid;
-    grid-template-columns: 180px minmax(0, 1fr);
-    gap: 22px;
-    align-items: center;
-  }
-
-  .exa-pulse-score-ring {
-    --score: 50;
-    width: 156px;
-    height: 156px;
-    margin: 0 auto;
-    border-radius: 50%;
-    background: conic-gradient(#3b82f6 calc(var(--score) * 1%), #14243a 0);
-    display: grid;
-    place-items: center;
-    position: relative;
-  }
-
-  .exa-pulse-score-ring::before {
-    content: "";
-    position: absolute;
-    inset: 11px;
-    border-radius: 50%;
-    background: #081321;
-    border: 1px solid #1f314a;
-  }
-
-  .exa-pulse-score-copy {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-  }
-
-  .exa-pulse-score-copy strong {
-    display: block;
-    color: #f8fafc;
-    font-size: 36px;
-    letter-spacing: -0.06em;
-  }
-
-  .exa-pulse-score-copy span {
-    color: #71839c;
-    font-size: 9px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .exa-pulse-sentiment-copy h3 {
-    margin: 0;
-    font-size: 22px;
-    color: #f8fafc;
-  }
-
-  .exa-pulse-sentiment-copy > p {
-    margin: 8px 0 15px;
-    color: #8394ad;
-    font-size: 11px;
-    line-height: 1.6;
-  }
-
-  .exa-pulse-factors {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  .exa-pulse-factor {
-    padding: 10px 11px;
-    border: 1px solid #17283f;
-    border-radius: 11px;
-    background: rgba(6, 15, 29, 0.72);
-  }
-
-  .exa-pulse-factor div:first-child {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    color: #93a4bc;
-    font-size: 9px;
-  }
-
-  .exa-pulse-factor div strong {
-    color: #e2e8f0;
-  }
-
-  .exa-pulse-factor-track {
-    height: 5px;
-    margin-top: 8px;
-    border-radius: 999px;
-    background: #14243a;
-    overflow: hidden;
-  }
-
-  .exa-pulse-factor-track span {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, #2563eb, #60a5fa);
-  }
-
-  .exa-pulse-breadth-summary,
-  .exa-pulse-breadth-details,
-  .exa-pulse-comparison-grid,
-  .exa-pulse-volume-grid {
-    display: grid;
-    gap: 9px;
-  }
-
-  .exa-pulse-breadth-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .exa-pulse-breadth-stat,
-  .exa-pulse-detail,
-  .exa-pulse-comparison-tile,
-  .exa-pulse-volume-tile {
-    padding: 12px;
-    border: 1px solid #17283f;
-    border-radius: 11px;
-    background: rgba(6, 15, 29, 0.72);
-  }
-
-  .exa-pulse-breadth-stat span,
-  .exa-pulse-detail span,
-  .exa-pulse-comparison-tile span,
-  .exa-pulse-volume-tile span {
-    display: block;
-    color: #71839c;
-    font-size: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .exa-pulse-breadth-stat strong,
-  .exa-pulse-detail strong,
-  .exa-pulse-volume-tile strong {
-    display: block;
-    margin-top: 7px;
-    color: #e2e8f0;
-    font-size: 17px;
-  }
-
-  .exa-pulse-breadth-bar,
-  .exa-pulse-volume-track {
-    height: 9px;
-    margin-top: 16px;
-    border-radius: 999px;
-    background: #14243a;
-    overflow: hidden;
-    display: flex;
-  }
-
-  .exa-pulse-breadth-bar span:nth-child(1) { background: #22c55e; }
-  .exa-pulse-breadth-bar span:nth-child(2) { background: #94a3b8; }
-  .exa-pulse-breadth-bar span:nth-child(3) { background: #ef4444; }
-
-  .exa-pulse-breadth-legend,
-  .exa-pulse-volume-legend {
-    margin-top: 8px;
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    color: #64748b;
-    font-size: 8px;
-  }
-
-  .exa-pulse-breadth-details {
-    margin-top: 14px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .exa-pulse-chart-shell {
-    height: 300px;
-    min-width: 0;
-  }
-
-  .exa-pulse-chart-note {
-    margin: 12px 0 0;
-    padding: 10px 12px;
-    border: 1px solid #1b2d45;
-    border-radius: 10px;
-    background: rgba(14, 27, 47, 0.55);
-    color: #71839c;
-    font-size: 9px;
-    line-height: 1.55;
-  }
-
-  .exa-pulse-comparison-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .exa-pulse-comparison-tile strong {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-top: 7px;
-    color: #e2e8f0;
-    font-size: 15px;
-  }
-
-  .exa-pulse-delta {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 9px;
-    font-weight: 850;
-  }
-
-  .exa-pulse-delta.positive { color: #4ade80; }
-  .exa-pulse-delta.negative { color: #fb7185; }
-  .exa-pulse-delta.neutral { color: #94a3b8; }
-
-  .exa-pulse-rotation-list {
-    display: grid;
-    gap: 8px;
-  }
-
-  .exa-pulse-rotation-row {
-    display: grid;
-    grid-template-columns: minmax(120px, 1fr) minmax(90px, 0.7fr) minmax(90px, 0.65fr) auto;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 12px;
-    border: 1px solid #17283f;
-    border-radius: 11px;
-    background: rgba(6, 15, 29, 0.72);
-  }
-
-  .exa-pulse-rotation-name strong {
-    display: block;
-    color: #e8eef8;
-    font-size: 10px;
-  }
-
-  .exa-pulse-rotation-name span,
-  .exa-pulse-rotation-metric span {
-    display: block;
-    margin-top: 3px;
-    color: #60728d;
-    font-size: 8px;
-  }
-
-  .exa-pulse-rotation-metric strong {
-    display: block;
-    color: #dbeafe;
-    font-size: 10px;
-  }
-
-  .exa-pulse-badge {
-    min-width: 76px;
-    padding: 6px 8px;
-    border-radius: 999px;
-    text-align: center;
-    font-size: 8px;
-    font-weight: 850;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .exa-pulse-badge.leading,
-  .exa-pulse-badge.improving {
-    color: #86efac;
-    background: rgba(34, 197, 94, 0.11);
-  }
-
-  .exa-pulse-badge.weakening,
-  .exa-pulse-badge.lagging {
-    color: #fda4af;
-    background: rgba(244, 63, 94, 0.11);
-  }
-
-  .exa-pulse-badge.stable,
-  .exa-pulse-badge.baseline {
-    color: #bfdbfe;
-    background: rgba(59, 130, 246, 0.11);
-  }
-
-  .exa-pulse-alert-list {
-    display: grid;
-    gap: 9px;
-  }
-
-  .exa-pulse-alert-item {
-    padding: 12px;
-    border: 1px solid #1a2c44;
-    border-radius: 12px;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: flex-start;
-    background: rgba(6, 15, 29, 0.72);
-  }
-
-  .exa-pulse-alert-item.high { border-color: rgba(244, 63, 94, 0.28); }
-  .exa-pulse-alert-item.moderate { border-color: rgba(245, 158, 11, 0.28); }
-  .exa-pulse-alert-item.low { border-color: rgba(34, 197, 94, 0.23); }
-
-  .exa-pulse-alert-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #111f34;
-    color: #93c5fd;
-  }
-
-  .exa-pulse-alert-copy strong {
-    display: block;
-    color: #e8eef8;
-    font-size: 10px;
-  }
-
-  .exa-pulse-alert-copy p {
-    margin: 5px 0 0;
-    color: #71839c;
-    font-size: 9px;
-    line-height: 1.5;
-  }
-
-  .exa-pulse-severity {
-    padding: 5px 7px;
-    border-radius: 999px;
-    font-size: 7px;
-    font-weight: 850;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .exa-pulse-severity.high { color: #fda4af; background: rgba(244, 63, 94, 0.11); }
-  .exa-pulse-severity.moderate { color: #fcd34d; background: rgba(245, 158, 11, 0.11); }
-  .exa-pulse-severity.low { color: #86efac; background: rgba(34, 197, 94, 0.11); }
-
-  .exa-pulse-interpretation {
-    padding: 15px;
-    border: 1px solid rgba(59, 130, 246, 0.22);
-    border-radius: 13px;
-    background: linear-gradient(145deg, rgba(37, 99, 235, 0.08), rgba(10, 20, 36, 0.7));
-  }
-
-  .exa-pulse-interpretation h3 {
-    margin: 0;
-    color: #dbeafe;
-    font-size: 13px;
-  }
-
-  .exa-pulse-interpretation p {
-    margin: 9px 0 0;
-    color: #93a4bc;
-    font-size: 10px;
-    line-height: 1.65;
-  }
-
-  .exa-pulse-volume-grid {
-    margin-top: 14px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .exa-pulse-volume-track .up { background: #22c55e; }
-  .exa-pulse-volume-track .down { background: #ef4444; }
-
-  .exa-pulse-sector-grid {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 9px;
-  }
-
-  .exa-pulse-sector {
-    min-height: 78px;
-    padding: 12px;
-    border: 1px solid #1c2d45;
-    border-radius: 11px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .exa-pulse-sector span {
-    color: #cbd5e1;
-    font-size: 9px;
-    line-height: 1.35;
-  }
-
-  .exa-pulse-sector strong {
-    margin-top: 11px;
-    font-size: 14px;
-  }
-
-  .exa-pulse-sector.strong-positive { background: rgba(22, 101, 52, 0.28); color: #86efac; }
-  .exa-pulse-sector.positive { background: rgba(21, 128, 61, 0.13); color: #86efac; }
-  .exa-pulse-sector.neutral { background: rgba(51, 65, 85, 0.19); color: #cbd5e1; }
-  .exa-pulse-sector.negative { background: rgba(190, 24, 93, 0.12); color: #fda4af; }
-  .exa-pulse-sector.strong-negative { background: rgba(159, 18, 57, 0.27); color: #fda4af; }
-
-  .exa-pulse-three-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .exa-pulse-list {
-    display: grid;
-    gap: 8px;
-  }
-
-  .exa-pulse-stock-row {
-    min-height: 54px;
-    padding: 9px 10px;
-    border: 1px solid #17283f;
-    border-radius: 10px;
-    background: rgba(6, 15, 29, 0.72);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .exa-pulse-stock-main {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-  }
-
-  .exa-pulse-stock-rank {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    background: #122139;
-    color: #7f91ad;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 9px;
-    font-weight: 850;
-  }
-
-  .exa-pulse-stock-copy {
-    min-width: 0;
-  }
-
-  .exa-pulse-stock-copy strong {
-    display: block;
-    overflow: hidden;
-    color: #e8eef8;
-    font-size: 10px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .exa-pulse-stock-copy span {
-    display: block;
-    margin-top: 4px;
-    color: #5f718c;
-    font-size: 8px;
-  }
-
-  .exa-pulse-stock-value {
-    text-align: right;
-  }
-
-  .exa-pulse-stock-value > strong {
-    display: block;
-    color: #f8fafc;
-    font-size: 10px;
-  }
-
-  .exa-pulse-stock-value > span {
-    display: inline-flex;
-    margin-top: 4px;
-  }
-
-  .exa-pulse-stock-button {
-    width: 27px;
-    height: 27px;
-    margin-left: 7px;
-    padding: 0;
-    border: 1px solid #21334c;
-    border-radius: 8px;
-    background: #0d192b;
-    color: #7da9e8;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  .exa-pulse-highlow-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-  }
-
-  .exa-pulse-proximity {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 9px;
-    font-weight: 800;
-  }
-
-  .exa-pulse-proximity.high { color: #4ade80; }
-  .exa-pulse-proximity.low { color: #facc15; }
-
-  .exa-pulse-empty,
-  .exa-pulse-loading {
-    min-height: 260px;
-    padding: 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
-
-  .exa-pulse-empty strong,
-  .exa-pulse-loading strong {
-    margin-top: 11px;
-    color: #e2e8f0;
-    font-size: 12px;
-  }
-
-  .exa-pulse-empty p,
-  .exa-pulse-loading p {
-    max-width: 430px;
-    margin: 7px 0 0;
-    color: #70829b;
-    font-size: 10px;
-    line-height: 1.55;
-  }
-
-  .exa-pulse-disclaimer {
-    margin: 16px 0 0;
-    color: #53657e;
-    font-size: 9px;
-    line-height: 1.6;
-    text-align: center;
-  }
-
-
-  .exa-pulse-history-section {
-    margin-bottom: 16px;
-  }
-
-  .exa-pulse-history-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-
-  .exa-pulse-history-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .exa-pulse-range-control {
-    display: inline-flex;
-    padding: 3px;
-    border: 1px solid #21334c;
-    border-radius: 10px;
-    background: #081321;
-  }
-
-  .exa-pulse-range-control button {
-    min-width: 48px;
-    padding: 7px 10px;
-    border: 0;
-    border-radius: 7px;
-    background: transparent;
-    color: #71839d;
-    font-size: 9px;
-    font-weight: 850;
-    cursor: pointer;
-  }
-
-  .exa-pulse-range-control button.active {
-    background: #17345e;
-    color: #dbeafe;
-  }
-
-  .exa-pulse-history-meta-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-
-  .exa-pulse-history-meta {
-    padding: 13px;
-    border: 1px solid #1b2d45;
-    border-radius: 12px;
-    background: rgba(8, 19, 33, 0.72);
-  }
-
-  .exa-pulse-history-meta span {
-    display: block;
-    color: #62748e;
-    font-size: 8px;
-    font-weight: 750;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .exa-pulse-history-meta strong {
-    display: block;
-    margin-top: 6px;
-    color: #e8eef8;
-    font-size: 12px;
-  }
-
-  .exa-pulse-history-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  .exa-pulse-history-summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 14px;
-  }
-
-  .exa-pulse-history-summary > div {
-    padding: 12px;
-    border: 1px solid #1b2d45;
-    border-radius: 11px;
-    background: rgba(8, 19, 33, 0.66);
-  }
-
-  .exa-pulse-history-summary span {
-    display: block;
-    color: #65758d;
-    font-size: 8px;
-  }
-
-  .exa-pulse-history-summary strong {
-    display: block;
-    margin-top: 5px;
-    color: #e8eef8;
-    font-size: 11px;
-  }
-
-  .exa-pulse-history-empty {
-    min-height: 280px;
-    padding: 28px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #60728d;
-    text-align: center;
-  }
-
-  .exa-pulse-history-empty strong {
-    margin-top: 10px;
-    color: #dbeafe;
-    font-size: 11px;
-  }
-
-  .exa-pulse-history-empty p {
-    max-width: 410px;
-    margin: 7px 0 0;
-    font-size: 9px;
-    line-height: 1.55;
-  }
-
-  .exa-pulse-session-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .exa-pulse-session-card {
-    padding: 14px;
-    border: 1px solid #1b2d45;
-    border-radius: 12px;
-    background: rgba(8, 19, 33, 0.72);
-  }
-
-  .exa-pulse-session-card.best {
-    border-color: rgba(34, 197, 94, 0.28);
-  }
-
-  .exa-pulse-session-card.weakest {
-    border-color: rgba(244, 63, 94, 0.28);
-  }
-
-  .exa-pulse-session-card span {
-    color: #64748b;
-    font-size: 8px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .exa-pulse-session-card strong {
-    display: block;
-    margin-top: 7px;
-    color: #e8eef8;
-    font-size: 12px;
-  }
-
-  .exa-pulse-session-card p {
-    margin: 5px 0 0;
-    color: #71839d;
-    font-size: 9px;
-    line-height: 1.5;
-  }
-
-  .exa-pulse-risk-timeline {
-    display: grid;
-    gap: 8px;
-    margin-top: 14px;
-  }
-
-  .exa-pulse-risk-row {
-    display: grid;
-    grid-template-columns: 70px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px;
-    font-size: 9px;
-  }
-
-  .exa-pulse-risk-row > span:first-child {
-    color: #64748b;
-  }
-
-  .exa-pulse-risk-track {
-    height: 6px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: #122139;
-  }
-
-  .exa-pulse-risk-track span {
-    display: block;
-    height: 100%;
-    border-radius: inherit;
-  }
-
-  .exa-pulse-risk-track span.low { background: #22c55e; }
-  .exa-pulse-risk-track span.moderate { background: #f59e0b; }
-  .exa-pulse-risk-track span.high { background: #f43f5e; }
-
-  .exa-pulse-risk-row strong {
-    min-width: 58px;
-    color: #dbeafe;
-    font-size: 8px;
-    text-align: right;
-    text-transform: uppercase;
-  }
-
-  .exa-pulse-sector-history-legend {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-  }
-
-  .exa-pulse-sector-history-legend span {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    color: #70829b;
-    font-size: 8px;
-  }
-
-  .exa-pulse-sector-history-legend i {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-  }
-
-  @media (max-width: 1180px) {
-    .exa-pulse-index-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .exa-pulse-main-grid,
-    .exa-pulse-intelligence-grid,
-    .exa-pulse-risk-grid,
-    .exa-pulse-history-grid { grid-template-columns: 1fr; }
-    .exa-pulse-sector-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .exa-pulse-three-grid { grid-template-columns: 1fr; }
-  }
-
-  @media (max-width: 760px) {
-    .exa-pulse-page { padding: 18px 14px 30px; }
-    .exa-pulse-header { flex-direction: column; }
-    .exa-pulse-status-row { grid-template-columns: 1fr; }
-    .exa-pulse-header-actions { width: 100%; justify-content: stretch; }
-    .exa-pulse-button { flex: 1; }
-    .exa-pulse-update-card { min-width: 0; text-align: left; }
-    .exa-pulse-sentiment-layout { grid-template-columns: 1fr; }
-    .exa-pulse-sector-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .exa-pulse-highlow-grid { grid-template-columns: 1fr; }
-    .exa-pulse-history-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .exa-pulse-history-header { align-items: flex-start; }
-    .exa-pulse-history-actions { width: 100%; }
-    .exa-pulse-rotation-row {
-      grid-template-columns: minmax(110px, 1fr) minmax(80px, 0.7fr) auto;
-    }
-    .exa-pulse-rotation-row .exa-pulse-rotation-metric:nth-of-type(2) { display: none; }
-  }
-
-  @media (max-width: 480px) {
-    .exa-pulse-index-grid,
-    .exa-pulse-factors,
-    .exa-pulse-breadth-summary,
-    .exa-pulse-breadth-details,
-    .exa-pulse-comparison-grid,
-    .exa-pulse-volume-grid,
-    .exa-pulse-history-meta-grid,
-    .exa-pulse-history-summary,
-    .exa-pulse-session-grid { grid-template-columns: 1fr; }
-    .exa-pulse-sector-grid { grid-template-columns: 1fr; }
-    .exa-pulse-chart-shell { height: 260px; }
-    .exa-pulse-rotation-row { grid-template-columns: minmax(0, 1fr) auto; }
-    .exa-pulse-rotation-row .exa-pulse-rotation-metric { display: none; }
-  }
-`;
-
 function safeNumber(value, fallback = null) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
@@ -1332,20 +157,6 @@ function formatCompact(value) {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(number);
-}
-
-function formatTimestamp(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Update time unavailable";
-
-  try {
-    return new Intl.DateTimeFormat("en-IN", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(date);
-  } catch {
-    return date.toLocaleString();
-  }
 }
 
 function formatTrendDate(value) {
@@ -2087,7 +898,7 @@ function deriveDailyInterpretation({ sentiment, pulse, rotation, alerts, previou
 function StockList({ items, mode, onAnalyze }) {
   if (!items.length) {
     return (
-      <div className="exa-pulse-empty" style={{ minHeight: 190 }}>
+      <div className="exa-pulse-empty exa-pulse-empty--compact">
         <BarChart3 size={27} color="#52657f" />
         <strong>No market rows available</strong>
         <p>The current market source did not return enough data for this section.</p>
@@ -2107,11 +918,11 @@ function StockList({ items, mode, onAnalyze }) {
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div className="exa-pulse-stock-actions">
             <div className="exa-pulse-stock-value">
               <strong>{formatPrice(stock.price, stock.currency)}</strong>
               {mode === "active" ? (
-                <span style={{ color: "#7f91ad", fontSize: 8 }}>
+                <span className="exa-pulse-stock-volume">
                   Vol {formatCompact(stock.volume)}
                 </span>
               ) : (
@@ -2137,7 +948,7 @@ function StockList({ items, mode, onAnalyze }) {
 function HighLowList({ items, type, onAnalyze }) {
   if (!items.length) {
     return (
-      <div className="exa-pulse-empty" style={{ minHeight: 180 }}>
+      <div className="exa-pulse-empty exa-pulse-empty--compact">
         <Waves size={26} color="#52657f" />
         <strong>Snapshot rows unavailable</strong>
         <p>The 52-week snapshot did not contain enough comparable price-range data.</p>
@@ -2157,7 +968,7 @@ function HighLowList({ items, type, onAnalyze }) {
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div className="exa-pulse-stock-actions">
             <span className={`exa-pulse-proximity ${type}`}>
               {type === "high" ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
               {type === "high"
@@ -2271,7 +1082,7 @@ export default function MarketPulse() {
       setNearHighs(buildNearHighs(highsResult.value.stocks));
       setSnapshotMetadata({
         generatedAt: highsResult.value.generatedAt,
-        source: highsResult.value.source,
+        source: "Market data",
       });
     } else {
       setNearHighs([]);
@@ -2281,7 +1092,7 @@ export default function MarketPulse() {
       setNearLows(buildNearLows(lowsResult.value.stocks));
       setSnapshotMetadata((current) => ({
         generatedAt: current.generatedAt || lowsResult.value.generatedAt,
-        source: current.source || lowsResult.value.source,
+        source: "Market data",
       }));
     } else {
       setNearLows([]);
@@ -2291,7 +1102,7 @@ export default function MarketPulse() {
       setAnalyticsData(analyticsResult.value);
       setSnapshotMetadata((current) => ({
         generatedAt: analyticsResult.value.generatedAt || current.generatedAt,
-        source: analyticsResult.value.source || current.source,
+        source: "Market data",
       }));
     } else {
       setAnalyticsData(null);
@@ -2429,80 +1240,69 @@ export default function MarketPulse() {
   const marketStatus = marketData?.marketStatus || {};
   const isOpen = Boolean(marketStatus?.isOpen);
   const marketPulseUsesFallback = String(
-  marketData?.source || "",
-)
-  .toLowerCase()
-  .includes("fallback");
+    marketData?.source || "",
+  )
+    .toLowerCase()
+    .includes("fallback");
 
-function getMarketPulsePresentation() {
-  if (loading) {
-    return {
-      status: "loading",
-      label: "Loading",
-      description:
-        "Building current market intelligence.",
-      fallbackText:
-        "Fetching the latest market snapshot",
-    };
-  }
+  function getMarketPulsePresentation() {
+    if (loading) {
+      return {
+        status: "loading",
+        label: "Loading market",
+        description: "Preparing the latest market snapshot",
+        fallbackText: "Fetching market data",
+      };
+    }
 
-  if (error || marketPulseUsesFallback) {
-    return {
-      status: "fallback",
-      label: "Fallback data",
-      description:
-        "Some sections are using locally available reference data.",
-      fallbackText:
-        "Live market services are unavailable",
-    };
-  }
+    if (error || marketPulseUsesFallback) {
+      return {
+        status: "fallback",
+        label: "Reference data",
+        description: "Live market services are temporarily unavailable",
+        fallbackText: "Live update unavailable",
+      };
+    }
 
-  if (warning) {
+    if (warning) {
+      return {
+        status: "delayed",
+        label: "Partial update",
+        description: "Some market sections may be delayed",
+        fallbackText: "Partial market update",
+      };
+    }
+
+    if (marketData?.cached) {
+      return {
+        status: "cached",
+        label: "Cached snapshot",
+        description: isOpen
+          ? "Latest available trading-session data"
+          : "Latest completed-session data",
+        fallbackText: "Cached update time unavailable",
+      };
+    }
+
+    if (isOpen) {
+      return {
+        status: "live",
+        label: "Market open",
+        description: "Current Indian trading session",
+        fallbackText: "Current update time unavailable",
+      };
+    }
+
     return {
       status: "delayed",
-      label: "Partial data",
-      description:
-        "Some market sections could not be refreshed.",
-      fallbackText:
-        "Some sections may be delayed",
+      label: "Market closed",
+      description: "Latest completed Indian trading session",
+      fallbackText: "Session update time unavailable",
     };
   }
 
-  if (marketData?.cached) {
-    return {
-      status: "cached",
-      label: "Cached",
-      description: isOpen
-        ? "Showing the latest cached trading-session snapshot."
-        : "Showing the latest cached completed-session snapshot.",
-      fallbackText:
-        "Cached update time unavailable",
-    };
-  }
-
-  if (isOpen) {
-    return {
-      status: "live",
-      label: "Market open",
-      description:
-        "Changes represent the current Indian trading session.",
-      fallbackText:
-        "Current-session update time unavailable",
-    };
-  }
-
-  return {
-    status: "delayed",
-    label: "Market closed",
-    description:
-      "Changes represent the latest completed Indian trading session.",
-    fallbackText:
-      "Latest-session update time unavailable",
-  };
-}
-
-const marketPulsePresentation =
-  getMarketPulsePresentation();
+  const marketPulsePresentation =
+    getMarketPulsePresentation();
 
   const pulseAdvancing = safeNumber(currentPulse?.advancingPercent, advancing / breadthTotal * 100);
   const pulseDeclining = safeNumber(currentPulse?.decliningPercent, declining / breadthTotal * 100);
@@ -2518,68 +1318,54 @@ const marketPulsePresentation =
 
   return (
     <AppShell>
-      <style>{MARKET_PULSE_STYLES}</style>
-
       <main className="exa-pulse-page">
         <div className="exa-pulse-container">
           <section className="exa-pulse-header">
-            <div>
-              <p className="exa-pulse-eyebrow">EXA MARKET INTELLIGENCE · PHASE 9C</p>
-              <h1>Market Pulse</h1>
-              <p className="exa-pulse-header-copy">
-                Track Indian market direction, breadth, sector rotation and historical regime changes. Phase 9C adds rolling market sentiment, normalized index comparisons, sector leadership history, risk timelines and CSV export.
-              </p>
-            </div>
-
-            <div className="exa-pulse-header-actions">
-              <button
-                type="button"
-                className="exa-pulse-button"
-                disabled={refreshing}
-                onClick={() => loadMarketPulse({ refresh: true })}
-              >
-                {refreshing
-                  ? <LoaderCircle size={14} className="exa-pulse-spinner" />
-                  : <RefreshCw size={14} />}
-                {refreshing ? "Refreshing" : "Refresh market"}
-              </button>
-            </div>
-          </section>
-
-          <section className="exa-pulse-status-row">
-            <div className={`exa-pulse-market-status ${isOpen ? "open" : "closed"}`}>
-              <span className="exa-pulse-status-icon">
-                {isOpen ? <Activity size={19} /> : <Clock3 size={19} />}
-              </span>
-              <div>
-                <div className="exa-market-pulse-status">
-  <div className="exa-market-pulse-status__main">
-    <DataStatusBadge
-      status={marketPulsePresentation.status}
-      label={marketPulsePresentation.label}
-    />
-
-    <p>
-      {marketPulsePresentation.description}
-    </p>
+  <div className="exa-pulse-header-content">
+    <h1>EXA Market Pulse</h1>
   </div>
 
-  <DataTimestamp
-    value={fetchedAt}
-    source="Market data"
-    fallbackText={
-      marketPulsePresentation.fallbackText
-    }
-  />
-</div>
-              </div>
-            </div>
+  <div className="exa-pulse-header-controls">
+    <div
+      className={`exa-pulse-premium-status exa-pulse-premium-status--${marketPulsePresentation.status}`}
+      role="status"
+      aria-live="polite"
+    >
+      <span
+        className="exa-pulse-premium-status__dot"
+        aria-hidden="true"
+      />
 
-            <div className="exa-pulse-update-card">
-              <span>Last refreshed</span>
-              <strong>{formatTimestamp(fetchedAt)}</strong>
-            </div>
-          </section>
+      <strong>
+        {marketPulsePresentation.label}
+      </strong>
+    </div>
+
+    <button
+      type="button"
+      className="exa-pulse-button"
+      disabled={refreshing}
+      onClick={() =>
+        loadMarketPulse({
+          refresh: true,
+        })
+      }
+    >
+      {refreshing ? (
+        <LoaderCircle
+          size={14}
+          className="exa-pulse-spinner"
+        />
+      ) : (
+        <RefreshCw size={14} />
+      )}
+
+      {refreshing
+        ? "Refreshing"
+        : "Refresh market"}
+    </button>
+  </div>
+</section>
 
           {warning && (
             <div className="exa-pulse-notice">
@@ -2589,7 +1375,7 @@ const marketPulsePresentation =
           )}
 
           {error && (
-            <div className="exa-pulse-notice" style={{ borderColor: "rgba(244,63,94,.3)", color: "#fda4af" }}>
+            <div className="exa-pulse-notice error">
               <AlertCircle size={16} />
               <span>{error}</span>
             </div>
@@ -2689,11 +1475,11 @@ const marketPulsePresentation =
                     <div className="exa-pulse-breadth-summary">
                       <div className="exa-pulse-breadth-stat">
                         <span>Advancing</span>
-                        <strong style={{ color: "#4ade80" }}>{formatCompact(advancing)}</strong>
+                        <strong className="positive">{formatCompact(advancing)}</strong>
                       </div>
                       <div className="exa-pulse-breadth-stat">
                         <span>Declining</span>
-                        <strong style={{ color: "#fb7185" }}>{formatCompact(declining)}</strong>
+                        <strong className="negative">{formatCompact(declining)}</strong>
                       </div>
                       <div className="exa-pulse-breadth-stat">
                         <span>Unchanged</span>
@@ -2735,7 +1521,7 @@ const marketPulsePresentation =
                 <article className="exa-pulse-card">
                   <header className="exa-pulse-card-header">
                     <div className="exa-pulse-card-title">
-                      <span><Activity size={18} /></span>
+                      
                       <div>
                         <h2>Breadth trend</h2>
                         <p>Participation history preserved by the scheduled Screener snapshot</p>
@@ -2901,7 +1687,7 @@ const marketPulsePresentation =
                   </div>
 
                   {!hasComparableHistory && (
-                    <div className="exa-pulse-notice" style={{ marginBottom: 0 }}>
+                    <div className="exa-pulse-notice exa-pulse-notice--flush">
                       <Database size={16} />
                       <span>
                         Historical tracking currently has one stored session. The scheduled snapshot workflow will add one point per Indian-market date, and all comparisons will activate automatically.
@@ -3021,7 +1807,7 @@ const marketPulsePresentation =
                         <TrendingUp size={28} />
                         <strong>Index history starts with the next snapshot</strong>
                         <p>
-                          Phase 9C now stores NIFTY 50, SENSEX, BANK NIFTY and NIFTY IT values in each scheduled snapshot. Two stored sessions are required for normalized comparison.
+                          The scheduled market snapshot stores NIFTY 50, SENSEX, BANK NIFTY and NIFTY IT values. Two stored sessions are required for normalized comparison.
                         </p>
                       </div>
                     )}
@@ -3097,7 +1883,7 @@ const marketPulsePresentation =
                       })}
                     </div>
 
-                    <div className="exa-pulse-session-grid" style={{ marginTop: 16 }}>
+                    <div className="exa-pulse-session-grid exa-pulse-session-grid--spaced">
                       <div className="exa-pulse-session-card best">
                         <span>Best stored session</span>
                         <strong>{historicalHighlights.best?.label || "Building"}</strong>
@@ -3120,7 +1906,7 @@ const marketPulsePresentation =
                 </article>
               </section>
 
-              <section className="exa-pulse-card" style={{ marginBottom: 16 }}>
+              <section className="exa-pulse-card exa-pulse-section-gap">
                 <header className="exa-pulse-card-header">
                   <div className="exa-pulse-card-title">
                     <span><Trophy size={18} /></span>
@@ -3184,7 +1970,7 @@ const marketPulsePresentation =
                 </div>
               </section>
 
-              <section className="exa-pulse-card" style={{ marginBottom: 16 }}>
+              <section className="exa-pulse-card exa-pulse-section-gap">
                 <header className="exa-pulse-card-header">
                   <div className="exa-pulse-card-title">
                     <span><Layers3 size={18} /></span>
@@ -3288,15 +2074,15 @@ const marketPulsePresentation =
                       </div>
                       <div className="exa-pulse-volume-tile">
                         <span>Advancing</span>
-                        <strong style={{ color: "#4ade80" }}>{formatNumber(pulseAdvancing, 1)}%</strong>
+                        <strong className="positive">{formatNumber(pulseAdvancing, 1)}%</strong>
                       </div>
                       <div className="exa-pulse-volume-tile">
                         <span>Declining</span>
-                        <strong style={{ color: "#fb7185" }}>{formatNumber(pulseDeclining, 1)}%</strong>
+                        <strong className="negative">{formatNumber(pulseDeclining, 1)}%</strong>
                       </div>
                     </div>
 
-                    <div className="exa-pulse-chart-shell" style={{ height: 210, marginTop: 14 }}>
+                    <div className="exa-pulse-chart-shell exa-pulse-chart-shell--compact">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={[
@@ -3322,7 +2108,7 @@ const marketPulsePresentation =
                 </article>
               </section>
 
-              <section className="exa-pulse-card" style={{ marginBottom: 16 }}>
+              <section className="exa-pulse-card exa-pulse-section-gap">
                 <header className="exa-pulse-card-header">
                   <div className="exa-pulse-card-title">
                     <span><Zap size={18} /></span>

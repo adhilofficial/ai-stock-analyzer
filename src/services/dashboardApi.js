@@ -6,6 +6,30 @@ const API_BASE_URL = String(
   import.meta.env.VITE_API_BASE_URL || "",
 ).replace(/\/+$/, "");
 
+const MARKET_NEWS_TIMEOUT_MS = 25_000;
+function normalizePublicSource(
+  source,
+  fallback = "Market data",
+) {
+  const value = String(
+    source || "",
+  ).trim();
+
+  if (!value) {
+    return fallback;
+  }
+
+  if (
+    value
+      .toLowerCase()
+      .includes("yahoo")
+  ) {
+    return "Market data";
+  }
+
+  return value;
+}
+
 function buildApiUrl(path) {
   return `${API_BASE_URL}${path}`;
 }
@@ -386,8 +410,9 @@ export async function getDashboardMarketData({
     success: true,
 
     source:
-      data?.source ||
-      "Yahoo Finance",
+      normalizePublicSource(
+        data?.source,
+      ),
 
     fetchedAt:
       data?.fetchedAt ||
@@ -450,9 +475,9 @@ export async function getWatchlistQuotes({
   ) {
     return {
       success: true,
+      source: "Market data",
       quotes: [],
       unavailableSymbols: [],
-      source: "Yahoo Finance",
       cached: false,
     };
   }
@@ -504,8 +529,9 @@ export async function getWatchlistQuotes({
     success: true,
 
     source:
-      data?.source ||
-      "Yahoo Finance",
+      normalizePublicSource(
+        data?.source,
+      ),
 
     fetchedAt:
       data?.fetchedAt ||
@@ -582,8 +608,9 @@ export async function getMarketMovers({
     success: true,
 
     source:
-      data?.source ||
-      "Yahoo Finance",
+      normalizePublicSource(
+        data?.source,
+      ),
 
     universe:
       data?.universe ||
@@ -679,8 +706,9 @@ export async function getMarketBreadth({
     success: true,
 
     source:
-      data?.source ||
-      "Yahoo Finance",
+      normalizePublicSource(
+        data?.source,
+      ),
 
     universe:
       data?.universe ||
@@ -821,8 +849,9 @@ export async function getMarketAlerts({
     success: true,
 
     source:
-      data?.source ||
-      "Yahoo Finance",
+      normalizePublicSource(
+        data?.source,
+      ),
 
     universe:
       data?.universe ||
@@ -870,7 +899,6 @@ export async function getMarketAlerts({
   };
 }
 
-
 function normalizeMarketNewsArticle(article) {
   return {
     id:
@@ -879,35 +907,31 @@ function normalizeMarketNewsArticle(article) {
       article?.title ||
       `news-${Date.now()}`,
 
-    title:
-      String(
-        article?.title ||
-          "Market update",
-      ).trim(),
+    title: String(
+      article?.title ||
+        "Market update",
+    ).trim(),
 
-    summary:
-      String(
-        article?.summary || "",
-      ).trim(),
+    summary: String(
+      article?.summary || "",
+    ).trim(),
 
     source:
-      String(
-        article?.source ||
-          "Yahoo Finance",
-      ).trim(),
+      normalizePublicSource(
+        article?.source,
+      ),
 
-    url:
-      String(
-        article?.url || "",
-      ).trim(),
+    url: String(
+      article?.url || "",
+    ).trim(),
 
-    imageUrl:
-      String(
-        article?.imageUrl || "",
-      ).trim(),
+    imageUrl: String(
+      article?.imageUrl || "",
+    ).trim(),
 
     publishedAt:
-      article?.publishedAt || null,
+      article?.publishedAt ||
+      null,
 
     relatedTickers:
       Array.isArray(
@@ -916,11 +940,10 @@ function normalizeMarketNewsArticle(article) {
         ? article.relatedTickers
         : [],
 
-    type:
-      String(
-        article?.type ||
-          "STORY",
-      ).trim(),
+    type: String(
+      article?.type ||
+        "STORY",
+    ).trim(),
   };
 }
 
@@ -932,18 +955,21 @@ export async function getMarketNews({
     refresh ? "?refresh=1" : "";
 
   const response =
-   await fetchWithTimeout(
-    buildApiUrl(
-      `/api/market-news${refreshQuery}`,
-    ),
-    {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
+    await fetchWithTimeout(
+      buildApiUrl(
+        `/api/market-news${refreshQuery}`,
+      ),
+      {
+        method: "GET",
+
+        headers: {
+          Accept: "application/json",
+        },
+
+        signal,
       },
-      signal,
-    },
-  );
+      MARKET_NEWS_TIMEOUT_MS,
+    );
 
   const data =
     await readJsonResponse(response);
@@ -958,12 +984,20 @@ export async function getMarketNews({
     );
   }
 
+  const articles =
+    Array.isArray(data?.articles)
+      ? data.articles.map(
+          normalizeMarketNewsArticle,
+        )
+      : [];
+
   return {
     success: true,
 
     source:
-      data?.source ||
-      "Yahoo Finance",
+      normalizePublicSource(
+        data?.source,
+      ),
 
     region:
       data?.region ||
@@ -985,20 +1019,13 @@ export async function getMarketNews({
         ? Number(
             data.articleCount,
           )
-        : 0,
+        : articles.length,
 
     warning:
       String(
         data?.warning || "",
       ).trim(),
 
-    articles:
-      Array.isArray(
-        data?.articles,
-      )
-        ? data.articles.map(
-            normalizeMarketNewsArticle,
-          )
-        : [],
+    articles,
   };
 }

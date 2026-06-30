@@ -1145,6 +1145,22 @@ function isAbortError(error) {
   return error?.name === "AbortError";
 }
 
+function isTimeoutError(error) {
+  const name = String(
+    error?.name || "",
+  ).toLowerCase();
+
+  const message = String(
+    error?.message || "",
+  ).toLowerCase();
+
+  return (
+    name === "timeouterror" ||
+    message.includes("timed out") ||
+    message.includes("timeout")
+  );
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
 
@@ -1815,55 +1831,79 @@ useEffect(() => {
       [],
     );
 
-const loadMarketNewsData =
-  useCallback(
-    async ({
-      refresh = false,
-      signal,
-    } = {}) => {
-      setNewsLoading(true);
-      setNewsError("");
+  const loadMarketNewsData =
+    useCallback(
+      async ({
+        refresh = false,
+        signal,
+      } = {}) => {
+        setNewsLoading(true);
+        setNewsError("");
 
-      try {
-        const data =
-          await getMarketNews({
-            refresh,
-            signal,
-          });
+        try {
+          const data =
+            await getMarketNews({
+              refresh,
+              signal,
+            });
 
-        setLiveMarketNews(
-          Array.isArray(data?.articles)
-            ? data.articles
-            : [],
-        );
-      } catch (caughtError) {
-        if (
-          caughtError?.name ===
-          "AbortError"
-        ) {
-          return;
+          const articles =
+            Array.isArray(data?.articles)
+              ? data.articles
+              : [];
+
+          setLiveMarketNews(articles);
+
+          const apiWarning = String(
+            data?.warning || "",
+          ).trim();
+
+          if (apiWarning) {
+            setNewsError(apiWarning);
+          } else if (
+            articles.length === 0
+          ) {
+            setNewsError(
+              "Recent market news is temporarily unavailable.",
+            );
+          }
+        } catch (caughtError) {
+          if (isAbortError(caughtError)) {
+            return;
+          }
+
+          const timedOut =
+            isTimeoutError(caughtError);
+
+          /*
+           * News is an optional dashboard section.
+           * A slow news provider must never block
+           * the EXA Market Summary or other data.
+           */
+          setNewsError(
+            timedOut
+              ? "News is taking longer than expected. Market indicators remain available."
+              : "News is temporarily unavailable. Market indicators remain available.",
+          );
+
+          /*
+           * Preserve previously loaded articles
+           * when a manual or automatic refresh fails.
+           */
+          setLiveMarketNews(
+            (currentArticles) =>
+              Array.isArray(currentArticles)
+                ? currentArticles
+                : [],
+          );
+        } finally {
+          if (!signal?.aborted) {
+            setNewsLoading(false);
+          }
         }
-
-        console.error(
-          "Market news error:",
-          caughtError,
-        );
-
-        setNewsError(
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Unable to load live market news.",
-        );
-
-        setLiveMarketNews([]);
-      } finally {
-        if (!signal?.aborted) {
-          setNewsLoading(false);
-        }
-      }
-    },
-    [],
-  );
+      },
+      [],
+    );
 
 
   useEffect(() => {
@@ -1880,16 +1920,17 @@ const loadMarketNewsData =
   }, [loadMarketData]);
 
   useEffect(() => {
-  const controller =
-    new AbortController();
+    const controller =
+      new AbortController();
 
-  loadMarketNewsData({
-    signal: controller.signal,
-  });
+    loadMarketNewsData({
+      signal: controller.signal,
+    });
 
-  return () =>
-    controller.abort();
-}, [loadMarketNewsData]);
+    return () => {
+      controller.abort();
+    };
+  }, [loadMarketNewsData]);
 
   useEffect(() => {
     const controller =
@@ -2295,7 +2336,7 @@ const loadMarketNewsData =
     });
 
     loadMarketNewsData({
-  refresh: true,
+      refresh: true,
     });
   }
 
