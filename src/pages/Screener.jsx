@@ -28,7 +28,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import AppShell from "../components/layout/AppShell";
 import SnapshotFreshnessBanner from "../components/data/SnapshotFreshnessBanner";
-
+import CompanyLogo from "../components/common/CompanyLogo";
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
 import "../styles/snapshot-freshness.css";
@@ -552,6 +552,7 @@ function normalizeCompareStock(stock) {
     name: String(stock?.name || symbol).trim(),
     sector: String(stock?.sector || "Sector unavailable").trim(),
     logoDomain: String(stock?.logoDomain || "").trim(),
+    website: String(stock?.website || "").trim(),
   };
 }
 
@@ -656,6 +657,15 @@ const SCREENER_STYLES = `
     color: #94a3b8;
     font-size: 13px;
     line-height: 1.7;
+  }
+
+  .exa-screener-header-controls {
+    display: flex;
+    min-width: 190px;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 12px;
   }
 
   .exa-screener-refresh {
@@ -1214,6 +1224,12 @@ const SCREENER_STYLES = `
     flex-shrink: 0;
   }
 
+  .exa-compare-chip-logo {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px;
+  }
+
   .exa-compare-chip-copy {
     min-width: 0;
   }
@@ -1457,6 +1473,7 @@ const SCREENER_STYLES = `
     color: #f8fafc;
     font-size: 11px;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .exa-screener-company-copy span {
@@ -1664,6 +1681,12 @@ const SCREENER_STYLES = `
       flex-direction: column;
     }
 
+    .exa-screener-header-controls {
+      width: 100%;
+      min-width: 0;
+      align-items: flex-start;
+    }
+
     .exa-screener-refresh {
       width: 100%;
     }
@@ -1725,6 +1748,67 @@ const SCREENER_STYLES = `
       grid-template-columns: 1fr;
     }
   }
+
+  .exa-screener-company-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.exa-company-logo {
+  overflow: hidden;
+  flex: 0 0 auto;
+
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 50%;
+
+  background: #13243d;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exa-company-logo img {
+  width: 74%;
+  height: 74%;
+  object-fit: contain;
+}
+
+.exa-company-logo span {
+  color: #93c5fd;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.exa-screener-company-copy {
+  min-width: 0;
+}
+
+.exa-screener-company-copy strong {
+  display: block;
+  overflow: hidden;
+
+  color: #f8fafc;
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exa-screener-company-copy span {
+  display: block;
+  margin-top: 5px;
+
+  overflow: hidden;
+
+  color: #607795;
+  font-size: 9px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 `;
 
 function numericValue(value) {
@@ -1793,32 +1877,6 @@ function formatPercent(value) {
   }
 
   return `${number.toFixed(2)}%`;
-}
-
-function CompanyLogo({ domain, name }) {
-  const [failed, setFailed] = useState(false);
-
-  const logoKey = import.meta.env.VITE_LOGO_KEY;
-
-  const showImage = Boolean(domain && logoKey && !failed);
-
-  return (
-    <span className="exa-screener-company-logo">
-      {showImage ? (
-        <img
-          src={`https://img.logo.dev/${domain}?token=${logoKey}&size=128&format=webp`}
-          alt=""
-          loading="lazy"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        String(name || "?")
-          .trim()
-          .charAt(0)
-          .toUpperCase()
-      )}
-    </span>
-  );
 }
 
 function SummaryCard({ label, value, note }) {
@@ -2565,7 +2623,10 @@ export default function Screener() {
 
             <div className="exa-screener-header-controls">
               <SnapshotFreshnessBanner
-                generatedAt={apiData?.generatedAt}
+                generatedAt={
+                  apiData?.generatedAt ||
+                  apiData?.fetchedAt
+                }
                 loading={loading}
                 error={error}
               />
@@ -3151,8 +3212,12 @@ export default function Screener() {
                               <td>
                                 <div className="exa-screener-company">
                                   <CompanyLogo
-                                    domain={stock.logoDomain}
+                                    symbol={stock.symbol}
                                     name={stock.name}
+                                    logoDomain={stock.logoDomain}
+                                    website={stock.website}
+                                    size={40}
+                                    className="exa-screener-company-logo"
                                   />
 
                                   <div className="exa-screener-company-copy">
@@ -3349,8 +3414,12 @@ export default function Screener() {
                     className="exa-compare-chip"
                   >
                     <CompanyLogo
-                      domain={stock.logoDomain}
+                      symbol={stock.symbol}
                       name={stock.name}
+                      logoDomain={stock.logoDomain}
+                      website={stock.website}
+                      size={30}
+                      className="exa-compare-chip-logo"
                     />
 
                     <div className="exa-compare-chip-copy">
