@@ -10,6 +10,8 @@ export const WATCHLIST_UPDATED_EVENT =
 export const RECENT_ANALYSES_UPDATED_EVENT =
   "exa:recent-analyses-updated";
 
+export const MAX_WATCHLIST_ITEMS = 20;
+
 const DEFAULT_WATCHLIST_SYMBOLS = [
   "RELIANCE.NS",
   "INFY.NS",
@@ -18,8 +20,9 @@ const DEFAULT_WATCHLIST_SYMBOLS = [
   "ASIANPAINT.NS",
 ];
 
-const MAX_WATCHLIST_ITEMS = 20;
 const MAX_RECENT_ANALYSES = 10;
+const WATCHLIST_SYMBOL_PATTERN =
+  /^[A-Z0-9.^&=_-]{1,30}$/;
 
 function hasBrowserStorage() {
   return (
@@ -29,10 +32,42 @@ function hasBrowserStorage() {
   );
 }
 
+export function normalizeWatchlistSymbol(value) {
+  const candidate =
+    value && typeof value === "object"
+      ? value.symbol
+      : value;
+
+  const normalizedSymbol = String(
+    candidate || "",
+  )
+    .trim()
+    .toUpperCase();
+
+  return WATCHLIST_SYMBOL_PATTERN.test(
+    normalizedSymbol,
+  )
+    ? normalizedSymbol
+    : "";
+}
+
 function normalizeSymbol(value) {
   return String(value || "")
     .trim()
     .toUpperCase();
+}
+
+function cleanWatchlistSymbols(symbols) {
+  return [
+    ...new Set(
+      (Array.isArray(symbols)
+        ? symbols
+        : []
+      )
+        .map(normalizeWatchlistSymbol)
+        .filter(Boolean),
+    ),
+  ].slice(0, MAX_WATCHLIST_ITEMS);
 }
 
 function createCustomEvent(eventName) {
@@ -79,7 +114,7 @@ function writeStorageValue(
   eventName,
 ) {
   if (!hasBrowserStorage()) {
-    return;
+    return false;
   }
 
   try {
@@ -89,73 +124,58 @@ function writeStorageValue(
     );
 
     createCustomEvent(eventName);
+    return true;
   } catch (error) {
     console.error(
       `Unable to save ${key}:`,
       error,
     );
+
+    return false;
   }
 }
 
 export function getSavedWatchlistSymbols() {
-  const storedValue =
-    readStorageValue(
-      WATCHLIST_STORAGE_KEY,
-    );
+  const storedValue = readStorageValue(
+    WATCHLIST_STORAGE_KEY,
+  );
 
   /*
-   * The default watchlist is returned only when
-   * the user has never saved a watchlist before.
-   *
-   * An intentionally empty saved array remains
-   * empty after refreshing the page.
+   * Return defaults only when no watchlist has
+   * ever been saved. An intentionally empty
+   * array remains empty after a page reload.
    */
   if (storedValue === null) {
-    return DEFAULT_WATCHLIST_SYMBOLS;
+    return [...DEFAULT_WATCHLIST_SYMBOLS];
   }
 
   if (!Array.isArray(storedValue)) {
-    return DEFAULT_WATCHLIST_SYMBOLS;
+    return [...DEFAULT_WATCHLIST_SYMBOLS];
   }
 
-  return [
-    ...new Set(
-      storedValue
-        .map((item) => {
-          if (
-            typeof item === "string"
-          ) {
-            return item;
-          }
+  const cleanedSymbols =
+    cleanWatchlistSymbols(storedValue);
 
-          if (
-            item &&
-            typeof item === "object"
-          ) {
-            return item.symbol;
-          }
+  /* Repair malformed or duplicate storage data. */
+  if (
+    JSON.stringify(cleanedSymbols) !==
+    JSON.stringify(storedValue)
+  ) {
+    writeStorageValue(
+      WATCHLIST_STORAGE_KEY,
+      cleanedSymbols,
+      WATCHLIST_UPDATED_EVENT,
+    );
+  }
 
-          return "";
-        })
-        .map(normalizeSymbol)
-        .filter(Boolean),
-    ),
-  ].slice(0, MAX_WATCHLIST_ITEMS);
+  return cleanedSymbols;
 }
 
 export function saveWatchlistSymbols(
   symbols,
 ) {
-  const cleanedSymbols = [
-    ...new Set(
-      (Array.isArray(symbols)
-        ? symbols
-        : []
-      )
-        .map(normalizeSymbol)
-        .filter(Boolean),
-    ),
-  ].slice(0, MAX_WATCHLIST_ITEMS);
+  const cleanedSymbols =
+    cleanWatchlistSymbols(symbols);
 
   writeStorageValue(
     WATCHLIST_STORAGE_KEY,
@@ -166,23 +186,20 @@ export function saveWatchlistSymbols(
   return cleanedSymbols;
 }
 
-export function addWatchlistSymbol(
-  symbol,
-) {
+export function addWatchlistSymbol(symbol) {
   const normalizedSymbol =
-    normalizeSymbol(symbol);
-
-  if (!normalizedSymbol) {
-    return getSavedWatchlistSymbols();
-  }
+    normalizeWatchlistSymbol(symbol);
 
   const currentSymbols =
     getSavedWatchlistSymbols();
 
   if (
+    !normalizedSymbol ||
     currentSymbols.includes(
       normalizedSymbol,
-    )
+    ) ||
+    currentSymbols.length >=
+      MAX_WATCHLIST_ITEMS
   ) {
     return currentSymbols;
   }
@@ -197,17 +214,17 @@ export function removeWatchlistSymbol(
   symbol,
 ) {
   const normalizedSymbol =
-    normalizeSymbol(symbol);
+    normalizeWatchlistSymbol(symbol);
 
-  const updatedSymbols =
-    getSavedWatchlistSymbols().filter(
-      (savedSymbol) =>
-        savedSymbol !==
-        normalizedSymbol,
-    );
+  if (!normalizedSymbol) {
+    return getSavedWatchlistSymbols();
+  }
 
   return saveWatchlistSymbols(
-    updatedSymbols,
+    getSavedWatchlistSymbols().filter(
+      (savedSymbol) =>
+        savedSymbol !== normalizedSymbol,
+    ),
   );
 }
 

@@ -74,6 +74,17 @@ import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
 
 
+const EMPTY_WATCHLIST_META = Object.freeze({
+  source: "Market data",
+  fetchedAt: null,
+  latestQuoteAt: null,
+  cached: false,
+  stale: false,
+  partial: false,
+  warning: "",
+  unavailableSymbols: [],
+});
+
 const DASHBOARD_POPULAR_STOCKS = [
   {
     symbol: "RELIANCE.NS",
@@ -1227,6 +1238,18 @@ export default function Dashboard() {
   ] = useState([]);
 
   const [
+    watchlistMeta,
+    setWatchlistMeta,
+  ] = useState(() => ({
+    ...EMPTY_WATCHLIST_META,
+  }));
+
+  const [
+    watchlistRefreshing,
+    setWatchlistRefreshing,
+  ] = useState(false);
+
+  const [
     liveMarketMovers,
     setLiveMarketMovers,
   ] = useState(null);
@@ -1647,12 +1670,22 @@ useEffect(() => {
     } = {}) => {
       if (watchlistSymbols.length === 0) {
         setLiveWatchlistQuotes([]);
+        setWatchlistMeta({
+          ...EMPTY_WATCHLIST_META,
+          fetchedAt: new Date().toISOString(),
+        });
         setWatchlistLoading(false);
+        setWatchlistRefreshing(false);
         setWatchlistError("");
         return;
       }
 
-      setWatchlistLoading(true);
+      if (refresh) {
+        setWatchlistRefreshing(true);
+      } else {
+        setWatchlistLoading(true);
+      }
+
       setWatchlistError("");
 
       try {
@@ -1663,11 +1696,78 @@ useEffect(() => {
             signal,
           });
 
-        setLiveWatchlistQuotes(
+        const nextQuotes =
           Array.isArray(data?.quotes)
             ? data.quotes
-            : [],
-        );
+            : [];
+
+        /*
+         * Merge successful quotes into the previous map.
+         * A partial API response must not erase values for
+         * the symbols that could not refresh this time.
+         */
+        setLiveWatchlistQuotes((current) => {
+          const quoteMap = new Map(
+            (Array.isArray(current) ? current : []).map(
+              (quote) => [
+                String(quote?.symbol || "")
+                  .trim()
+                  .toUpperCase(),
+                quote,
+              ],
+            ),
+          );
+
+          nextQuotes.forEach((quote) => {
+            const symbol = String(
+              quote?.symbol || "",
+            )
+              .trim()
+              .toUpperCase();
+
+            if (symbol) {
+              quoteMap.set(symbol, quote);
+            }
+          });
+
+          return watchlistSymbols
+            .map((symbol) =>
+              quoteMap.get(
+                String(symbol || "")
+                  .trim()
+                  .toUpperCase(),
+              ),
+            )
+            .filter(Boolean);
+        });
+
+        const nextMeta = {
+          source: data?.source || "Market data",
+          fetchedAt: data?.fetchedAt ||
+            new Date().toISOString(),
+          latestQuoteAt:
+            data?.latestQuoteAt || null,
+          cached: Boolean(data?.cached),
+          stale: Boolean(data?.stale),
+          partial: Boolean(data?.partial),
+          warning:
+            typeof data?.warning === "string"
+              ? data.warning
+              : "",
+          unavailableSymbols:
+            Array.isArray(data?.unavailableSymbols)
+              ? data.unavailableSymbols
+              : [],
+        };
+
+        setWatchlistMeta(nextMeta);
+
+        if (nextMeta.partial || nextMeta.stale) {
+          setWatchlistError(
+            nextMeta.warning ||
+              "Some watchlist prices could not be refreshed.",
+          );
+        }
       } catch (error) {
         if (isAbortError(error)) {
           return;
@@ -1678,16 +1778,24 @@ useEffect(() => {
           error,
         );
 
-        setWatchlistError(
+        const message =
           error instanceof Error
             ? error.message
-            : "Unable to load live watchlist prices.",
-        );
+            : "Unable to load watchlist prices.";
 
-        setLiveWatchlistQuotes([]);
+        setWatchlistError(message);
+        setWatchlistMeta((current) => ({
+          ...current,
+          source:
+            current?.source || "Market data",
+          partial: true,
+          stale: true,
+          warning: message,
+        }));
       } finally {
         if (!signal?.aborted) {
           setWatchlistLoading(false);
+          setWatchlistRefreshing(false);
         }
       }
     },
@@ -2007,6 +2115,19 @@ useEffect(() => {
       ),
     );
 
+    const unavailableSymbolSet = new Set(
+      (Array.isArray(
+        watchlistMeta?.unavailableSymbols,
+      )
+        ? watchlistMeta.unavailableSymbols
+        : []
+      ).map((symbol) =>
+        String(symbol || "")
+          .trim()
+          .toUpperCase(),
+      ),
+    );
+
     const recentAnalysisMap = new Map(
       recentAnalyses.map(
         (analysis) => [
@@ -2057,9 +2178,32 @@ useEffect(() => {
             liveQuote?.changePercent ??
             null,
 
+          previousClose:
+            liveQuote?.previousClose ?? null,
+
+          currency:
+            liveQuote?.currency || "INR",
+
+          exchange:
+            liveQuote?.exchange || "NSE",
+
           marketState:
             liveQuote?.marketState ||
             "UNKNOWN",
+
+          lastUpdated:
+            liveQuote?.lastUpdated ||
+            watchlistMeta?.latestQuoteAt ||
+            null,
+
+          quoteStatus:
+            !liveQuote ||
+            liveQuote?.price === null ||
+            liveQuote?.price === undefined
+              ? "unavailable"
+              : unavailableSymbolSet.has(symbol)
+                ? "previous"
+                : "current",
 
           exaScore:
             savedAnalysis?.score ??
@@ -2079,6 +2223,7 @@ useEffect(() => {
     watchlistSymbols,
     liveWatchlistQuotes,
     recentAnalyses,
+    watchlistMeta,
   ]);
 
   const liveIndicesAvailable =
@@ -2308,6 +2453,16 @@ useEffect(() => {
 
   function handleOpenWatchlist() {
     navigate("/analyze");
+  }
+
+  function handleRefreshWatchlist() {
+    if (watchlistLoading || watchlistRefreshing) {
+      return;
+    }
+
+    loadWatchlistData({
+      refresh: true,
+    });
   }
 
   function handleRefreshMarketData() {
@@ -2693,8 +2848,14 @@ useEffect(() => {
             watchlistLoading={
               watchlistLoading
             }
+            watchlistRefreshing={
+              watchlistRefreshing
+            }
             watchlistError={
               watchlistError
+            }
+            watchlistMeta={
+              watchlistMeta
             }
             alertsLoading={
               alertsLoading
@@ -2709,7 +2870,10 @@ useEffect(() => {
             onViewWatchlist={
               handleOpenWatchlist
             }
-            
+            onRefreshWatchlist={
+              handleRefreshWatchlist
+            }
+
             newsArticles={
             liveMarketNews
             }

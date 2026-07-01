@@ -237,6 +237,10 @@ function normalizeWatchlistQuote(quote) {
     marketState:
       quote?.marketState ||
       "UNKNOWN",
+
+    lastUpdated:
+      quote?.lastUpdated ||
+      null,
   };
 }
 
@@ -539,6 +543,21 @@ export async function getWatchlistQuotes({
 
     cached:
       Boolean(data?.cached),
+
+    stale:
+      Boolean(data?.stale),
+
+    partial:
+      Boolean(data?.partial),
+
+    warning:
+      typeof data?.warning === "string"
+        ? data.warning
+        : "",
+
+    latestQuoteAt:
+      data?.latestQuoteAt ||
+      null,
 
     requestedSymbols:
       Array.isArray(

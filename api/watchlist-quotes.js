@@ -1,6 +1,7 @@
 import yahooFinance from "./_lib/yahooFinance.js";
 
 const CACHE_DURATION_MS = 30 * 1000;
+const STALE_CACHE_MAX_AGE_MS = 15 * 60 * 1000;
 const MAX_SYMBOLS = 20;
 
 const responseCache = new Map();
@@ -37,7 +38,7 @@ function parseSymbols(value) {
         )
         .filter(Boolean)
         .filter((symbol) =>
-          /^[A-Z0-9.^&=_-]+$/.test(symbol),
+          /^[A-Z0-9.^&=_-]{1,30}$/.test(symbol),
         ),
     ),
   ].slice(0, MAX_SYMBOLS);
@@ -58,7 +59,9 @@ function normalizeTimestamp(value) {
 function normalizeQuote(quote) {
   const symbol = String(
     quote?.symbol || "",
-  ).toUpperCase();
+  )
+    .trim()
+    .toUpperCase();
 
   return {
     symbol,
@@ -97,14 +100,12 @@ function normalizeQuote(quote) {
       quote?.fullExchangeName ||
       quote?.exchange ||
       "NSE",
-    marketState:
-      String(
-        quote?.marketState || "UNKNOWN",
-      ).toUpperCase(),
-    lastUpdated:
-      normalizeTimestamp(
-        quote?.regularMarketTime,
-      ),
+    marketState: String(
+      quote?.marketState || "UNKNOWN",
+    ).toUpperCase(),
+    lastUpdated: normalizeTimestamp(
+      quote?.regularMarketTime,
+    ),
   };
 }
 
@@ -117,7 +118,7 @@ function cleanExpiredCache() {
   ] of responseCache.entries()) {
     if (
       now - cacheEntry.savedAt >
-      CACHE_DURATION_MS * 5
+      STALE_CACHE_MAX_AGE_MS
     ) {
       responseCache.delete(cacheKey);
     }
@@ -163,9 +164,69 @@ async function loadQuotes(symbols) {
     return {
       quotes,
       warning:
-        "Some quotes could not be refreshed in the combined request.",
+        "Some quotes required an individual retry.",
     };
   }
+}
+
+function buildResponseData({
+  symbols,
+  rawQuotes,
+  warning = "",
+}) {
+  const quoteMap = new Map();
+
+  rawQuotes
+    .filter((quote) => quote?.symbol)
+    .map(normalizeQuote)
+    .filter(
+      (quote) =>
+        quote.symbol &&
+        quote.price !== null,
+    )
+    .forEach((quote) => {
+      quoteMap.set(quote.symbol, quote);
+    });
+
+  const quotes = symbols
+    .map((symbol) => quoteMap.get(symbol))
+    .filter(Boolean);
+
+  const receivedSymbols = new Set(
+    quotes.map((quote) => quote.symbol),
+  );
+
+  const unavailableSymbols = symbols.filter(
+    (symbol) =>
+      !receivedSymbols.has(symbol),
+  );
+
+  const partial =
+    unavailableSymbols.length > 0;
+
+  const latestQuoteAt = quotes
+    .map((quote) => quote.lastUpdated)
+    .filter(Boolean)
+    .sort()
+    .at(-1) || null;
+
+  return {
+    success: true,
+    source: "Market data",
+    fetchedAt: new Date().toISOString(),
+    latestQuoteAt,
+    requestedSymbols: symbols,
+    quotes,
+    unavailableSymbols,
+    partial,
+    warning: partial
+      ? `${unavailableSymbols.length} requested quote${
+          unavailableSymbols.length === 1
+            ? ""
+            : "s"
+        } could not be refreshed.`
+      : warning,
+  };
 }
 
 export default async function handler(
@@ -218,45 +279,18 @@ export default async function handler(
     return response.status(200).json({
       ...cachedEntry.data,
       cached: true,
+      stale: false,
     });
   }
 
   try {
     const result = await loadQuotes(symbols);
 
-    const quotes = result.quotes
-      .filter((quote) => quote?.symbol)
-      .map(normalizeQuote);
-
-    const receivedSymbols = new Set(
-      quotes.map((quote) => quote.symbol),
-    );
-
-    const unavailableSymbols =
-      symbols.filter(
-        (symbol) =>
-          !receivedSymbols.has(symbol),
-      );
-
-    const fetchedAt =
-      new Date().toISOString();
-
-    const responseData = {
-      success: true,
-      source: "Market data",
-      fetchedAt,
-      requestedSymbols: symbols,
-      quotes,
-      unavailableSymbols,
-      partial:
-        unavailableSymbols.length > 0,
-      warning:
-        unavailableSymbols.length > 0
-          ? `${unavailableSymbols.length} requested quote${
-              unavailableSymbols.length === 1 ? "" : "s"
-            } were unavailable.`
-          : result.warning,
-    };
+    const responseData = buildResponseData({
+      symbols,
+      rawQuotes: result.quotes,
+      warning: result.warning,
+    });
 
     cleanExpiredCache();
 
@@ -273,12 +307,42 @@ export default async function handler(
     return response.status(200).json({
       ...responseData,
       cached: false,
+      stale: false,
     });
   } catch (error) {
     console.error(
       "Watchlist quote API error:",
       error,
     );
+
+    const staleCacheAge = cachedEntry
+      ? Date.now() - cachedEntry.savedAt
+      : Number.POSITIVE_INFINITY;
+
+    if (
+      cachedEntry &&
+      staleCacheAge <=
+        STALE_CACHE_MAX_AGE_MS
+    ) {
+      response.setHeader(
+        "Cache-Control",
+        "no-store",
+      );
+
+      return response.status(200).json({
+        ...cachedEntry.data,
+        fetchedAt:
+          cachedEntry.data.fetchedAt ||
+          new Date(
+            cachedEntry.savedAt,
+          ).toISOString(),
+        cached: true,
+        stale: true,
+        partial: true,
+        warning:
+          "The latest refresh failed. Previously cached watchlist values are being shown.",
+      });
+    }
 
     return response.status(500).json({
       success: false,
@@ -287,8 +351,7 @@ export default async function handler(
           ? error.message
           : "Unable to retrieve market prices.",
       source: "Market data",
-      fetchedAt:
-        new Date().toISOString(),
+      fetchedAt: new Date().toISOString(),
     });
   }
 }

@@ -48,7 +48,9 @@ export default function DashboardRightRail({
   recentAnalyses = [],
   newsArticles = [],
   watchlistLoading = false,
+  watchlistRefreshing = false,
   watchlistError = "",
+  watchlistMeta = null,
   alertsLoading = false,
   alertsError = "",
   newsLoading = false,
@@ -57,6 +59,7 @@ export default function DashboardRightRail({
   onRemoveStock,
   onClearAnalyses,
   onViewWatchlist,
+  onRefreshWatchlist,
   onViewNews,
   onOpenNewsArticle,
 }) {
@@ -81,10 +84,13 @@ export default function DashboardRightRail({
       <CompactWatchlist
         stocks={watchlist}
         loading={watchlistLoading}
+        refreshing={watchlistRefreshing}
         error={watchlistError}
+        meta={watchlistMeta}
         onAnalyze={onAnalyze}
         onRemove={onRemoveStock}
         onViewAll={onViewWatchlist}
+        onRefresh={onRefreshWatchlist}
       />
 
       <div className="exa-right-rail-section exa-right-rail-news">

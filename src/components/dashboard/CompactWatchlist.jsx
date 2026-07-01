@@ -1,18 +1,15 @@
 import {
   ArrowUpRight,
   Plus,
+  RefreshCw,
   X,
 } from "lucide-react";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import CompanyLogo from "../common/CompanyLogo";
+import DataStatusBadge from "../data/DataStatusBadge";
+import DataTimestamp from "../data/DataTimestamp";
 
-const LOGO_DEV_KEY =
-  import.meta.env.VITE_LOGO_DEV_KEY || "";
-
-function formatPrice(value) {
+function formatPrice(value, currency = "INR") {
   if (
     value === null ||
     value === undefined ||
@@ -27,14 +24,15 @@ function formatPrice(value) {
     return "N/A";
   }
 
-  return new Intl.NumberFormat(
-    "en-IN",
-    {
+  try {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "INR",
+      currency: currency || "INR",
       maximumFractionDigits: 2,
-    },
-  ).format(number);
+    }).format(number);
+  } catch {
+    return number.toFixed(2);
+  }
 }
 
 function formatPercent(value) {
@@ -52,152 +50,133 @@ function formatPercent(value) {
     return "N/A";
   }
 
-  return `${
-    number >= 0 ? "+" : ""
-  }${number.toFixed(2)}%`;
+  return `${number >= 0 ? "+" : ""}${number.toFixed(2)}%`;
 }
 
-function getLogoDomain(stock) {
-  const savedDomain = String(
-    stock?.logoDomain || "",
-  ).trim();
-
-  if (savedDomain) {
-    return savedDomain;
+function getQuoteLabel(stock) {
+  if (
+    stock?.quoteStatus === "unavailable" ||
+    stock?.price === null ||
+    stock?.price === undefined
+  ) {
+    return "Quote unavailable";
   }
 
-  const symbol = String(
-    stock?.symbol || "",
-  )
-    .trim()
-    .toUpperCase();
-
-  const knownDomains = {
-    "RELIANCE.NS": "ril.com",
-    "INFY.NS": "infosys.com",
-    "HDFCBANK.NS": "hdfcbank.com",
-    "ASIANPAINT.NS": "asianpaints.com",
-    "TCS.NS": "tcs.com",
-    "ICICIBANK.NS": "icicibank.com",
-    "SBIN.NS": "sbi.co.in",
-    "WIPRO.NS": "wipro.com",
-    "TECHM.NS": "techmahindra.com",
-    "BHARTIARTL.NS": "airtel.in",
-    "ITC.NS": "itcportal.com",
-    "MARUTI.NS": "marutisuzuki.com",
-    "SUNPHARMA.NS": "sunpharma.com",
-    "BAJFINANCE.NS": "bajajfinserv.in",
-    "BAJAJFINSV.NS": "bajajfinserv.in",
-    "AXISBANK.NS": "axisbank.com",
-    "KOTAKBANK.NS": "kotak.com",
-    "HINDUNILVR.NS": "hul.co.in",
-    "TITAN.NS": "titancompany.in",
-    "POWERGRID.NS": "powergrid.in",
-    "NTPC.NS": "ntpc.co.in",
-    "ONGC.NS": "ongcindia.com",
-    "TATASTEEL.NS": "tatasteel.com",
-    "HINDALCO.NS": "hindalco.com",
-    "JSWSTEEL.NS": "jsw.in",
-    "ULTRACEMCO.NS": "ultratechcement.com",
-    "ADANIPORTS.NS": "adani.com",
-  };
-
-  return knownDomains[symbol] || "";
-}
-
-function getLogoUrl(stock) {
-  const domain =
-    getLogoDomain(stock);
+  if (stock?.quoteStatus === "previous") {
+    return "Previous value";
+  }
 
   if (
-    !domain ||
-    !LOGO_DEV_KEY
+    String(stock?.marketState || "").toUpperCase() ===
+    "REGULAR"
   ) {
-    return "";
+    return "Market open";
   }
 
-  return (
-    `https://img.logo.dev/${encodeURIComponent(
-      domain,
-    )}` +
-    `?token=${encodeURIComponent(
-      LOGO_DEV_KEY,
-    )}` +
-    "&size=64&format=png"
-  );
+  return "Latest close";
 }
 
-function CompactStockLogo({
-  stock,
+function getStatusPresentation({
+  loading,
+  refreshing,
+  error,
+  stocks,
+  meta,
 }) {
-  const [
-    imageFailed,
-    setImageFailed,
-  ] = useState(false);
+  if ((loading || refreshing) && stocks.length === 0) {
+    return {
+      status: "loading",
+      label: "Loading",
+    };
+  }
 
-  const logoUrl =
-    getLogoUrl(stock);
+  if (error && stocks.length === 0) {
+    return {
+      status: "unavailable",
+      label: "Unavailable",
+    };
+  }
 
-  useEffect(() => {
-    setImageFailed(false);
-  }, [logoUrl]);
+  if (
+    error ||
+    meta?.partial ||
+    meta?.stale ||
+    (meta?.unavailableSymbols?.length || 0) > 0
+  ) {
+    return {
+      status: "delayed",
+      label: "Partial update",
+    };
+  }
 
-  const firstLetter =
-    stock?.name
-      ?.charAt(0)
-      ?.toUpperCase() ||
-    stock?.symbol
-      ?.charAt(0)
-      ?.toUpperCase() ||
-    "S";
+  if (meta?.cached) {
+    return {
+      status: "cached",
+      label: "Cached",
+    };
+  }
 
-  return (
-    <span className="exa-compact-stock-logo">
-      {logoUrl && !imageFailed ? (
-        <img
-          src={logoUrl}
-          alt={`${stock?.name || "Company"} logo`}
-          loading="lazy"
-          onError={() => {
-            setImageFailed(true);
-          }}
-        />
-      ) : (
-        <span>
-          {firstLetter}
-        </span>
-      )}
-    </span>
+  const availableStocks = stocks.filter(
+    (stock) => stock?.price !== null && stock?.price !== undefined,
   );
+
+  if (
+    availableStocks.length > 0 &&
+    availableStocks.every(
+      (stock) =>
+        String(stock?.marketState || "").toUpperCase() !==
+        "REGULAR",
+    )
+  ) {
+    return {
+      status: "delayed",
+      label: "Market closed",
+    };
+  }
+
+  return {
+    status: "live",
+    label: "Live",
+  };
 }
 
 export default function CompactWatchlist({
   stocks = [],
   loading = false,
+  refreshing = false,
   error = "",
+  meta = null,
   onAnalyze,
   onRemove,
   onViewAll,
+  onRefresh,
 }) {
-  const visibleStocks =
-    Array.isArray(stocks)
-      ? stocks.slice(0, 6)
-      : [];
+  const safeStocks = Array.isArray(stocks)
+    ? stocks
+    : [];
+
+  const visibleStocks = safeStocks.slice(0, 6);
+
+  const statusPresentation =
+    getStatusPresentation({
+      loading,
+      refreshing,
+      error,
+      stocks: safeStocks,
+      meta,
+    });
+
+  const statusTimestamp =
+    meta?.latestQuoteAt || meta?.fetchedAt;
 
   function handleAnalyze(symbol) {
-    if (
-      onAnalyze &&
-      symbol
-    ) {
+    if (onAnalyze && symbol) {
       onAnalyze(symbol);
     }
   }
 
   function handleRemove(symbol) {
-    if (
-      onRemove &&
-      symbol
-    ) {
+    if (onRemove && symbol) {
       onRemove(symbol);
     }
   }
@@ -214,13 +193,12 @@ export default function CompactWatchlist({
         </div>
 
         <div className="exa-compact-header-actions">
-          <span>
-            {stocks.length}
-          </span>
+          <span>{safeStocks.length}</span>
 
           <button
             type="button"
             aria-label="Add stock"
+            title="Add stock"
             onClick={onViewAll}
           >
             <Plus size={15} />
@@ -228,121 +206,163 @@ export default function CompactWatchlist({
         </div>
       </div>
 
-      {loading ? (
-        <div className="exa-compact-watchlist-state">
-          Loading live prices...
+      <div className="exa-compact-watchlist-meta">
+        <div className="exa-compact-watchlist-meta-copy">
+          <DataStatusBadge
+            status={statusPresentation.status}
+            label={statusPresentation.label}
+            compact
+          />
+
+          <DataTimestamp
+            value={statusTimestamp}
+            source={meta?.source || "Market data"}
+            fallbackText={
+              loading
+                ? "Fetching prices"
+                : "Update time unavailable"
+            }
+            compact
+          />
         </div>
-      ) : error ? (
+
+        <button
+          type="button"
+          className="exa-compact-watchlist-refresh"
+          aria-label="Reload watchlist prices"
+          title="Reload watchlist prices"
+          disabled={loading || refreshing}
+          onClick={onRefresh}
+        >
+          <RefreshCw
+            size={13}
+            className={
+              refreshing
+                ? "exa-compact-watchlist-refresh-icon spinning"
+                : "exa-compact-watchlist-refresh-icon"
+            }
+          />
+        </button>
+      </div>
+
+      {error && visibleStocks.length > 0 && (
+        <p
+          className="exa-compact-watchlist-warning"
+          role="status"
+        >
+          {meta?.warning ||
+            "Some prices could not be refreshed. Previous values remain visible."}
+        </p>
+      )}
+
+      {loading && visibleStocks.length === 0 ? (
+        <div className="exa-compact-watchlist-state">
+          Loading market prices...
+        </div>
+      ) : error && visibleStocks.length === 0 ? (
         <div className="exa-compact-watchlist-state error">
-          Live prices are temporarily unavailable.
+          <strong>Prices unavailable</strong>
+          <p>Reload the watchlist to try again.</p>
         </div>
       ) : visibleStocks.length === 0 ? (
         <div className="exa-compact-watchlist-state">
-          <strong>
-            Watchlist is empty
-          </strong>
-
-          <p>
-            Add stocks from the Analyze page.
-          </p>
+          <strong>Watchlist is empty</strong>
+          <p>Add stocks from the Analyze page.</p>
         </div>
       ) : (
         <div className="exa-compact-watchlist-list">
-          {visibleStocks.map(
-            (stock, index) => {
-              const change =
-                Number(
-                  stock?.changePercent,
-                );
+          {visibleStocks.map((stock, index) => {
+            const change = Number(
+              stock?.changePercent,
+            );
 
-              const hasChange =
-                stock?.changePercent !==
-                  null &&
-                stock?.changePercent !==
-                  undefined &&
-                Number.isFinite(
-                  change,
-                );
+            const hasChange =
+              stock?.changePercent !== null &&
+              stock?.changePercent !== undefined &&
+              Number.isFinite(change);
 
-              const changeClass =
-                !hasChange
-                  ? "neutral"
-                  : change >= 0
-                    ? "positive"
-                    : "negative";
+            const changeClass = !hasChange
+              ? "neutral"
+              : change >= 0
+                ? "positive"
+                : "negative";
 
-              return (
-                <div
-                  key={
-                    stock?.symbol ||
-                    index
+            const quoteUnavailable =
+              stock?.quoteStatus === "unavailable" ||
+              stock?.price === null ||
+              stock?.price === undefined;
+
+            return (
+              <div
+                key={stock?.symbol || index}
+                className={`exa-compact-watchlist-row ${
+                  quoteUnavailable
+                    ? "quote-unavailable"
+                    : ""
+                }`}
+              >
+                <button
+                  type="button"
+                  className="exa-compact-stock-button"
+                  onClick={() =>
+                    handleAnalyze(stock?.symbol)
                   }
-                  className="exa-compact-watchlist-row"
                 >
-                  <button
-                    type="button"
-                    className="exa-compact-stock-button"
-                    onClick={() =>
-                      handleAnalyze(
-                        stock?.symbol,
-                      )
-                    }
-                  >
-                    <CompactStockLogo
-                      stock={stock}
-                    />
+                  <CompanyLogo
+                    symbol={stock?.symbol}
+                    name={stock?.name}
+                    logoDomain={stock?.logoDomain}
+                    website={stock?.website}
+                    size={36}
+                    className="exa-compact-stock-logo"
+                  />
 
-                    <span className="exa-compact-stock-copy">
-                      <strong>
-                        {stock?.name ||
-                          stock?.symbol ||
-                          "Unknown"}
-                      </strong>
-
-                      <small>
-                        {stock?.symbol ||
-                          "-"}
-                      </small>
-                    </span>
-                  </button>
-
-                  <div className="exa-compact-stock-price">
+                  <span className="exa-compact-stock-copy">
                     <strong>
-                      {formatPrice(
-                        stock?.price,
-                      )}
+                      {stock?.name ||
+                        stock?.symbol ||
+                        "Unknown"}
                     </strong>
 
-                    <span
-                      className={
-                        changeClass
-                      }
-                    >
-                      {formatPercent(
-                        stock?.changePercent,
-                      )}
-                    </span>
-                  </div>
+                    <small>
+                      {stock?.symbol || "-"}
+                      <span aria-hidden="true"> · </span>
+                      {getQuoteLabel(stock)}
+                    </small>
+                  </span>
+                </button>
 
-                  <button
-                    type="button"
-                    className="exa-compact-remove-button"
-                    aria-label={`Remove ${
-                      stock?.name ||
-                      "stock"
-                    }`}
-                    onClick={() =>
-                      handleRemove(
-                        stock?.symbol,
-                      )
-                    }
-                  >
-                    <X size={13} />
-                  </button>
+                <div className="exa-compact-stock-price">
+                  <strong>
+                    {formatPrice(
+                      stock?.price,
+                      stock?.currency,
+                    )}
+                  </strong>
+
+                  <span className={changeClass}>
+                    {formatPercent(
+                      stock?.changePercent,
+                    )}
+                  </span>
                 </div>
-              );
-            },
-          )}
+
+                <button
+                  type="button"
+                  className="exa-compact-remove-button"
+                  aria-label={`Remove ${
+                    stock?.name || "stock"
+                  }`}
+                  title="Remove from watchlist"
+                  onClick={() =>
+                    handleRemove(stock?.symbol)
+                  }
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 

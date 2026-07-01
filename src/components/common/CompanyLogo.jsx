@@ -1,9 +1,10 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
-const COMPANY_DOMAINS = {
+const COMPANY_DOMAINS = Object.freeze({
   "RELIANCE.NS": "ril.com",
   "HDFCBANK.NS": "hdfcbank.com",
   "BHARTIARTL.NS": "airtel.in",
@@ -11,6 +12,7 @@ const COMPANY_DOMAINS = {
   "SBIN.NS": "sbi.co.in",
   "TCS.NS": "tcs.com",
   "BAJFINANCE.NS": "bajajfinserv.in",
+  "BAJAJFINSV.NS": "bajajfinserv.in",
   "INFY.NS": "infosys.com",
   "ITC.NS": "itcportal.com",
   "LT.NS": "larsentoubro.com",
@@ -21,34 +23,61 @@ const COMPANY_DOMAINS = {
   "TATAMOTORS.NS": "tatamotors.com",
   "TATASTEEL.NS": "tatasteel.com",
   "WIPRO.NS": "wipro.com",
+  "TECHM.NS": "techmahindra.com",
   "HINDUNILVR.NS": "hul.co.in",
   "ASIANPAINT.NS": "asianpaints.com",
   "ULTRACEMCO.NS": "ultratechcement.com",
-};
+  "TITAN.NS": "titancompany.in",
+  "POWERGRID.NS": "powergrid.in",
+  "NTPC.NS": "ntpc.co.in",
+  "ONGC.NS": "ongcindia.com",
+  "HINDALCO.NS": "hindalco.com",
+  "JSWSTEEL.NS": "jsw.in",
+  "ADANIPORTS.NS": "adani.com",
+});
+
+function cleanDomain(value) {
+  const rawValue = String(value || "").trim();
+
+  if (!rawValue) {
+    return "";
+  }
+
+  try {
+    const url = rawValue.includes("://")
+      ? new URL(rawValue)
+      : new URL(`https://${rawValue}`);
+
+    return url.hostname.replace(/^www\./i, "");
+  } catch {
+    return rawValue
+      .replace(/^https?:\/\//i, "")
+      .replace(/^www\./i, "")
+      .split("/")[0]
+      .trim();
+  }
+}
 
 function resolveDomain({
   symbol,
   logoDomain,
   website,
 }) {
-  if (logoDomain) {
-    return logoDomain;
+  const explicitDomain = cleanDomain(
+    logoDomain || website,
+  );
+
+  if (explicitDomain) {
+    return explicitDomain;
   }
 
-  if (website) {
-    try {
-      return new URL(website).hostname.replace(
-        /^www\./,
-        "",
-      );
-    } catch {
-      return "";
-    }
-  }
-
-  return COMPANY_DOMAINS[
-    String(symbol || "").toUpperCase()
-  ] || "";
+  return (
+    COMPANY_DOMAINS[
+      String(symbol || "")
+        .trim()
+        .toUpperCase()
+    ] || ""
+  );
 }
 
 export default function CompanyLogo({
@@ -59,59 +88,68 @@ export default function CompanyLogo({
   size = 42,
   className = "",
 }) {
-  const [failed, setFailed] =
-    useState(false);
+  const [failed, setFailed] = useState(false);
 
-  const domain = resolveDomain({
-    symbol,
-    logoDomain,
-    website,
-  });
+  const domain = useMemo(
+    () =>
+      resolveDomain({
+        symbol,
+        logoDomain,
+        website,
+      }),
+    [symbol, logoDomain, website],
+  );
 
   const logoKey =
-    import.meta.env.VITE_LOGO_KEY;
+    import.meta.env.VITE_LOGO_KEY ||
+    import.meta.env.VITE_LOGO_DEV_KEY ||
+    "";
 
   useEffect(() => {
     setFailed(false);
-  }, [domain]);
+  }, [domain, logoKey]);
 
-  const showImage =
-    Boolean(
-      domain &&
-      logoKey &&
-      !failed,
-    );
+  const showImage = Boolean(
+    domain && logoKey && !failed,
+  );
 
-  const fallbackLetter =
-    String(
-      name ||
-      symbol ||
-      "?",
-    )
-      .trim()
-      .charAt(0)
-      .toUpperCase();
+  const fallbackLetter = String(
+    name || symbol || "?",
+  )
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  const accessibleName =
+    name || symbol || "Company";
 
   return (
     <div
-      className={`exa-company-logo ${className}`}
+      className={`exa-company-logo ${className}`.trim()}
       style={{
         width: size,
         height: size,
       }}
-      aria-label={`${name || symbol} logo`}
+      role="img"
+      aria-label={`${accessibleName} logo`}
+      title={accessibleName}
     >
       {showImage ? (
         <img
-          src={`https://img.logo.dev/${domain}?token=${logoKey}&size=128&format=webp`}
+          src={
+            `https://img.logo.dev/${encodeURIComponent(domain)}` +
+            `?token=${encodeURIComponent(logoKey)}` +
+            "&size=128&format=webp"
+          }
           alt=""
           loading="lazy"
-          onError={() =>
-            setFailed(true)
-          }
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
         />
       ) : (
-        <span>{fallbackLetter}</span>
+        <span aria-hidden="true">
+          {fallbackLetter || "?"}
+        </span>
       )}
     </div>
   );

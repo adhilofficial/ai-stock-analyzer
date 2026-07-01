@@ -1,9 +1,13 @@
-import { useEffect, useState } from "react";
+import {
+  RefreshCw,
+  X,
+} from "lucide-react";
 
-const LOGO_DEV_KEY =
-  import.meta.env.VITE_LOGO_DEV_KEY || "";
+import CompanyLogo from "../common/CompanyLogo";
+import DataStatusBadge from "../data/DataStatusBadge";
+import DataTimestamp from "../data/DataTimestamp";
 
-function formatPrice(value) {
+function formatPrice(value, currency = "INR") {
   if (
     value === null ||
     value === undefined ||
@@ -18,11 +22,15 @@ function formatPrice(value) {
     return "N/A";
   }
 
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  }).format(number);
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: currency || "INR",
+      maximumFractionDigits: 2,
+    }).format(number);
+  } catch {
+    return number.toFixed(2);
+  }
 }
 
 function formatPercent(value) {
@@ -63,112 +71,101 @@ function getViewClass(view) {
   return "neutral";
 }
 
-function getLogoDomain(stock) {
-  const savedDomain = String(
-    stock?.logoDomain || "",
-  ).trim();
-
-  if (savedDomain) {
-    return savedDomain;
+function getQuoteLabel(stock) {
+  if (
+    stock?.quoteStatus === "unavailable" ||
+    stock?.price === null ||
+    stock?.price === undefined
+  ) {
+    return "Quote unavailable";
   }
 
-  const symbol = String(
-    stock?.symbol || "",
-  )
-    .trim()
-    .toUpperCase();
+  if (stock?.quoteStatus === "previous") {
+    return "Previous value";
+  }
 
-  const knownDomains = {
-    "RELIANCE.NS": "ril.com",
-    "INFY.NS": "infosys.com",
-    "HDFCBANK.NS": "hdfcbank.com",
-    "ASIANPAINT.NS": "asianpaints.com",
-    "TCS.NS": "tcs.com",
-    "ICICIBANK.NS": "icicibank.com",
-    "SBIN.NS": "sbi.co.in",
-    "WIPRO.NS": "wipro.com",
-    "TECHM.NS": "techmahindra.com",
-    "BHARTIARTL.NS": "airtel.in",
-    "ITC.NS": "itcportal.com",
-    "MARUTI.NS": "marutisuzuki.com",
-    "SUNPHARMA.NS": "sunpharma.com",
-    "BAJFINANCE.NS": "bajajfinserv.in",
-    "BAJAJFINSV.NS": "bajajfinserv.in",
-    "AXISBANK.NS": "axisbank.com",
-    "KOTAKBANK.NS": "kotak.com",
-    "HINDUNILVR.NS": "hul.co.in",
-    "TITAN.NS": "titancompany.in",
-    "POWERGRID.NS": "powergrid.in",
-    "NTPC.NS": "ntpc.co.in",
-    "ONGC.NS": "ongcindia.com",
-    "TATASTEEL.NS": "tatasteel.com",
+  if (
+    String(stock?.marketState || "").toUpperCase() ===
+    "REGULAR"
+  ) {
+    return "Market open";
+  }
+
+  return "Latest close";
+}
+
+function getStatusPresentation({
+  loading,
+  refreshing,
+  error,
+  stocks,
+  meta,
+}) {
+  if ((loading || refreshing) && stocks.length === 0) {
+    return {
+      status: "loading",
+      label: "Loading",
+    };
+  }
+
+  if (error && stocks.length === 0) {
+    return {
+      status: "unavailable",
+      label: "Unavailable",
+    };
+  }
+
+  if (
+    error ||
+    meta?.partial ||
+    meta?.stale ||
+    (meta?.unavailableSymbols?.length || 0) > 0
+  ) {
+    return {
+      status: "delayed",
+      label: "Partial update",
+    };
+  }
+
+  if (meta?.cached) {
+    return {
+      status: "cached",
+      label: "Cached",
+    };
+  }
+
+  return {
+    status: "live",
+    label: "Live",
   };
-
-  return knownDomains[symbol] || "";
-}
-
-function getLogoUrl(stock) {
-  if (!LOGO_DEV_KEY) {
-    return "";
-  }
-
-  const domain = getLogoDomain(stock);
-
-  if (!domain) {
-    return "";
-  }
-
-  return (
-    `https://img.logo.dev/${encodeURIComponent(domain)}` +
-    `?token=${encodeURIComponent(LOGO_DEV_KEY)}` +
-    "&size=64&format=png"
-  );
-}
-
-function StockLogo({ stock }) {
-  const [imageFailed, setImageFailed] =
-    useState(false);
-
-  const logoUrl = getLogoUrl(stock);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [logoUrl]);
-
-  const firstLetter =
-    stock?.name
-      ?.charAt(0)
-      ?.toUpperCase() || "S";
-
-  return (
-    <span className="exa-stock-avatar">
-      {logoUrl && !imageFailed ? (
-        <img
-          src={logoUrl}
-          alt={`${stock?.name || "Company"} logo`}
-          className="exa-stock-logo"
-          loading="lazy"
-          onError={() => {
-            setImageFailed(true);
-          }}
-        />
-      ) : (
-        <span className="exa-stock-fallback">
-          {firstLetter}
-        </span>
-      )}
-    </span>
-  );
 }
 
 export default function WatchlistCard({
   stocks = [],
+  loading = false,
+  refreshing = false,
+  error = "",
+  meta = null,
   onAnalyze,
   onRemove,
+  onRefresh,
 }) {
+  const safeStocks = Array.isArray(stocks)
+    ? stocks
+    : [];
+
+  const statusPresentation =
+    getStatusPresentation({
+      loading,
+      refreshing,
+      error,
+      stocks: safeStocks,
+      meta,
+    });
+
   return (
     <article className="exa-dashboard-card exa-watchlist-card">
-      <div className="exa-card-heading">
+      <div className="exa-card-heading exa-watchlist-card-heading">
         <div>
           <p className="exa-card-eyebrow">
             SAVED STOCKS
@@ -177,17 +174,73 @@ export default function WatchlistCard({
           <h2>My Watchlist</h2>
         </div>
 
-        <span className="exa-watchlist-count">
-          {stocks.length} stocks
-        </span>
+        <div className="exa-watchlist-card-heading-actions">
+          <span className="exa-watchlist-count">
+            {safeStocks.length} stocks
+          </span>
+
+          <button
+            type="button"
+            className="exa-watchlist-refresh-button"
+            disabled={loading || refreshing}
+            onClick={onRefresh}
+            aria-label="Reload watchlist prices"
+            title="Reload watchlist prices"
+          >
+            <RefreshCw
+              size={14}
+              className={
+                refreshing
+                  ? "spinning"
+                  : ""
+              }
+            />
+          </button>
+        </div>
       </div>
 
-      {stocks.length === 0 ? (
-        <div className="exa-watchlist-empty">
-          <strong>
-            Your watchlist is empty
-          </strong>
+      <div className="exa-watchlist-data-meta">
+        <DataStatusBadge
+          status={statusPresentation.status}
+          label={statusPresentation.label}
+          compact
+        />
 
+        <DataTimestamp
+          value={
+            meta?.latestQuoteAt ||
+            meta?.fetchedAt
+          }
+          source={meta?.source || "Market data"}
+          fallbackText={
+            loading
+              ? "Fetching prices"
+              : "Update time unavailable"
+          }
+          compact
+        />
+      </div>
+
+      {error && safeStocks.length > 0 && (
+        <p className="exa-watchlist-inline-warning">
+          {meta?.warning ||
+            "Some quotes could not be refreshed. Previous values remain visible."}
+        </p>
+      )}
+
+      {loading && safeStocks.length === 0 ? (
+        <div className="exa-watchlist-empty">
+          <strong>Loading watchlist</strong>
+          <p>Fetching current market values.</p>
+        </div>
+      ) : error && safeStocks.length === 0 ? (
+        <div className="exa-watchlist-empty">
+          <strong>Prices unavailable</strong>
+          <p>Reload the watchlist to try again.</p>
+        </div>
+      ) : safeStocks.length === 0 ? (
+        <div className="exa-watchlist-empty">
+          <strong>Your watchlist is empty</strong>
           <p>
             Add stocks from the Analyze page to monitor them here.
           </p>
@@ -203,7 +256,7 @@ export default function WatchlistCard({
             <span>Actions</span>
           </div>
 
-          {stocks.map((stock, index) => {
+          {safeStocks.map((stock, index) => {
             const changeNumber = Number(
               stock?.changePercent,
             );
@@ -213,31 +266,43 @@ export default function WatchlistCard({
               stock?.changePercent !== undefined &&
               Number.isFinite(changeNumber);
 
-            const changeClass =
-              !hasChange
-                ? "neutral"
-                : changeNumber >= 0
-                  ? "positive"
-                  : "negative";
+            const changeClass = !hasChange
+              ? "neutral"
+              : changeNumber >= 0
+                ? "positive"
+                : "negative";
+
+            const quoteUnavailable =
+              stock?.quoteStatus === "unavailable" ||
+              stock?.price === null ||
+              stock?.price === undefined;
 
             return (
               <div
                 key={stock?.symbol || index}
-                className="exa-watchlist-row"
+                className={`exa-watchlist-row ${
+                  quoteUnavailable
+                    ? "quote-unavailable"
+                    : ""
+                }`}
               >
                 <button
                   type="button"
                   className="exa-watchlist-company"
                   onClick={() => {
-                    if (
-                      onAnalyze &&
-                      stock?.symbol
-                    ) {
+                    if (onAnalyze && stock?.symbol) {
                       onAnalyze(stock.symbol);
                     }
                   }}
                 >
-                  <StockLogo stock={stock} />
+                  <CompanyLogo
+                    symbol={stock?.symbol}
+                    name={stock?.name}
+                    logoDomain={stock?.logoDomain}
+                    website={stock?.website}
+                    size={40}
+                    className="exa-stock-avatar"
+                  />
 
                   <span>
                     <strong>
@@ -246,12 +311,17 @@ export default function WatchlistCard({
 
                     <small>
                       {stock?.symbol || "-"}
+                      <span aria-hidden="true"> · </span>
+                      {getQuoteLabel(stock)}
                     </small>
                   </span>
                 </button>
 
                 <span className="exa-watchlist-price">
-                  {formatPrice(stock?.price)}
+                  {formatPrice(
+                    stock?.price,
+                    stock?.currency,
+                  )}
                 </span>
 
                 <span
@@ -281,10 +351,7 @@ export default function WatchlistCard({
                     type="button"
                     className="analyze"
                     onClick={() => {
-                      if (
-                        onAnalyze &&
-                        stock?.symbol
-                      ) {
+                      if (onAnalyze && stock?.symbol) {
                         onAnalyze(stock.symbol);
                       }
                     }}
@@ -298,16 +365,14 @@ export default function WatchlistCard({
                     aria-label={`Remove ${
                       stock?.name || "stock"
                     }`}
+                    title="Remove from watchlist"
                     onClick={() => {
-                      if (
-                        onRemove &&
-                        stock?.symbol
-                      ) {
+                      if (onRemove && stock?.symbol) {
                         onRemove(stock.symbol);
                       }
                     }}
                   >
-                    ×
+                    <X size={14} />
                   </button>
                 </div>
               </div>
@@ -317,16 +382,7 @@ export default function WatchlistCard({
       )}
 
       <p className="exa-watchlist-note">
-        Prices and daily changes are loaded from Yahoo Finance.
-        EXA scores appear only after a successful AI analysis.{" "}
-        <a
-          href="https://logo.dev"
-          target="_blank"
-          rel="noreferrer"
-          className="exa-logo-attribution"
-        >
-          Logos provided by Logo.dev
-        </a>
+        Market data may be delayed. EXA scores appear only after a successful AI analysis.
       </p>
     </article>
   );

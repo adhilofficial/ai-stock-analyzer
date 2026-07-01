@@ -4613,3 +4613,112 @@ html[data-theme="light"]
     rgba(248, 250, 252, 0.98)
     !important;
 }
+/* =========================================
+   PHASE 3F — WATCHLIST DATA RELIABILITY
+   ========================================= */
+
+.exa-compact-watchlist-meta {
+  min-width: 0;
+  margin: 7px 0 2px;
+  padding: 8px 9px;
+  border: 1px solid var(--exa-border);
+  border-radius: 10px;
+  background: var(--exa-card-background-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.exa-compact-watchlist-meta-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.exa-compact-watchlist-meta-copy
+  .exa-data-timestamp {
+  max-width: 100%;
+  color: var(--exa-text-muted);
+  font-size: 7.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exa-compact-watchlist-refresh {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  padding: 0;
+  border: 1px solid var(--exa-border);
+  border-radius: 8px;
+  color: var(--exa-primary);
+  background: var(--exa-primary-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.exa-compact-watchlist-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.exa-compact-watchlist-refresh-icon.spinning {
+  animation: exaWatchlistSpin 0.8s linear infinite;
+}
+
+@keyframes exaWatchlistSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.exa-compact-watchlist-warning {
+  margin: 7px 0 2px;
+  padding: 7px 8px;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: 8px;
+  color: var(--exa-warning);
+  background: rgba(245, 158, 11, 0.07);
+  font-size: 7.5px;
+  line-height: 1.45;
+}
+
+.exa-compact-watchlist-row.quote-unavailable {
+  opacity: 0.76;
+}
+
+.exa-compact-stock-logo.exa-company-logo {
+  padding: 0;
+}
+
+.exa-compact-stock-logo.exa-company-logo img {
+  display: block;
+}
+
+.exa-compact-stock-logo.exa-company-logo > span {
+  color: var(--exa-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.exa-compact-stock-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .exa-compact-watchlist-meta {
+    align-items: flex-start;
+  }
+
+  .exa-compact-remove-button {
+    opacity: 1;
+  }
+}
