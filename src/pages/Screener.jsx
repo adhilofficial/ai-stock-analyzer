@@ -31,6 +31,7 @@ import SnapshotFreshnessBanner from "../components/data/SnapshotFreshnessBanner"
 
 import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
+import "../styles/snapshot-freshness.css";
 
 const DEFAULT_FILTERS = {
   sector: "All",
@@ -2010,7 +2011,10 @@ export default function Screener() {
             : "Unable to load the stock screener.",
         );
 
-        setStocks([]);
+        if (!refresh) {
+          setStocks([]);
+          setApiData(null);
+        }
       } finally {
         if (!signal?.aborted) {
           setLoading(false);
@@ -2559,32 +2563,36 @@ export default function Screener() {
               </p>
             </div>
 
-            <button
-              type="button"
-              className="exa-screener-refresh"
-              disabled={loading || refreshing}
-              onClick={() =>
-                loadScreener({
-                  refresh: true,
-                })
-              }
-            >
-              {refreshing ? (
-                <LoaderCircle size={15} className="exa-screener-spinner" />
-              ) : (
-                <RefreshCw size={15} />
-              )}
+            <div className="exa-screener-header-controls">
+              <SnapshotFreshnessBanner
+                generatedAt={apiData?.generatedAt}
+                loading={loading}
+                error={error}
+              />
 
-              {refreshing ? "Reloading" : "Reload results"}
-            </button>
+              <button
+                type="button"
+                className="exa-screener-refresh"
+                disabled={loading || refreshing}
+                onClick={() =>
+                  loadScreener({
+                    refresh: true,
+                  })
+                }
+              >
+                {refreshing ? (
+                  <LoaderCircle
+                    size={15}
+                    className="exa-screener-spinner"
+                  />
+                ) : (
+                  <RefreshCw size={15} />
+                )}
+
+                {refreshing ? "Reloading" : "Reload results"}
+              </button>
+            </div>
           </section>
-
-          {apiData && !error && (
-            <SnapshotFreshnessBanner
-              generatedAt={apiData.generatedAt}
-              source={apiData.source}
-            />
-          )}
 
           <section className="exa-screener-summary-grid">
             <SummaryCard
