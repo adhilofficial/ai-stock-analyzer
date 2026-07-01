@@ -16,44 +16,58 @@ import ErrorBoundary from
 import NetworkStatusBanner from
   "./components/NetworkStatusBanner";
 
+import ProtectedRoute from
+  "./components/ProtectedRoute";
+
 import AppShell from
   "./components/layout/AppShell";
 
-const Dashboard = lazy(() =>
-  import("./pages/Dashboard"),
-);
-
-const Analyze = lazy(() =>
-  import("./pages/Analyze"),
-);
-
-const MarketPulse = lazy(() =>
-  import("./pages/MarketPulse"),
-);
-
-const ComingSoon = lazy(() =>
-  import("./pages/ComingSoon"),
-);
-
-const Alerts = lazy(() =>
-  import("./pages/Alerts"),
-);
-
-const AIResearch = lazy(() =>
-  import("./pages/AIResearch"),
-);
-const Disclaimer = lazy(
-  () => import("./pages/Disclaimer"),
-);
-
-const Methodology = lazy(
-  () => import("./pages/Methodology"),
-);
+import { useAuth } from
+  "./context/AuthContext";
 
 import Screener from "./pages/Screener";
 import Compare from "./pages/Compare";
 import Portfolio from "./pages/Portfolio";
-const About = lazy(() => import("./pages/About"));
+
+const Dashboard = lazy(() =>
+  import("./pages/Dashboard")
+);
+
+const Analyze = lazy(() =>
+  import("./pages/Analyze")
+);
+
+const MarketPulse = lazy(() =>
+  import("./pages/MarketPulse")
+);
+
+const ComingSoon = lazy(() =>
+  import("./pages/ComingSoon")
+);
+
+const Alerts = lazy(() =>
+  import("./pages/Alerts")
+);
+
+const AIResearch = lazy(() =>
+  import("./pages/AIResearch")
+);
+
+const Disclaimer = lazy(() =>
+  import("./pages/Disclaimer")
+);
+
+const Methodology = lazy(() =>
+  import("./pages/Methodology")
+);
+
+const About = lazy(() =>
+  import("./pages/About")
+);
+
+const Login = lazy(() =>
+  import("./pages/Login")
+);
 
 function PageLoader() {
   return (
@@ -77,10 +91,6 @@ function PageLoader() {
   );
 }
 
-/*
- * All unfinished routes use the same
- * premium sidebar and topbar as Dashboard.
- */
 function PremiumComingSoon() {
   return (
     <AppShell>
@@ -90,96 +100,164 @@ function PremiumComingSoon() {
 }
 
 function AppRoutes() {
+  const {
+    user,
+    loading,
+  } = useAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
   return (
-    <Suspense
-      fallback={<PageLoader />}
-    >
+    <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route
           path="/"
           element={
             <Navigate
-              to="/dashboard"
+              to={
+                user
+                  ? "/dashboard"
+                  : "/login"
+              }
               replace
             />
           }
         />
 
         <Route
-          path="/dashboard"
-          element={<Dashboard />}
+          path="/login"
+          element={
+            user ? (
+              <Navigate
+                to="/dashboard"
+                replace
+              />
+            ) : (
+              <Login />
+            )
+          }
         />
+
         <Route
-  path="/about"
-  element={<About />}
-/>
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/analyze"
-          element={<Analyze />}
+          element={
+            <ProtectedRoute>
+              <Analyze />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/portfolio"
-          element={<Portfolio />}
+          element={
+            <ProtectedRoute>
+              <Portfolio />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/screener"
-          element={<Screener />}
+          element={
+            <ProtectedRoute>
+              <Screener />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/market-pulse"
-          element={<MarketPulse />}
+          element={
+            <ProtectedRoute>
+              <MarketPulse />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/research"
-          element={<AIResearch />}
+          element={
+            <ProtectedRoute>
+              <AIResearch />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/alerts"
-          element={<Alerts />}
+          element={
+            <ProtectedRoute>
+              <Alerts />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/learn"
           element={
-            <PremiumComingSoon />
+            <ProtectedRoute>
+              <PremiumComingSoon />
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/settings"
           element={
-            <PremiumComingSoon />
+            <ProtectedRoute>
+              <PremiumComingSoon />
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/compare"
-          element={<Compare />}
+          element={
+            <ProtectedRoute>
+              <Compare />
+            </ProtectedRoute>
+          }
         />
-        <Route
-  path="/disclaimer"
-  element={<Disclaimer />}
-/>
 
-<Route
-  path="/methodology"
-  element={<Methodology />}
-/>
+        {/* Public information pages */}
+
+        <Route
+          path="/about"
+          element={<About />}
+        />
+
+        <Route
+          path="/disclaimer"
+          element={<Disclaimer />}
+        />
+
+        <Route
+          path="/methodology"
+          element={<Methodology />}
+        />
 
         <Route
           path="*"
           element={
             <Navigate
-              to="/dashboard"
+              to={
+                user
+                  ? "/dashboard"
+                  : "/login"
+              }
               replace
             />
-            
           }
         />
       </Routes>
