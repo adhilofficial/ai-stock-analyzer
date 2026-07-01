@@ -53,8 +53,18 @@ import {
 import AppShell from
   "../components/layout/AppShell";
 
-import SnapshotFreshnessBanner from
-  "../components/data/SnapshotFreshnessBanner";
+import CompanyLogo from
+  "../components/common/CompanyLogo";
+
+import DataStatusBadge from
+  "../components/data/DataStatusBadge";
+
+import DataTimestamp from
+  "../components/data/DataTimestamp";
+
+import {
+  getPortfolioQuotes,
+} from "../services/portfolioApi";
 
 import {
   buildPortfolioPositions,
@@ -70,7 +80,6 @@ import "../styles/dashboard.css";
 import "../styles/dashboard-v2.css";
 
 const MAX_TRANSACTIONS = 2000;
-const SYMBOL_BATCH_SIZE = 5;
 
 const PORTFOLIO_CHART_COLORS = [
   "#60a5fa",
@@ -160,6 +169,43 @@ const PORTFOLIO_STYLES = `
     align-items: center;
     gap: 9px;
     flex-shrink: 0;
+  }
+
+
+  .exa-portfolio-header-side {
+    display: flex;
+    min-width: 270px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .exa-portfolio-market-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .exa-portfolio-quote-state {
+    display: block;
+    margin-top: 4px;
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: 0.03em;
+  }
+
+  .exa-portfolio-quote-state.live {
+    color: #4ade80;
+  }
+
+  .exa-portfolio-quote-state.closed {
+    color: #fbbf24;
+  }
+
+  .exa-portfolio-quote-state.unavailable {
+    color: #fb7185;
   }
 
   .exa-portfolio-button {
@@ -1805,362 +1851,28 @@ async function searchPortfolioCompanies(
     }));
 }
 
-async function fetchSingleSymbol(
-  symbol,
-  signal,
-) {
-  const baseSymbol = cleanText(
-    symbol,
-  )
-    .toUpperCase()
-    .replace(
-      /\.(NS|BO)$/i,
-      "",
-    );
-
-  const parameters =
-    new URLSearchParams({
-      q: baseSymbol,
-      page: "1",
-      limit: "50",
-      sort: "marketCap-desc",
-    });
-
-  const data = await fetchJson(
-    `/api/screener?${parameters.toString()}`,
-    signal,
-  );
-
-  const normalizedTarget =
-    cleanText(symbol).toUpperCase();
-
-  const exactStock = (
-    Array.isArray(data?.stocks)
-      ? data.stocks
-      : []
-  ).find((stock) => {
-    const candidates = [
-      stock?.symbol,
-      stock?.yahooSymbol,
-      stock?.nseSymbol,
-      stock?.nseSymbol
-        ? `${stock.nseSymbol}.NS`
-        : "",
-      stock?.bseCode
-        ? `${stock.bseCode}.BO`
-        : "",
-    ]
-      .map((value) =>
-        cleanText(value).toUpperCase(),
-      )
-      .filter(Boolean);
-
-    return candidates.includes(
-      normalizedTarget,
-    );
-  });
-
-  return {
-    stock: exactStock || null,
-    generatedAt:
-      data?.generatedAt || null,
-    source:
-      data?.source ||
-      "Screener snapshot",
-  };
-}
-
-function getDomainFromWebsite(
-  website,
-) {
-  const value = cleanText(website);
-
-  if (!value) {
-    return "";
-  }
-
-  try {
-    return new URL(
-      value.startsWith("http")
-        ? value
-        : `https://${value}`,
-    ).hostname.replace(
-      /^www\./i,
-      "",
-    );
-  } catch {
-    return "";
-  }
-}
-
-async function fetchLivePortfolioStock(
-  symbol,
-  signal,
-) {
-  const normalizedSymbol =
-    cleanText(symbol).toUpperCase();
-
-  const parameters =
-    new URLSearchParams({
-      symbol: normalizedSymbol,
-      range: "1d",
-    });
-
-  const response = await fetch(
-    `/api/stock-data?${parameters.toString()}`,
-    {
-      method: "GET",
-      headers: {
-        Accept:
-          "application/json",
-      },
-      signal,
-    },
-  );
-
-  const contentType =
-    response.headers.get(
-      "content-type",
-    ) || "";
-
-  if (
-    !contentType.includes(
-      "application/json",
-    )
-  ) {
-    throw new Error(
-      `Live market data for ${normalizedSymbol} returned a non-JSON response.`,
-    );
-  }
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      getApiErrorMessage(
-        data?.error,
-        `Live market data is unavailable for ${normalizedSymbol}.`,
-      ),
-    );
-  }
-
-  if (!data?.symbol) {
-    return {
-      stock: null,
-      generatedAt: null,
-      source:
-        data?.source ||
-        "Yahoo Finance",
-    };
-  }
-
-  const resolvedSymbol =
-    cleanText(data.symbol)
-      .toUpperCase() ||
-    normalizedSymbol;
-
-  const baseNseSymbol =
-    resolvedSymbol.endsWith(".NS")
-      ? resolvedSymbol.replace(
-          /\.NS$/i,
-          "",
-        )
-      : "";
-
-  return {
-    stock: {
-      symbol: resolvedSymbol,
-      yahooSymbol: resolvedSymbol,
-      name:
-        cleanText(
-          data.name ||
-            data.company,
-        ) || resolvedSymbol,
-      exchange:
-        cleanText(data.exchange),
-      currency:
-        cleanText(data.currency) ||
-        "INR",
-      marketState:
-        cleanText(data.marketState),
-      price: data.price ?? null,
-      previousClose:
-        data.previousClose ?? null,
-      change: data.change ?? null,
-      changePercent:
-        data.changePercent ?? null,
-      marketCap:
-        data.marketCap ?? null,
-      peRatio:
-        data.peRatio ??
-        data.peRatioTTM ??
-        null,
-      forwardPE:
-        data.forwardPE ?? null,
-      week52Low:
-        data.week52Low ??
-        data.fiftyTwoWeekLow ??
-        null,
-      week52High:
-        data.week52High ??
-        data.fiftyTwoWeekHigh ??
-        null,
-      volume: data.volume ?? null,
-      averageVolume:
-        data.averageVolume ?? null,
-      sector:
-        cleanText(data.sector) ||
-        "Sector unavailable",
-      industry:
-        cleanText(data.industry),
-      website:
-        cleanText(data.website),
-      logoDomain:
-        getDomainFromWebsite(
-          data.website,
-        ),
-      nseSymbol: baseNseSymbol,
-      nseUrl:
-        baseNseSymbol
-          ? `https://www.nseindia.com/get-quotes/equity?symbol=${encodeURIComponent(
-              baseNseSymbol,
-            )}`
-          : "",
-      source:
-        data.source ||
-        "Yahoo Finance",
-      lastUpdated:
-        data.lastUpdated ||
-        new Date().toISOString(),
-    },
-    generatedAt:
-      data.lastUpdated ||
-      new Date().toISOString(),
-    source:
-      data.source ||
-      "Yahoo Finance live fallback",
-  };
-}
-
-async function fetchPortfolioStock(
-  symbol,
-  signal,
-) {
-  const snapshotResult =
-    await fetchSingleSymbol(
-      symbol,
-      signal,
-    );
-
-  if (snapshotResult.stock) {
-    return {
-      ...snapshotResult,
-      usedLiveFallback: false,
-    };
-  }
-
-  const liveResult =
-    await fetchLivePortfolioStock(
-      symbol,
-      signal,
-    );
-
-  return {
-    ...liveResult,
-    usedLiveFallback:
-      Boolean(liveResult.stock),
-  };
-}
-
 async function fetchPortfolioStocks(
   symbols,
   signal,
+  refresh = false,
 ) {
-  const uniqueSymbols = [
-    ...new Set(
-      symbols
-        .map((symbol) =>
-          cleanText(symbol)
-            .toUpperCase(),
-        )
-        .filter(Boolean),
-    ),
-  ];
-
-  const chunks = splitIntoChunks(
-    uniqueSymbols,
-    SYMBOL_BATCH_SIZE,
-  );
-
-  const stocks = [];
-  const missingSymbols = [];
-  let generatedAt = null;
-  let usedLiveFallback = false;
-
-  for (const chunk of chunks) {
-    const results =
-      await Promise.allSettled(
-        chunk.map((symbol) =>
-          fetchPortfolioStock(
-            symbol,
-            signal,
-          ),
-        ),
-      );
-
-    results.forEach(
-      (result, index) => {
-        const symbol = chunk[index];
-
-        if (
-          result.status ===
-          "rejected"
-        ) {
-          if (
-            result.reason?.name ===
-            "AbortError"
-          ) {
-            throw result.reason;
-          }
-
-          console.warn(
-            `Portfolio data unavailable for ${symbol}:`,
-            result.reason,
-          );
-
-          missingSymbols.push(symbol);
-          return;
-        }
-
-        if (result.value?.stock) {
-          stocks.push(
-            result.value.stock,
-          );
-          generatedAt =
-            generatedAt ||
-            result.value.generatedAt ||
-            null;
-          usedLiveFallback =
-            usedLiveFallback ||
-            Boolean(
-              result.value
-                .usedLiveFallback,
-            );
-          return;
-        }
-
-        missingSymbols.push(symbol);
-      },
-    );
-  }
+  const data = await getPortfolioQuotes({
+    symbols,
+    refresh,
+    signal,
+  });
 
   return {
-    stocks,
-    generatedAt,
-    source: usedLiveFallback
-      ? "Screener snapshot + Yahoo Finance live fallback"
-      : "Screener snapshot",
-    missingSymbols,
+    stocks: data.quotes.map((quote) => ({
+      ...quote,
+      source: "Market data",
+    })),
+    generatedAt: data.fetchedAt,
+    source: "Market data",
+    cached: Boolean(data.cached),
+    partial: Boolean(data.partial),
+    warning: data.warning || "",
+    missingSymbols: data.unavailableSymbols,
   };
 }
 
@@ -2232,46 +1944,6 @@ function compareRows(
   return direction === "asc"
     ? firstNumber - secondNumber
     : secondNumber - firstNumber;
-}
-
-function CompanyLogo({
-  domain,
-  name,
-  className = "exa-portfolio-logo",
-}) {
-  const [
-    failed,
-    setFailed,
-  ] = useState(false);
-
-  const logoKey =
-    import.meta.env
-      .VITE_LOGO_KEY;
-
-  const showImage = Boolean(
-    domain &&
-      logoKey &&
-      !failed,
-  );
-
-  return (
-    <span className={className}>
-      {showImage ? (
-        <img
-          src={`https://img.logo.dev/${domain}?token=${logoKey}&size=128&format=webp`}
-          alt=""
-          loading="lazy"
-          onError={() =>
-            setFailed(true)
-          }
-        />
-      ) : (
-        cleanText(name || "?")
-          .charAt(0)
-          .toUpperCase()
-      )}
-    </span>
-  );
 }
 
 function SummaryCard({
@@ -2416,11 +2088,14 @@ export default function Portfolio() {
   const [marketStocks, setMarketStocks] = useState([]);
   const [marketMetadata, setMarketMetadata] = useState({
     generatedAt: null,
-    source: "Yahoo Finance",
+    source: "Market data",
+    cached: false,
+    partial: false,
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
   const [unavailableSymbols, setUnavailableSymbols] = useState([]);
 
   const [holdingSearch, setHoldingSearch] = useState("");
@@ -2460,9 +2135,16 @@ export default function Portfolio() {
       if (holdingSymbols.length === 0) {
         setMarketStocks([]);
         setUnavailableSymbols([]);
+        setMarketMetadata({
+          generatedAt: null,
+          source: "Market data",
+          cached: false,
+          partial: false,
+        });
         setLoading(false);
         setRefreshing(false);
         setError("");
+        setWarning("");
         return;
       }
 
@@ -2473,31 +2155,59 @@ export default function Portfolio() {
       }
 
       setError("");
+      setWarning("");
 
       try {
-        const data = await fetchPortfolioStocks(holdingSymbols, signal);
+        const data = await fetchPortfolioStocks(
+          holdingSymbols,
+          signal,
+          refresh,
+        );
 
         setMarketStocks(data.stocks);
-        setUnavailableSymbols(
-          Array.isArray(data?.missingSymbols) ? data.missingSymbols : [],
-        );
+
+        const missingSymbols = Array.isArray(
+          data?.missingSymbols,
+        )
+          ? data.missingSymbols
+          : [];
+
+        setUnavailableSymbols(missingSymbols);
         setMarketMetadata({
           generatedAt: data.generatedAt,
-          source: data.source,
+          source: "Market data",
+          cached: Boolean(data.cached),
+          partial:
+            Boolean(data.partial) ||
+            missingSymbols.length > 0,
         });
+
+        if (data.warning) {
+          setWarning(data.warning);
+        }
       } catch (caughtError) {
         if (caughtError?.name === "AbortError") {
           return;
         }
 
-        console.error("Portfolio market-data error:", caughtError);
-        setError(
+        const message =
           caughtError instanceof Error
             ? caughtError.message
-            : "Unable to load portfolio market data.",
-        );
-        setMarketStocks([]);
-        setUnavailableSymbols(holdingSymbols);
+            : "Unable to load portfolio market data.";
+
+        if (refresh) {
+          setWarning(
+            "The latest refresh failed. Previously loaded portfolio values remain visible.",
+          );
+          setMarketMetadata((current) => ({
+            ...current,
+            partial: true,
+          }));
+        } else {
+          setError(message);
+          setMarketStocks([]);
+          setUnavailableSymbols(holdingSymbols);
+        }
       } finally {
         if (!signal?.aborted) {
           setLoading(false);
@@ -2658,6 +2368,22 @@ export default function Portfolio() {
             cleanText(quote?.logoDomain) || position.logoDomain,
           quote,
           price,
+          quoteStatus:
+            price === null
+              ? "unavailable"
+              : String(
+                    quote?.marketState || "",
+                  ).toUpperCase() === "REGULAR"
+                ? "live"
+                : "closed",
+          quoteLabel:
+            price === null
+              ? "Quote unavailable"
+              : String(
+                    quote?.marketState || "",
+                  ).toUpperCase() === "REGULAR"
+                ? "Market open"
+                : "Latest close",
           investedValue,
           currentValue,
           profitLoss,
@@ -2678,6 +2404,68 @@ export default function Portfolio() {
   const dayMovementNote = isMarketOpen
     ? "Estimated live change across holdings"
     : "Change from the latest completed trading session";
+
+
+  const portfolioMarketPresentation = useMemo(() => {
+    if (loading && marketStocks.length === 0) {
+      return {
+        status: "loading",
+        label: "Loading values",
+        fallbackText: "Fetching portfolio quotes",
+      };
+    }
+
+    if (error && marketStocks.length === 0) {
+      return {
+        status: "unavailable",
+        label: "Values unavailable",
+        fallbackText: "Portfolio quotes unavailable",
+      };
+    }
+
+    if (
+      warning ||
+      marketMetadata.partial ||
+      unavailableSymbols.length > 0
+    ) {
+      return {
+        status: "delayed",
+        label: "Partial update",
+        fallbackText: "Some holding quotes are unavailable",
+      };
+    }
+
+    if (marketMetadata.cached) {
+      return {
+        status: "cached",
+        label: "Cached values",
+        fallbackText: "Cached quote time unavailable",
+      };
+    }
+
+    if (isMarketOpen) {
+      return {
+        status: "live",
+        label: "Market open",
+        fallbackText: "Current quote time unavailable",
+      };
+    }
+
+    return {
+      status: "delayed",
+      label: "Market closed",
+      fallbackText: "Latest session time unavailable",
+    };
+  }, [
+    loading,
+    error,
+    warning,
+    marketStocks.length,
+    marketMetadata.partial,
+    marketMetadata.cached,
+    unavailableSymbols.length,
+    isMarketOpen,
+  ]);
 
   const filteredRows = useMemo(() => {
     const query = cleanText(holdingSearch).toLowerCase();
@@ -3350,38 +3138,55 @@ export default function Portfolio() {
               </p>
             </div>
 
-            <div className="exa-portfolio-header-actions">
-              <button
-                type="button"
-                className="exa-portfolio-button"
-                disabled={refreshing || openPositions.length === 0}
-                onClick={() => loadPortfolioData({ refresh: true })}
-              >
-                {refreshing ? (
-                  <LoaderCircle size={14} className="exa-portfolio-spinner" />
-                ) : (
-                  <RefreshCw size={14} />
-                )}
-                {refreshing ? "Reloading" : "Reload values"}
-              </button>
+            <div className="exa-portfolio-header-side">
+              {openPositions.length > 0 && (
+                <div className="exa-portfolio-market-status">
+                  <DataStatusBadge
+                    status={portfolioMarketPresentation.status}
+                    label={portfolioMarketPresentation.label}
+                    compact
+                  />
 
-              <button
-                type="button"
-                className="exa-portfolio-button primary"
-                onClick={() => openAddTransaction()}
-              >
-                <Plus size={14} />
-                Add transaction
-              </button>
+                  <DataTimestamp
+                    value={marketMetadata.generatedAt}
+                    source="Market data"
+                    fallbackText={
+                      portfolioMarketPresentation.fallbackText
+                    }
+                    compact
+                  />
+                </div>
+              )}
+
+              <div className="exa-portfolio-header-actions">
+                <button
+                  type="button"
+                  className="exa-portfolio-button"
+                  disabled={refreshing || openPositions.length === 0}
+                  onClick={() => loadPortfolioData({ refresh: true })}
+                >
+                  {refreshing ? (
+                    <LoaderCircle
+                      size={14}
+                      className="exa-portfolio-spinner"
+                    />
+                  ) : (
+                    <RefreshCw size={14} />
+                  )}
+                  {refreshing ? "Reloading" : "Reload values"}
+                </button>
+
+                <button
+                  type="button"
+                  className="exa-portfolio-button primary"
+                  onClick={() => openAddTransaction()}
+                >
+                  <Plus size={14} />
+                  Add transaction
+                </button>
+              </div>
             </div>
           </section>
-
-          {marketMetadata.generatedAt && (
-            <SnapshotFreshnessBanner
-              generatedAt={marketMetadata.generatedAt}
-              source={marketMetadata.source}
-            />
-          )}
 
           <section className="exa-portfolio-summary-grid phase-8c">
             <SummaryCard
@@ -3482,6 +3287,12 @@ export default function Portfolio() {
             P/L uses the weighted-average cost method. Taxes, dividends,
             corporate actions and broker reconciliation are not included.
           </div>
+
+          {warning && (
+            <div className="exa-portfolio-notice warning">
+              {warning}
+            </div>
+          )}
 
           {unavailableSymbols.length > 0 && (
             <div className="exa-portfolio-notice warning">
@@ -4157,8 +3968,11 @@ export default function Portfolio() {
                         <td>
                           <div className="exa-portfolio-company">
                             <CompanyLogo
-                              domain={row.logoDomain}
+                              symbol={row.symbol}
                               name={row.name}
+                              logoDomain={row.logoDomain}
+                              size={36}
+                              className="exa-portfolio-logo"
                             />
                             <div className="exa-portfolio-company-copy">
                               <strong title={row.name}>{row.name}</strong>
@@ -4170,7 +3984,14 @@ export default function Portfolio() {
                         </td>
                         <td>{formatNumber(row.quantity, 4)}</td>
                         <td>{formatCurrency(row.averagePrice)}</td>
-                        <td>{formatCurrency(row.price)}</td>
+                        <td>
+                          <div>{formatCurrency(row.price)}</div>
+                          <small
+                            className={`exa-portfolio-quote-state ${row.quoteStatus}`}
+                          >
+                            {row.quoteLabel}
+                          </small>
+                        </td>
                         <td>{formatCurrency(row.investedValue, 0)}</td>
                         <td>{formatCurrency(row.currentValue, 0)}</td>
                         <td
@@ -4366,8 +4187,11 @@ export default function Portfolio() {
                           <td>
                             <div className="exa-portfolio-company compact">
                               <CompanyLogo
-                                domain={transaction.logoDomain}
+                                symbol={transaction.symbol}
                                 name={transaction.name}
+                                logoDomain={transaction.logoDomain}
+                                size={32}
+                                className="exa-portfolio-logo"
                               />
                               <div className="exa-portfolio-company-copy">
                                 <strong title={transaction.name}>
@@ -4494,8 +4318,11 @@ export default function Portfolio() {
                   {form.selectedStock ? (
                     <div className="exa-portfolio-selected-stock">
                       <CompanyLogo
-                        domain={form.selectedStock.logoDomain}
+                        symbol={form.selectedStock.symbol}
                         name={form.selectedStock.name}
+                        logoDomain={form.selectedStock.logoDomain}
+                        size={36}
+                        className="exa-portfolio-logo"
                       />
                       <div className="exa-portfolio-selected-stock-copy">
                         <strong>{form.selectedStock.name}</strong>
@@ -4561,8 +4388,11 @@ export default function Portfolio() {
                                 onClick={() => selectStock(stock)}
                               >
                                 <CompanyLogo
-                                  domain={stock.logoDomain}
+                                  symbol={stock.symbol}
                                   name={stock.name}
+                                  logoDomain={stock.logoDomain}
+                                  size={36}
+                                  className="exa-portfolio-logo"
                                 />
                                 <div className="exa-portfolio-search-result-copy">
                                   <strong>{stock.name}</strong>

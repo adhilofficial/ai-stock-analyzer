@@ -17,6 +17,20 @@ function cleanText(value) {
   return String(value ?? "").trim();
 }
 
+
+function normalizePortfolioSymbol(value) {
+  const symbol = cleanText(value).toUpperCase();
+
+  if (
+    !symbol ||
+    !/^[A-Z0-9.^&=_-]+$/.test(symbol)
+  ) {
+    return "";
+  }
+
+  return symbol;
+}
+
 function safePositiveNumber(value) {
   const number = Number(value);
 
@@ -73,7 +87,7 @@ export function normalizePortfolioHolding(holding) {
     return null;
   }
 
-  const symbol = cleanText(holding.symbol).toUpperCase();
+  const symbol = normalizePortfolioSymbol(holding.symbol);
   const quantity = safePositiveNumber(holding.quantity);
   const averagePrice = safeNonNegativeNumber(
     holding.averagePrice,
@@ -168,7 +182,7 @@ export function normalizePortfolioTransaction(transaction) {
   }
 
   const type = cleanText(transaction.type).toUpperCase();
-  const symbol = cleanText(transaction.symbol).toUpperCase();
+  const symbol = normalizePortfolioSymbol(transaction.symbol);
   const quantity = safePositiveNumber(transaction.quantity);
   const price = safeNonNegativeNumber(transaction.price);
   const charges = safeNonNegativeNumber(
@@ -307,14 +321,48 @@ export function readPortfolioTransactions() {
 }
 
 export function validatePortfolioTransactions(transactions) {
-  const normalized = (Array.isArray(transactions) ? transactions : [])
-    .map(normalizePortfolioTransaction)
-    .filter(Boolean)
-    .sort((first, second) =>
-      transactionSortValue(first).localeCompare(
-        transactionSortValue(second),
-      ),
-    );
+  const input = Array.isArray(transactions)
+    ? transactions
+    : [];
+
+  if (input.length > MAX_TRANSACTIONS) {
+    return {
+      valid: false,
+      message: `A portfolio can store up to ${MAX_TRANSACTIONS} transactions.`,
+    };
+  }
+
+  const normalized = input
+    .map(normalizePortfolioTransaction);
+
+  if (normalized.some((transaction) => !transaction)) {
+    return {
+      valid: false,
+      message:
+        "One or more portfolio transactions contain invalid fields.",
+    };
+  }
+
+  const transactionIds = new Set();
+
+  for (const transaction of normalized) {
+    if (transactionIds.has(transaction.id)) {
+      return {
+        valid: false,
+        transactionId: transaction.id,
+        message:
+          "Duplicate portfolio transaction identifiers were detected.",
+      };
+    }
+
+    transactionIds.add(transaction.id);
+  }
+
+  normalized.sort((first, second) =>
+    transactionSortValue(first).localeCompare(
+      transactionSortValue(second),
+    ),
+  );
 
   const quantities = new Map();
 
@@ -356,12 +404,11 @@ export function writePortfolioTransactions(transactions) {
   }
 
   try {
-    const normalized = (Array.isArray(transactions) ? transactions : [])
-      .map(normalizePortfolioTransaction)
-      .filter(Boolean)
-      .slice(0, MAX_TRANSACTIONS);
+    const input = Array.isArray(transactions)
+      ? transactions
+      : [];
 
-    const validation = validatePortfolioTransactions(normalized);
+    const validation = validatePortfolioTransactions(input);
 
     if (!validation.valid) {
       console.error(
@@ -370,6 +417,10 @@ export function writePortfolioTransactions(transactions) {
       );
       return false;
     }
+
+    const normalized = input
+      .map(normalizePortfolioTransaction)
+      .filter(Boolean);
 
     window.localStorage.setItem(
       PORTFOLIO_TRANSACTION_STORAGE_KEY,
