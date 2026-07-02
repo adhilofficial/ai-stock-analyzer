@@ -10,7 +10,15 @@
       "destination": "/api/stock-data?symbol=:symbol"
     },
     {
-      "source": "/analyze",
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/reset-password",
       "destination": "/index.html"
     },
     {
@@ -18,15 +26,15 @@
       "destination": "/index.html"
     },
     {
-      "source": "/screener",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/compare",
+      "source": "/analyze",
       "destination": "/index.html"
     },
     {
       "source": "/portfolio",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/screener",
       "destination": "/index.html"
     },
     {
@@ -46,16 +54,24 @@
       "destination": "/index.html"
     },
     {
-  "source": "/about",
-  "destination": "/index.html"
-},
+      "source": "/settings",
+      "destination": "/index.html"
+    },
     {
-  "source": "/methodology",
-  "destination": "/index.html"
-},
-{
-  "source": "/disclaimer",
-  "destination": "/index.html"
-}
+      "source": "/compare",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/methodology",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/disclaimer",
+      "destination": "/index.html"
+    }
   ]
 }
