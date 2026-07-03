@@ -68,6 +68,12 @@ const About = lazy(() =>
 const Login = lazy(() =>
   import("./pages/Login")
 );
+const ForgotPassword = lazy(() =>
+  import("./pages/ForgotPassword")
+);
+const ResetPassword = lazy(() =>
+  import("./pages/ResetPassword")
+);
 
 function PageLoader() {
   return (
@@ -258,11 +264,20 @@ function AppRoutes() {
               }
               replace
             />
-          }
+               }
         />
+
+        <Route
+  path="/forgot-password"
+  element={<ForgotPassword />}
+/>
       </Routes>
     </Suspense>
   );
+  <Route
+  path="/reset-password"
+  element={<ResetPassword />}
+/>
 }
 
 export default function App() {

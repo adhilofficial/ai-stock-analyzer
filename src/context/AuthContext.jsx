@@ -212,6 +212,7 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  
   async function sendPasswordResetEmail(email) {
   const redirectUrl =
     `${window.location.origin}/reset-password`;

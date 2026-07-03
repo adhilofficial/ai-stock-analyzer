@@ -4,6 +4,7 @@ import {
 } from "react";
 
 import {
+  Link,
   useLocation,
   useNavigate,
 } from "react-router-dom";
@@ -174,6 +175,17 @@ dividerLine: {
   flex: 1,
   height: "1px",
   background: "rgba(148, 163, 184, 0.2)",
+},
+
+forgotLink: {
+  display: "block",
+  marginTop: "-8px",
+  marginBottom: "18px",
+  color: "#60a5fa",
+  fontSize: "13px",
+  fontWeight: "700",
+  textAlign: "right",
+  textDecoration: "none",
 },
 };
 
@@ -449,7 +461,14 @@ export default function Login() {
               style={styles.input}
             />
           </div>
-
+          {!isSignup && (
+  <Link
+    to="/forgot-password"
+    style={styles.forgotLink}
+  >
+    Forgot password?
+  </Link>
+)}
           <button
             type="submit"
             disabled={submitting}
