@@ -212,6 +212,38 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  async function sendPasswordResetEmail(email) {
+  const redirectUrl =
+    `${window.location.origin}/reset-password`;
+
+  const { data, error } =
+    await supabase.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: redirectUrl,
+      }
+    );
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+async function updatePassword(newPassword) {
+  const { data, error } =
+    await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
   async function signOut() {
     const {
       error,
@@ -243,6 +275,8 @@ export function AuthProvider({ children }) {
       signUp,
       signIn,
       signInWithGoogle,
+      sendPasswordResetEmail,
+      updatePassword,
       signOut,
       refreshProfile,
     }),
