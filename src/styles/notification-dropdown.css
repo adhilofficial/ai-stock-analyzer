@@ -64,7 +64,7 @@
 .exa-notification-dropdown-header span {
   margin-top: 4px;
   color: #7890ad;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .exa-notification-mark-all {
@@ -85,7 +85,7 @@
   cursor: pointer;
   flex-shrink: 0;
 
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 800;
 }
 
@@ -134,7 +134,7 @@
 }
 
 .exa-notification-item.read {
-  opacity: 0.76;
+  opacity: 1;
 }
 
 .exa-notification-severity-dot {
@@ -182,7 +182,7 @@
 .exa-notification-item-topline strong {
   overflow: hidden;
   color: #f8fafc;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -206,7 +206,7 @@
   overflow: hidden;
   color: #8fa4bf;
 
-  font-size: 8.5px;
+  font-size: 11px;
   line-height: 1.5;
 
   -webkit-box-orient: vertical;
@@ -223,7 +223,7 @@
   flex-wrap: wrap;
   gap: 6px;
 
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 750;
 }
 
@@ -249,13 +249,13 @@
 }
 
 .exa-notification-empty strong {
-  color: #cbd5e1;
-  font-size: 11px;
+  color: var(--exa-text-primary);
+  font-size: 12px;
 }
 
 .exa-notification-empty span {
   max-width: 230px;
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.5;
 }
 
@@ -277,7 +277,7 @@
 
   cursor: pointer;
 
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 850;
 }
 
@@ -325,6 +325,22 @@
 [data-theme="light"]
   .exa-notification-item.unread {
   background: rgba(37, 99, 235, 0.06);
+}
+
+[data-theme="light"] .exa-notification-mark-all {
+  border-color: var(--exa-border-strong);
+  color: var(--exa-primary-hover);
+  background: var(--exa-primary-soft);
+}
+
+[data-theme="light"] .exa-notification-mark-all:hover {
+  border-color: var(--exa-primary);
+  color: var(--exa-primary-contrast);
+  background: var(--exa-primary);
+}
+
+[data-theme="light"] .exa-notification-empty strong {
+  color: var(--exa-text-primary);
 }
 
 [data-theme="light"] .exa-notification-view-all {

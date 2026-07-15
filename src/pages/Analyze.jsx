@@ -179,23 +179,23 @@ const RANGE_MAP = {
 
 const SIGNAL_STYLE = {
   BUY: {
-    color: "#22c55e",
-    bg: "#052e16",
+    color: "var(--exa-positive)",
+    bg: "var(--exa-positive-soft)",
     label: "Positive",
   },
   SELL: {
-    color: "#ef4444",
-    bg: "#450a0a",
+    color: "var(--exa-negative)",
+    bg: "var(--exa-negative-soft)",
     label: "Negative",
   },
   NEUTRAL: {
-    color: "#eab308",
-    bg: "#422006",
+    color: "var(--exa-warning)",
+    bg: "var(--exa-warning-soft)",
     label: "Neutral",
   },
   WATCH: {
-    color: "#3b82f6",
-    bg: "#172554",
+    color: "var(--exa-primary)",
+    bg: "var(--exa-primary-soft)",
     label: "Watch",
   },
 };
@@ -211,15 +211,10 @@ const ANALYZE_LAYOUT_STYLES = `
     margin: 0 0 18px;
     padding: 16px;
     box-sizing: border-box;
-    border: 1px solid rgba(96, 165, 250, 0.16);
+    border: 1px solid var(--exa-border);
     border-radius: 18px;
-    background:
-      linear-gradient(
-        145deg,
-        rgba(14, 28, 51, 0.98),
-        rgba(7, 18, 35, 0.99)
-      );
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+    background: var(--exa-card-background);
+    box-shadow: var(--exa-shadow-card);
   }
 
   .exa-search-with-icon-button {
@@ -1053,16 +1048,16 @@ function ScoreCard({ title, score, scoreLabel }) {
 
   const labelColor =
     numericScore >= 70
-      ? "#22c55e"
+      ? "var(--exa-positive)"
       : numericScore >= 40
-        ? "#eab308"
-        : "#ef4444";
+        ? "var(--exa-warning)"
+        : "var(--exa-negative)";
 
   return (
     <div
       style={{
-        background: "#101a30",
-        border: "1px solid #1e293b",
+        background: "var(--exa-card-background)",
+        border: "1px solid var(--exa-border)",
         borderRadius: 10,
         padding: "14px 16px",
         display: "flex",
@@ -1074,7 +1069,7 @@ function ScoreCard({ title, score, scoreLabel }) {
       <div
         style={{
           fontSize: 13,
-          color: "#cbd5e1",
+          color: "var(--exa-text-secondary)",
         }}
       >
         {title}
@@ -2526,7 +2521,7 @@ export default function Analyze() {
               <div className="exa-analyze-title-row">
                 <div>
                   <p className="exa-analyze-eyebrow">
-                    EXA AI RESEARCH
+                    LITSES AI RESEARCH
                   </p>
 
                   <h1 className="exa-analyze-title">
@@ -2614,7 +2609,7 @@ export default function Analyze() {
 
                 <p>
                   Enter a company name or select a popular stock above.
-                  EXA will combine live Yahoo Finance data with
+                  Litses will combine live Yahoo Finance data with
                   AI-assisted educational research.
                 </p>
 
@@ -3167,7 +3162,7 @@ export default function Analyze() {
                     display: "flex",
                     gap: 4,
                     borderBottom:
-                      "1px solid #1e293b",
+                      "1px solid var(--exa-border)",
                     overflowX: "auto",
                   }}
                 >
@@ -3193,8 +3188,8 @@ export default function Analyze() {
                         background: "transparent",
                         color:
                           activeTab === tab
-                            ? "#fff"
-                            : "#64748b",
+                            ? "var(--exa-primary-hover)"
+                            : "var(--exa-text-secondary)",
                         borderBottom:
                           activeTab === tab
                             ? "2px solid #2563eb"
@@ -3294,7 +3289,7 @@ export default function Analyze() {
       fontSize: 14,
     }}
   >
-    The {activeTab} tab is part of the EXA NEXUS roadmap and
+    The {activeTab} tab is part of the Litses roadmap and
     will be added in a later phase.
   </div>
 )}
@@ -3327,4 +3322,3 @@ export default function Analyze() {
 }
 
 
-  

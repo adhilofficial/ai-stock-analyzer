@@ -513,7 +513,7 @@ function LoadingResearch({ stage }) {
       </span>
 
       <div>
-        <p>EXA RESEARCH ENGINE</p>
+        <p>LITSES RESEARCH ENGINE</p>
         <h2>
           Building the research report
         </h2>
@@ -621,7 +621,7 @@ function buildCopyText({
   generatedAt,
 }) {
   const lines = [
-    "EXA NEXUS — AI RESEARCH REPORT",
+    "LITSES — AI RESEARCH REPORT",
     "",
     `${stockData?.name || stockData?.company || stockData?.symbol}`,
     `${stockData?.symbol} · ${stockData?.exchange || "Indian market"}`,
@@ -1093,7 +1093,7 @@ export default function AIResearch() {
           <section className="exa-research-hero">
             <div className="exa-research-hero-copy">
               <p className="exa-research-eyebrow">
-                EXA AI RESEARCH
+                LITSES AI RESEARCH
               </p>
 
               <h1>
@@ -1852,7 +1852,7 @@ export default function AIResearch() {
           )}
 
           <p className="exa-research-disclaimer">
-            EXA NEXUS provides AI-assisted educational
+            Litses provides AI-assisted educational
             research based on available market data. It is
             not personalised investment advice, a registered
             research recommendation or a guarantee of future

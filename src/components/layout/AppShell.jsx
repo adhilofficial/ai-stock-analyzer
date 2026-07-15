@@ -10,42 +10,12 @@ import {
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-import "../../styles/theme.css";
-
-const THEME_STORAGE_KEY =
-  "exa-theme-v1";
+import {
+  applyTheme,
+  getInitialTheme,
+} from "../../config/theme";
 
 const SIDEBAR_BREAKPOINT = 900;
-
-function getInitialTheme() {
-  if (
-    typeof window ===
-    "undefined"
-  ) {
-    return "dark";
-  }
-
-  const savedTheme =
-    window.localStorage.getItem(
-      THEME_STORAGE_KEY,
-    );
-
-  if (
-    savedTheme === "dark" ||
-    savedTheme === "light"
-  ) {
-    return savedTheme;
-  }
-
-  const prefersLight =
-    window.matchMedia?.(
-      "(prefers-color-scheme: light)",
-    )?.matches;
-
-  return prefersLight
-    ? "light"
-    : "dark";
-}
 
 function getInitialSidebarOpen() {
   if (
@@ -88,15 +58,7 @@ export default function AppShell({
   );
 
   useEffect(() => {
-    document.documentElement.setAttribute(
-      "data-theme",
-      theme,
-    );
-
-    window.localStorage.setItem(
-      THEME_STORAGE_KEY,
-      theme,
-    );
+    applyTheme(theme);
   }, [theme]);
 
   /*

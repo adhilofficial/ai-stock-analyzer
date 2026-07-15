@@ -20,19 +20,19 @@ import {
 } from "../../utils/technicalIndicators";
 
 const COLORS = {
-  background: "#07111F",
-  card: "#101A30",
-  cardSecondary: "#0D1B2A",
-  border: "#1E293B",
-  blue: "#2F80ED",
-  cyan: "#22D3EE",
-  purple: "#8B5CF6",
-  green: "#22C55E",
-  yellow: "#EAB308",
-  red: "#EF4444",
-  white: "#F8FAFC",
-  text: "#CBD5E1",
-  muted: "#64748B",
+  background: "var(--exa-background)",
+  card: "var(--exa-card-background)",
+  cardSecondary: "var(--exa-card-background-soft)",
+  border: "var(--exa-border)",
+  blue: "var(--exa-primary)",
+  cyan: "var(--exa-accent)",
+  purple: "var(--exa-purple)",
+  green: "var(--exa-positive)",
+  yellow: "var(--exa-warning)",
+  red: "var(--exa-negative)",
+  white: "var(--exa-text-primary)",
+  text: "var(--exa-text-secondary)",
+  muted: "var(--exa-text-muted)",
 };
 
 function safeNumber(value) {
@@ -135,7 +135,7 @@ function getScoreLabel(score) {
         "Most calculated indicators currently support positive technical momentum.",
       color: COLORS.green,
       background:
-        "rgba(34, 197, 94, 0.10)",
+        "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
     };
   }
 
@@ -146,7 +146,7 @@ function getScoreLabel(score) {
         "Technical indicators are mixed and do not currently show a strong directional advantage.",
       color: COLORS.yellow,
       background:
-        "rgba(234, 179, 8, 0.10)",
+        "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
     };
   }
 
@@ -156,7 +156,7 @@ function getScoreLabel(score) {
       "Several calculated indicators currently reflect weak or negative technical momentum.",
     color: COLORS.red,
     background:
-      "rgba(239, 68, 68, 0.10)",
+      "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
   };
 }
 
@@ -171,7 +171,7 @@ function getTrendStyle(trend) {
         Icon: TrendingUp,
         color: COLORS.green,
         background:
-          "rgba(34, 197, 94, 0.10)",
+          "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
       };
 
     case "bearish":
@@ -179,7 +179,7 @@ function getTrendStyle(trend) {
         Icon: TrendingDown,
         color: COLORS.red,
         background:
-          "rgba(239, 68, 68, 0.10)",
+          "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
       };
 
     case "sideways":
@@ -187,7 +187,7 @@ function getTrendStyle(trend) {
         Icon: CircleMinus,
         color: COLORS.yellow,
         background:
-          "rgba(234, 179, 8, 0.10)",
+          "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
       };
 
     default:
@@ -195,7 +195,7 @@ function getTrendStyle(trend) {
         Icon: Activity,
         color: COLORS.muted,
         background:
-          "rgba(100, 116, 139, 0.10)",
+          "color-mix(in srgb, var(--exa-text-muted) 10%, transparent)",
       };
   }
 }
@@ -223,7 +223,7 @@ function getIndicatorStyle(label) {
     return {
       color: COLORS.green,
       background:
-        "rgba(34, 197, 94, 0.10)",
+        "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
     };
   }
 
@@ -241,7 +241,7 @@ function getIndicatorStyle(label) {
     return {
       color: COLORS.red,
       background:
-        "rgba(239, 68, 68, 0.10)",
+        "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
     };
   }
 
@@ -259,7 +259,7 @@ function getIndicatorStyle(label) {
     return {
       color: COLORS.yellow,
       background:
-        "rgba(234, 179, 8, 0.10)",
+        "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
     };
   }
 
@@ -271,14 +271,14 @@ function getIndicatorStyle(label) {
     return {
       color: COLORS.cyan,
       background:
-        "rgba(34, 211, 238, 0.10)",
+        "color-mix(in srgb, var(--exa-accent) 10%, transparent)",
     };
   }
 
   return {
     color: COLORS.muted,
     background:
-      "rgba(100, 116, 139, 0.10)",
+      "color-mix(in srgb, var(--exa-text-muted) 10%, transparent)",
   };
 }
 
@@ -299,7 +299,8 @@ function StatusBadge({
         fontWeight: 700,
         color,
         background,
-        border: `1px solid ${color}33`,
+        border:
+          `1px solid color-mix(in srgb, ${color} 20%, transparent)`,
         whiteSpace: "nowrap",
       }}
     >
@@ -323,14 +324,13 @@ function TechnicalMetricCard({
     <article
       style={{
         background:
-          "linear-gradient(145deg, #101A30 0%, #0D1B2A 100%)",
+          "linear-gradient(145deg, var(--exa-card-background) 0%, var(--exa-card-background-soft) 100%)",
         border:
-          "1px solid #1E293B",
+          "1px solid var(--exa-border)",
         borderRadius: 14,
         padding: 16,
         minWidth: 0,
-        boxShadow:
-          "0 12px 30px rgba(0, 0, 0, 0.12)",
+        boxShadow: "var(--exa-shadow-card)",
       }}
     >
       <div
@@ -354,9 +354,10 @@ function TechnicalMetricCard({
               "center",
             borderRadius: 10,
             color: accent,
-            background: `${accent}15`,
+            background:
+              `color-mix(in srgb, ${accent} 8%, transparent)`,
             border:
-              `1px solid ${accent}2E`,
+              `1px solid color-mix(in srgb, ${accent} 18%, transparent)`,
             flexShrink: 0,
           }}
         >
@@ -428,7 +429,7 @@ function DetailRow({
         gap: 18,
         padding: "11px 0",
         borderBottom:
-          "1px solid rgba(30, 41, 59, 0.75)",
+          "1px solid var(--exa-border)",
       }}
     >
       <span
@@ -486,9 +487,9 @@ function TechnicalSummary({
       <div
         style={{
           background:
-            "linear-gradient(145deg, #101A30 0%, #0B1829 100%)",
+            "linear-gradient(145deg, var(--exa-card-background) 0%, var(--exa-card-background-soft) 100%)",
           border:
-            "1px solid #1E293B",
+            "1px solid var(--exa-border)",
           borderRadius: 14,
           padding: 18,
           display: "flex",
@@ -578,9 +579,9 @@ function TechnicalSummary({
       <div
         style={{
           background:
-            "linear-gradient(145deg, #101A30 0%, #0B1829 100%)",
+            "linear-gradient(145deg, var(--exa-card-background) 0%, var(--exa-card-background-soft) 100%)",
           border:
-            "1px solid #1E293B",
+            "1px solid var(--exa-border)",
           borderRadius: 14,
           padding: 18,
           display: "flex",
@@ -603,7 +604,7 @@ function TechnicalSummary({
             background:
               trendStyle.background,
             border:
-              `1px solid ${trendStyle.color}33`,
+              `1px solid color-mix(in srgb, ${trendStyle.color} 20%, transparent)`,
             flexShrink: 0,
           }}
         >
@@ -761,9 +762,9 @@ export default function TechnicalsTab({
             color:
               COLORS.yellow,
             background:
-              "rgba(234, 179, 8, 0.08)",
+              "color-mix(in srgb, var(--exa-warning) 8%, transparent)",
             border:
-              "1px solid rgba(234, 179, 8, 0.22)",
+              "1px solid color-mix(in srgb, var(--exa-warning) 22%, transparent)",
             borderRadius: 12,
             fontSize: 12,
             lineHeight: 1.6,
@@ -1099,9 +1100,9 @@ export default function TechnicalsTab({
           padding: "13px 15px",
           color: COLORS.muted,
           background:
-            "rgba(47, 128, 237, 0.06)",
+            "color-mix(in srgb, var(--exa-primary) 6%, transparent)",
           border:
-            "1px solid rgba(47, 128, 237, 0.18)",
+            "1px solid color-mix(in srgb, var(--exa-primary) 18%, transparent)",
           borderRadius: 12,
           fontSize: 11,
           lineHeight: 1.65,
@@ -1109,7 +1110,7 @@ export default function TechnicalsTab({
       >
         These indicators are
         calculated from the chart
-        data currently loaded in EXA.
+        data currently loaded in Litses.
         They are provided for
         educational market research
         and should not be treated as

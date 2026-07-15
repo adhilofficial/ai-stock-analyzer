@@ -13,16 +13,16 @@ import {
 } from "lucide-react";
 
 const COLORS = {
-  panel: "#0b1729",
-  card: "#101e34",
-  border: "#1e3350",
-  text: "#94a3b8",
-  muted: "#64748b",
-  white: "#f8fafc",
-  blue: "#60a5fa",
-  green: "#22c55e",
-  yellow: "#eab308",
-  red: "#ef4444",
+  panel: "var(--exa-card-background)",
+  card: "var(--exa-card-background-soft)",
+  border: "var(--exa-border)",
+  text: "var(--exa-text-secondary)",
+  muted: "var(--exa-text-muted)",
+  white: "var(--exa-text-primary)",
+  blue: "var(--exa-primary)",
+  green: "var(--exa-positive)",
+  yellow: "var(--exa-warning)",
+  red: "var(--exa-negative)",
 };
 
 function safeNumber(value) {
@@ -261,9 +261,9 @@ function MetricCard({
             borderRadius: 10,
             color: COLORS.blue,
             background:
-              "rgba(37, 99, 235, 0.12)",
+              "var(--exa-primary-soft)",
             border:
-              "1px solid rgba(96, 165, 250, 0.16)",
+              "1px solid var(--exa-border-strong)",
             display:
               "inline-flex",
             alignItems: "center",
@@ -678,7 +678,7 @@ export default function FinancialsTab({
             `1px solid ${COLORS.border}`,
           borderRadius: 16,
           background:
-            "linear-gradient(145deg, rgba(10, 24, 43, 0.98), rgba(7, 18, 35, 0.98))",
+            "linear-gradient(145deg, var(--exa-card-background), var(--exa-card-background-soft))",
           display: "flex",
           alignItems: "center",
           justifyContent:
@@ -730,11 +730,11 @@ export default function FinancialsTab({
             minWidth: 160,
             padding: "12px 14px",
             border:
-              `1px solid ${health.tone}44`,
+              `1px solid color-mix(in srgb, ${health.tone} 27%, transparent)`,
             borderRadius: 12,
             color: health.tone,
             background:
-              `${health.tone}12`,
+              `color-mix(in srgb, ${health.tone} 7%, transparent)`,
             display: "flex",
             alignItems: "center",
             gap: 10,

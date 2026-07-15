@@ -14,17 +14,23 @@ export default function ExaBrandLogo({
   return (
     <div className={lockupClassName}>
       <img
-        src="/exa-logo.webp"
-        alt="EXA"
+        src="/favicon.svg"
+        alt="Litses"
         className="exa-brand-image"
         draggable="false"
       />
-  
-      {/* {showTagline && !compact && (
-        <span className="exa-brand-tagline">
-          AI Stock Analyzer
-        </span>
-      )} */}
+
+      <span className="exa-brand-copy">
+        <strong className="exa-brand-wordmark">
+          Litses
+        </strong>
+
+        {showTagline && !compact && (
+          <span className="exa-brand-tagline">
+            Market intelligence
+          </span>
+        )}
+      </span>
     </div>
   );
 }

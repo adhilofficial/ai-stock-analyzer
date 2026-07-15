@@ -856,7 +856,7 @@ const SCREENER_STYLES = `
     align-items: center;
     gap: 8px;
     margin-bottom: 11px;
-    color: #f8fafc;
+    color: var(--exa-text-primary);
     font-size: 13px;
     font-weight: 750;
   }
@@ -1054,7 +1054,7 @@ const SCREENER_STYLES = `
     overflow: hidden;
     margin: 4px 0 0;
     color: #94a3b8;
-    font-size: 8px;
+    font-size: 10px;
     line-height: 1.45;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -1064,7 +1064,7 @@ const SCREENER_STYLES = `
     display: block;
     margin-top: 5px;
     color: #475569;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-saved-screen-actions {
@@ -1198,7 +1198,7 @@ const SCREENER_STYLES = `
     display: block;
     margin-top: 4px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-compare-tray-stocks {
@@ -1247,7 +1247,7 @@ const SCREENER_STYLES = `
     display: block;
     margin-top: 2px;
     color: #64748b;
-    font-size: 7px;
+    font-size: 10px;
   }
 
   .exa-compare-chip-remove {
@@ -1316,7 +1316,7 @@ const SCREENER_STYLES = `
   .exa-compare-tray-message {
     margin: 8px 0 0;
     color: #fbbf24;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-screener-toolbar {
@@ -2389,7 +2389,7 @@ export default function Screener() {
 
     if (!saved) {
       setSavedScreenError(
-        "This browser did not allow EXA to save the screen locally.",
+        "This browser did not allow Litses to save the screen locally.",
       );
 
       return false;
@@ -2610,7 +2610,7 @@ export default function Screener() {
         <div className="exa-screener-container">
           <section className="exa-screener-header">
             <div>
-              <p className="exa-screener-eyebrow">EXA NEXUS</p>
+              <p className="exa-screener-eyebrow">LITSES</p>
 
               <h1>Stock Screener</h1>
 
@@ -3287,8 +3287,8 @@ export default function Screener() {
                                 <div
                                   style={{
                                     marginTop: 3,
-                                    color: "#64748b",
-                                    fontSize: 8,
+                                    color: "var(--exa-text-secondary)",
+                                    fontSize: 10,
                                   }}
                                 >
                                   {stock.rsiStatus}

@@ -738,11 +738,11 @@ export default function PremiumMarketOverview({
         <div className="exa-premium-card-header">
           <div>
             <p className="exa-card-eyebrow">
-              EXA INTELLIGENCE
+              LITSES INTELLIGENCE
             </p>
 
             <h2>
-              EXA Market Summary
+              Litses Market Summary
             </h2>
           </div>
 
@@ -835,7 +835,7 @@ export default function PremiumMarketOverview({
           onClick={onOpenAnalyze}
         >
           <Sparkles size={15} />
-          Ask EXA AI
+          Ask Litses AI
           <ArrowUpRight size={14} />
         </button>
 

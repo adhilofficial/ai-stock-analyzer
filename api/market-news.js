@@ -265,7 +265,7 @@ async function searchDirectly(
           Accept:
             "application/json",
           "User-Agent":
-            "Mozilla/5.0 EXA-Market-News/1.0",
+            "Mozilla/5.0 Litses-Market-News/1.0",
         },
       },
     );

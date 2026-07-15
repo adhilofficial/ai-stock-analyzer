@@ -392,9 +392,9 @@ export const dashboardMockData = {
       symbol: "LTIM.NS",
       type: "score",
       severity: "medium",
-      title: "EXA Score Upgrade",
+      title: "Litses Score Upgrade",
       message:
-        "LTIMindtree EXA score increased from 64 to 72.",
+        "LTIMindtree Litses score increased from 64 to 72.",
       time: "9:58 AM",
     },
     {

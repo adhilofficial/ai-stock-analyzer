@@ -86,13 +86,14 @@ function PageLoader() {
         alignItems: "center",
         justifyContent: "center",
         padding: "24px",
-        background: "#050914",
-        color: "#a8b3cf",
+        background:
+          "radial-gradient(circle at top, var(--exa-primary-soft) 0%, var(--exa-background) 62%)",
+        color: "var(--exa-text-secondary)",
         fontFamily:
           "Inter, system-ui, sans-serif",
       }}
     >
-      Loading EXA...
+      Loading Litses...
     </div>
   );
 }

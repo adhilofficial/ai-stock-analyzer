@@ -357,7 +357,7 @@ const COMPARE_STYLES = `
 
   .exa-compare-eyebrow {
     margin: 0 0 7px;
-    color: #22d3ee;
+    color: var(--exa-primary-hover);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.14em;
@@ -488,8 +488,8 @@ const COMPARE_STYLES = `
     height: 28px;
     border: 1px solid rgba(244, 63, 94, 0.18);
     border-radius: 8px;
-    color: #fda4af;
-    background: rgba(244, 63, 94, 0.06);
+    color: var(--exa-negative);
+    background: var(--exa-negative-soft);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -643,7 +643,7 @@ const COMPARE_STYLES = `
     padding: 4px 8px;
     border: 1px solid #29405f;
     border-radius: 999px;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 800;
   }
 
@@ -734,8 +734,8 @@ const COMPARE_STYLES = `
     align-items: center;
     gap: 7px;
     margin-bottom: 9px;
-    color: #e2e8f0;
-    font-size: 10px;
+    color: var(--exa-text-primary);
+    font-size: 11px;
     font-weight: 800;
   }
 
@@ -790,8 +790,8 @@ const COMPARE_STYLES = `
 
   .exa-compare-search-state {
     padding: 13px;
-    color: #94a3b8;
-    font-size: 10px;
+    color: var(--exa-text-secondary);
+    font-size: 11px;
     text-align: center;
   }
 
@@ -835,7 +835,7 @@ const COMPARE_STYLES = `
     display: block;
     margin-top: 3px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-compare-search-add {
@@ -965,19 +965,19 @@ const COMPARE_STYLES = `
     display: block;
     margin-top: 3px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-compare-overall-score {
     flex-shrink: 0;
-    color: #67e8f9;
+    color: var(--exa-accent);
     font-size: 21px;
     font-weight: 900;
   }
 
   .exa-compare-overall-score small {
-    color: #64748b;
-    font-size: 8px;
+    color: var(--exa-text-secondary);
+    font-size: 10px;
   }
 
   .exa-compare-score-rank {
@@ -990,7 +990,7 @@ const COMPARE_STYLES = `
     border-radius: 999px;
     color: #93c5fd;
     background: #101e34;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 800;
   }
 
@@ -1009,7 +1009,7 @@ const COMPARE_STYLES = `
 
   .exa-compare-category-row span,
   .exa-compare-category-row strong {
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-compare-category-row span {
@@ -1040,7 +1040,7 @@ const COMPARE_STYLES = `
   .exa-compare-coverage {
     margin-top: 10px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-compare-winner-grid {
@@ -1061,8 +1061,8 @@ const COMPARE_STYLES = `
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    color: #60a5fa;
-    font-size: 8px;
+    color: var(--exa-primary-hover);
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -1078,14 +1078,14 @@ const COMPARE_STYLES = `
   .exa-compare-winner-card p {
     margin: 5px 0 0;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
     line-height: 1.55;
   }
 
   .exa-compare-method-note {
     margin: 12px 0 0;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
     line-height: 1.6;
   }
 
@@ -2467,7 +2467,7 @@ export default function Compare() {
           <section className="exa-compare-header">
             <div>
               <p className="exa-compare-eyebrow">
-                EXA NEXUS
+                LITSES
               </p>
 
               <h1>

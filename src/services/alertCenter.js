@@ -1089,7 +1089,7 @@ export async function loadAlertCenterData({
   const source =
     sourceParts.length > 0
       ? sourceParts.join(" + ")
-      : "EXA alert center";
+      : "Litses alert center";
 
   const historySync = syncAlertHistory(alerts, {
     notifyAlertIds: customRulesData.newlyTriggeredAlertIds,

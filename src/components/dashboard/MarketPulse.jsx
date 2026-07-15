@@ -557,11 +557,11 @@ export default function MarketPulse({
       <div className="exa-card-heading">
         <div>
           <p className="exa-card-eyebrow">
-            EXA INTELLIGENCE
+            LITSES INTELLIGENCE
           </p>
 
           <h2>
-            EXA Market Pulse
+            Litses Market Pulse
           </h2>
         </div>
 

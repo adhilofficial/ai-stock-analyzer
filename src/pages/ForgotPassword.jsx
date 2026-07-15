@@ -11,7 +11,8 @@ const styles = {
     justifyContent: "center",
     padding: "24px",
     background:
-      "radial-gradient(circle at top, #13244a 0%, #070b16 45%, #03050c 100%)",
+      "radial-gradient(circle at top, var(--exa-primary-soft) 0%, var(--exa-background-secondary) 46%, var(--exa-background) 100%)",
+    color: "var(--exa-text-primary)",
     fontFamily: "Inter, system-ui, sans-serif",
   },
 
@@ -20,16 +21,16 @@ const styles = {
     maxWidth: "440px",
     padding: "32px",
     boxSizing: "border-box",
-    border: "1px solid rgba(148, 163, 184, 0.18)",
+    border: "1px solid var(--exa-border)",
     borderRadius: "22px",
-    background: "rgba(8, 14, 28, 0.94)",
-    boxShadow: "0 24px 80px rgba(0, 0, 0, 0.45)",
-    color: "#f8fafc",
+    background: "var(--exa-card-background)",
+    boxShadow: "var(--exa-shadow-card)",
+    color: "var(--exa-text-primary)",
   },
 
   brand: {
     marginBottom: "8px",
-    color: "#3b82f6",
+    color: "var(--exa-primary)",
     fontSize: "14px",
     fontWeight: "800",
     letterSpacing: "0.16em",
@@ -38,13 +39,14 @@ const styles = {
 
   title: {
     margin: "0 0 8px",
+    color: "var(--exa-text-primary)",
     fontSize: "30px",
     lineHeight: "1.2",
   },
 
   subtitle: {
     margin: "0 0 26px",
-    color: "#94a3b8",
+    color: "var(--exa-text-secondary)",
     fontSize: "14px",
     lineHeight: "1.6",
   },
@@ -56,7 +58,7 @@ const styles = {
   label: {
     display: "block",
     marginBottom: "8px",
-    color: "#cbd5e1",
+    color: "var(--exa-text-secondary)",
     fontSize: "13px",
     fontWeight: "700",
   },
@@ -65,11 +67,12 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
     padding: "13px 14px",
-    border: "1px solid rgba(148, 163, 184, 0.24)",
+    border: "1px solid var(--exa-border)",
     borderRadius: "12px",
     outline: "none",
-    background: "#0c1426",
-    color: "#f8fafc",
+    background: "var(--exa-input-background)",
+    color: "var(--exa-text-primary)",
+    caretColor: "var(--exa-primary)",
     fontSize: "15px",
   },
 
@@ -79,7 +82,7 @@ const styles = {
     border: "none",
     borderRadius: "12px",
     background:
-      "linear-gradient(135deg, #2563eb, #06b6d4)",
+      "linear-gradient(135deg, var(--exa-primary), var(--exa-accent))",
     color: "#ffffff",
     fontSize: "15px",
     fontWeight: "800",
@@ -88,10 +91,12 @@ const styles = {
   error: {
     marginBottom: "18px",
     padding: "12px 14px",
-    border: "1px solid rgba(248, 113, 113, 0.35)",
+    border:
+      "1px solid color-mix(in srgb, var(--exa-negative) 34%, transparent)",
     borderRadius: "10px",
-    background: "rgba(127, 29, 29, 0.24)",
-    color: "#fecaca",
+    background:
+      "color-mix(in srgb, var(--exa-negative) 9%, var(--exa-card-background))",
+    color: "var(--exa-negative)",
     fontSize: "13px",
     lineHeight: "1.5",
   },
@@ -99,10 +104,12 @@ const styles = {
   success: {
     marginBottom: "18px",
     padding: "12px 14px",
-    border: "1px solid rgba(52, 211, 153, 0.35)",
+    border:
+      "1px solid color-mix(in srgb, var(--exa-positive) 34%, transparent)",
     borderRadius: "10px",
-    background: "rgba(6, 78, 59, 0.24)",
-    color: "#a7f3d0",
+    background:
+      "color-mix(in srgb, var(--exa-positive) 9%, var(--exa-card-background))",
+    color: "var(--exa-positive)",
     fontSize: "13px",
     lineHeight: "1.5",
   },
@@ -110,7 +117,7 @@ const styles = {
   backLink: {
     display: "block",
     marginTop: "22px",
-    color: "#60a5fa",
+    color: "var(--exa-primary)",
     fontSize: "14px",
     fontWeight: "700",
     textAlign: "center",
@@ -165,7 +172,7 @@ export default function ForgotPassword() {
     <main style={styles.page}>
       <section style={styles.card}>
         <div style={styles.brand}>
-          EXA NEXUS
+          Litses
         </div>
 
         <h1 style={styles.title}>
@@ -174,7 +181,7 @@ export default function ForgotPassword() {
 
         <p style={styles.subtitle}>
           Enter the email address connected to your
-          Markets by exa account. We will send you a
+          Litses account. We will send you a
           secure password-reset link.
         </p>
 
@@ -218,7 +225,10 @@ export default function ForgotPassword() {
             disabled={submitting}
             style={{
               ...styles.button,
-              opacity: submitting ? 0.65 : 1,
+              opacity: 1,
+              background: submitting
+                ? "var(--exa-text-muted)"
+                : styles.button.background,
               cursor: submitting
                 ? "not-allowed"
                 : "pointer",

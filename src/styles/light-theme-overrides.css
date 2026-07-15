@@ -1,0 +1,1763 @@
+/*
+ * White-first compatibility layer for protected application pages that still
+ * contain legacy dark color literals. Keep this stylesheet after page styles
+ * so the data-theme specificity can normalize those surfaces without changing
+ * the dark theme.
+ */
+
+:root[data-theme="light"] {
+  --exa-light-on-accent: #ffffff;
+  --exa-light-positive-soft: color-mix(
+    in srgb,
+    var(--exa-positive) 10%,
+    var(--exa-card-background)
+  );
+  --exa-light-negative-soft: color-mix(
+    in srgb,
+    var(--exa-negative) 9%,
+    var(--exa-card-background)
+  );
+  --exa-light-warning-soft: color-mix(
+    in srgb,
+    var(--exa-warning) 10%,
+    var(--exa-card-background)
+  );
+}
+
+/* =====================================
+   SHARED DASHBOARD / LEGACY COMPONENTS
+   ===================================== */
+
+:root[data-theme="light"] .exa-dashboard-page {
+  color: var(--exa-text-primary);
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      var(--exa-primary-soft),
+      transparent 30%
+    ),
+    var(--exa-background);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-dashboard-header h1,
+    .exa-section-heading h2,
+    .exa-card-heading h2,
+    .exa-next-card h2,
+    .exa-index-value,
+    .exa-market-status strong,
+    .exa-pulse-ring-inner strong,
+    .exa-pulse-factor strong,
+    .exa-breadth-donut-inner strong,
+    .exa-breadth-metric strong,
+    .exa-sector-tile-heading strong,
+    .exa-watchlist-company strong,
+    .exa-watchlist-price strong,
+    .exa-alert-title-row strong,
+    .exa-mover-company strong,
+    .exa-mover-price strong,
+    .exa-recent-company strong
+  ) {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-dashboard-subtitle,
+    .exa-market-status small,
+    .exa-index-name,
+    .exa-index-market,
+    .exa-card-subtitle,
+    .exa-pulse-description p,
+    .exa-pulse-disclaimer,
+    .exa-dashboard-note,
+    .exa-sector-tile-body,
+    .exa-watchlist-company span,
+    .exa-watchlist-meta,
+    .exa-alert-time,
+    .exa-alert-body,
+    .exa-mover-company span,
+    .exa-recent-time,
+    .exa-alerts-empty,
+    .exa-recent-empty
+  ) {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-market-status,
+    .exa-dashboard-search,
+    .exa-index-card,
+    .exa-dashboard-card,
+    .exa-pulse-factor,
+    .exa-roadmap-list > div,
+    .exa-breadth-metric,
+    .exa-watchlist-data-meta
+  ) {
+  border-color: var(--exa-border) !important;
+  background: var(--exa-card-background) !important;
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-pulse-ring-inner,
+    .exa-breadth-donut-inner,
+    .exa-section-heading > span,
+    .exa-breadth-total,
+    .exa-stock-avatar,
+    .exa-score-badge,
+    .exa-alert-count,
+    .exa-recent-score
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"] .exa-dashboard-search input {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"] .exa-dashboard-search input::placeholder,
+:root[data-theme="light"] .exa-dashboard-search .exa-search-icon {
+  color: var(--exa-text-muted);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-watchlist-row,
+    .exa-alert-item,
+    .exa-mover-row,
+    .exa-recent-item
+  ) {
+  border-color: var(--exa-border);
+  background: transparent;
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-watchlist-row:hover,
+    .exa-alert-item:hover,
+    .exa-alert-item.clickable:hover,
+    .exa-mover-row:hover,
+    .exa-recent-item:hover
+  ) {
+  border-color: var(--exa-border-strong);
+  background: var(--exa-card-hover);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-market-refresh-button,
+    .exa-watchlist-refresh-button,
+    .exa-watchlist-actions .analyze,
+    .exa-restore-watchlist,
+    .exa-recent-clear
+  ) {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-watchlist-actions .remove,
+    .exa-alert-icon.risk
+  ) {
+  color: var(--exa-negative);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-negative) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-negative-soft);
+}
+
+:root[data-theme="light"] .exa-dashboard-page .positive,
+:root[data-theme="light"] .exa-dashboard-page .exa-watchlist-change.positive {
+  color: var(--exa-positive);
+}
+
+:root[data-theme="light"] .exa-dashboard-page .negative,
+:root[data-theme="light"] .exa-dashboard-page .exa-watchlist-change.negative {
+  color: var(--exa-negative);
+}
+
+:root[data-theme="light"] .exa-dashboard-page .neutral,
+:root[data-theme="light"] .exa-dashboard-page .exa-watchlist-change.neutral {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  :is(
+    .exa-market-api-notice.error,
+    .exa-watchlist-live-status.error,
+    .exa-demo-label.fallback,
+    .exa-movers-status-note,
+    .exa-watchlist-inline-warning
+  ) {
+  color: var(--exa-warning);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-warning) 28%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-warning-soft);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  .exa-alerts-list::-webkit-scrollbar-track {
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-dashboard-page
+  .exa-alerts-list::-webkit-scrollbar-thumb {
+  background: var(--exa-border-strong);
+}
+
+/* Dashboard search and recent-analysis styles embedded in Dashboard.jsx. */
+
+:root[data-theme="light"] .exa-dashboard-research-search,
+:root[data-theme="light"] .exa-dashboard-recent-section {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-dashboard-search-heading h2,
+    .exa-dashboard-suggestion-copy strong,
+    .exa-dashboard-suggestion-price strong,
+    .exa-dashboard-recent-header h2,
+    .exa-dashboard-recent-copy strong,
+    .exa-dashboard-recent-price strong,
+    .exa-dashboard-recent-score strong
+  ) {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-dashboard-search-heading span,
+    .exa-dashboard-suggestion-copy span,
+    .exa-dashboard-suggestion-price span,
+    .exa-dashboard-recent-copy span,
+    .exa-dashboard-recent-price span,
+    .exa-dashboard-recent-score span,
+    .exa-dashboard-suggestion-status
+  ) {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"] .exa-dashboard-search-box,
+:root[data-theme="light"] .exa-dashboard-top-search .exa-dashboard-search-box {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-input-background);
+}
+
+:root[data-theme="light"] .exa-dashboard-search-box:focus-within,
+:root[data-theme="light"]
+  .exa-dashboard-top-search
+  .exa-dashboard-search-box:focus-within {
+  border-color: var(--exa-border-strong);
+  box-shadow: 0 0 0 3px var(--exa-primary-soft);
+}
+
+:root[data-theme="light"] .exa-dashboard-search-input,
+:root[data-theme="light"] .exa-dashboard-top-search .exa-dashboard-search-input {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"] .exa-dashboard-search-input::placeholder {
+  color: var(--exa-text-muted);
+}
+
+:root[data-theme="light"] .exa-dashboard-suggestions,
+:root[data-theme="light"]
+  .exa-dashboard-top-search
+  .exa-dashboard-suggestions {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"] .exa-dashboard-suggestion,
+:root[data-theme="light"] .exa-dashboard-recent-card {
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-dashboard-suggestion:hover,
+    .exa-dashboard-suggestion.active,
+    .exa-dashboard-recent-card:hover
+  ) {
+  border-color: var(--exa-border-strong);
+  background: var(--exa-card-hover);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-dashboard-company-logo,
+    .exa-dashboard-recent-score,
+    .exa-dashboard-recent-empty
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-dashboard-search-clear,
+    .exa-dashboard-recent-header button,
+    .exa-dashboard-recent-action
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-dashboard-search-clear:hover,
+    .exa-dashboard-recent-header button:hover,
+    .exa-dashboard-recent-action:hover
+  ) {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-dashboard-search-submit,
+    .exa-dashboard-suggestion-links a:hover,
+    .exa-dashboard-recent-empty button
+  ) {
+  color: var(--exa-light-on-accent);
+  border-color: var(--exa-primary);
+  background: var(--exa-primary);
+}
+
+/* =====================================
+   SCREENER
+   ===================================== */
+
+:root[data-theme="light"] .exa-screener-page {
+  color: var(--exa-text-primary);
+  background: transparent;
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    h1,
+    h2,
+    .exa-screener-summary-card strong,
+    .exa-screener-preset-button strong,
+    .exa-saved-screen-copy strong,
+    .exa-compare-tray-title strong,
+    .exa-compare-chip-copy strong,
+    .exa-screener-company-copy strong,
+    .exa-screener-state strong
+  ) {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-screener-subtitle,
+    .exa-screener-summary-card span,
+    .exa-screener-summary-card small,
+    .exa-screener-filter-label,
+    .exa-screener-preset-button small,
+    .exa-saved-screens-heading p,
+    .exa-saved-screen-copy p,
+    .exa-saved-screen-copy small,
+    .exa-compare-tray-title small,
+    .exa-compare-chip-copy small,
+    .exa-screener-result-count,
+    .exa-screener-company-copy span,
+    .exa-screener-state p,
+    .exa-screener-pagination-info
+  ) {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-screener-summary-card,
+    .exa-screener-sidebar,
+    .exa-screener-presets,
+    .exa-saved-screens-panel,
+    .exa-screener-toolbar,
+    .exa-screener-table-card,
+    .exa-compare-tray
+  ) {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-screener-filter-group,
+    .exa-screener-preset-button,
+    .exa-saved-screens-count,
+    .exa-saved-screen-card,
+    .exa-saved-screen-empty,
+    .exa-screener-compare-toggle,
+    .exa-compare-chip,
+    .exa-screener-company-logo,
+    .exa-company-logo,
+    .exa-screener-trend,
+    .exa-screener-pagination,
+    .exa-screener-page-button
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-screener-input,
+    .exa-screener-select,
+    .exa-saved-screen-name-input,
+    .exa-screener-search,
+    .exa-screener-search input,
+    .exa-screener-toolbar-select
+  ) {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-input-background);
+}
+
+:root[data-theme="light"] .exa-screener-page .exa-screener-select option,
+:root[data-theme="light"]
+  .exa-screener-page
+  .exa-screener-toolbar-select option {
+  color: var(--exa-text-primary);
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-screener-input:focus,
+    .exa-screener-select:focus,
+    .exa-saved-screen-name-input:focus,
+    .exa-screener-search:focus-within,
+    .exa-screener-toolbar-select:focus
+  ) {
+  border-color: var(--exa-border-strong);
+  box-shadow: 0 0 0 3px var(--exa-primary-soft);
+}
+
+:root[data-theme="light"] .exa-screener-page .exa-screener-table th {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"] .exa-screener-page .exa-screener-table td {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  .exa-screener-table
+  tbody
+  tr:hover
+  td {
+  background: var(--exa-card-hover);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  .exa-screener-table
+  tbody
+  tr.compare-selected
+  td {
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-screener-reset,
+    .exa-saved-screen-open,
+    .exa-compare-clear,
+    .exa-screener-action,
+    .exa-screener-link,
+    .exa-screener-page-button
+  ) {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-screener-refresh,
+    .exa-saved-screen-save-button,
+    .exa-compare-open,
+    .exa-screener-preset-button.active,
+    .exa-screener-compare-toggle.selected
+  ) {
+  color: var(--exa-light-on-accent);
+  border-color: var(--exa-primary);
+  background: var(--exa-primary);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-saved-screen-delete,
+    .exa-compare-chip-remove:hover
+  ) {
+  color: var(--exa-negative);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-negative) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-negative-soft);
+}
+
+:root[data-theme="light"] .exa-screener-page .exa-screener-positive {
+  color: var(--exa-positive) !important;
+}
+
+:root[data-theme="light"] .exa-screener-page .exa-screener-negative {
+  color: var(--exa-negative) !important;
+}
+
+:root[data-theme="light"] .exa-screener-page .exa-screener-neutral {
+  color: var(--exa-text-secondary) !important;
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-saved-screen-status.success,
+    .exa-screener-trend.positive
+  ) {
+  color: var(--exa-positive);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-positive) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-positive-soft);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-saved-screen-status.error,
+    .exa-screener-trend.negative
+  ) {
+  color: var(--exa-negative);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-negative) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-negative-soft);
+}
+
+:root[data-theme="light"]
+  .exa-screener-page
+  :is(
+    .exa-screener-notice,
+    .exa-compare-tray-message
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+/* =====================================
+   PORTFOLIO
+   ===================================== */
+
+:root[data-theme="light"] .exa-portfolio-page {
+  color: var(--exa-text-primary);
+  background: transparent;
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    h1,
+    h2,
+    h3,
+    .exa-portfolio-summary-card strong,
+    .exa-portfolio-company-copy strong,
+    .exa-portfolio-state strong,
+    .exa-portfolio-modal-header h2,
+    .exa-portfolio-search-result-copy strong,
+    .exa-portfolio-selected-stock-copy strong,
+    .exa-transaction-preview strong,
+    .exa-diversification-badge > strong,
+    .exa-risk-panel-top strong,
+    .exa-analytics-metric strong,
+    .exa-analytics-card-header strong,
+    .exa-allocation-legend-row strong,
+    .exa-performance-row div strong,
+    .exa-performance-row > strong,
+    .exa-cashflow-card strong,
+    .exa-analytics-empty strong
+  ) {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-subtitle,
+    .exa-portfolio-summary-card span,
+    .exa-portfolio-summary-card small,
+    .exa-portfolio-count,
+    .exa-portfolio-company-copy span,
+    .exa-portfolio-state p,
+    .exa-portfolio-modal-header p,
+    .exa-portfolio-field label,
+    .exa-portfolio-search-result-copy span,
+    .exa-portfolio-selected-stock-copy span,
+    .exa-portfolio-section-header p,
+    .exa-analytics-heading p,
+    .exa-diversification-badge span,
+    .exa-diversification-badge small,
+    .exa-risk-panel > p,
+    .exa-analytics-metric span,
+    .exa-analytics-metric small,
+    .exa-analytics-card-header span,
+    .exa-allocation-legend-row span,
+    .exa-performance-row div small,
+    .exa-cashflow-card span,
+    .exa-cashflow-card small
+  ) {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-summary-card,
+    .exa-portfolio-toolbar,
+    .exa-portfolio-table-card,
+    .exa-portfolio-modal,
+    .exa-risk-panel,
+    .exa-analytics-metric,
+    .exa-analytics-card,
+    .exa-performance-list-card,
+    .exa-cashflow-card,
+    .exa-recharts-tooltip
+  ) {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-summary-icon,
+    .exa-portfolio-logo,
+    .exa-portfolio-icon-button,
+    .exa-portfolio-modal-close,
+    .exa-portfolio-selected-stock,
+    .exa-transaction-type-picker,
+    .exa-transaction-preview,
+    .exa-diversification-badge,
+    .exa-risk-meter,
+    .exa-chart-shell,
+    .exa-allocation-legend,
+    .exa-performance-row,
+    .exa-analytics-empty
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-toolbar-search,
+    .exa-portfolio-toolbar-search input,
+    .exa-portfolio-toolbar select,
+    .exa-portfolio-field input,
+    .exa-portfolio-field textarea,
+    .exa-portfolio-stock-search
+  ) {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-input-background);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-toolbar-search:focus-within,
+    .exa-portfolio-toolbar select:focus,
+    .exa-portfolio-field input:focus,
+    .exa-portfolio-field textarea:focus,
+    .exa-portfolio-stock-search:focus-within
+  ) {
+  border-color: var(--exa-border-strong);
+  box-shadow: 0 0 0 3px var(--exa-primary-soft);
+}
+
+:root[data-theme="light"] .exa-portfolio-page .exa-portfolio-table th {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"] .exa-portfolio-page .exa-portfolio-table td {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  .exa-portfolio-table
+  tbody
+  tr:hover
+  td {
+  background: var(--exa-card-hover);
+}
+
+:root[data-theme="light"] .exa-portfolio-modal-backdrop {
+  background: var(--exa-overlay);
+}
+
+:root[data-theme="light"] .exa-portfolio-modal-header {
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"] .exa-portfolio-search-results {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"] .exa-portfolio-search-result {
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"] .exa-portfolio-search-result:hover {
+  background: var(--exa-card-hover);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-button,
+    .exa-portfolio-icon-button,
+    .exa-portfolio-mini-action,
+    .exa-portfolio-modal-close
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-button.primary,
+    .exa-portfolio-analyze
+  ) {
+  color: var(--exa-light-on-accent);
+  border-color: var(--exa-primary);
+  background: var(--exa-primary);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-button.danger,
+    .exa-portfolio-icon-button.danger,
+    .exa-portfolio-mini-action.sell,
+    .exa-transaction-badge.sell,
+    .exa-transaction-type-picker button.active.sell,
+    .exa-portfolio-form-message.error
+  ) {
+  color: var(--exa-negative);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-negative) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-negative-soft);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-mini-action.buy,
+    .exa-transaction-badge.buy,
+    .exa-transaction-type-picker button.active.buy,
+    .exa-portfolio-form-message.success,
+    .exa-portfolio-notice.success,
+    .exa-risk-warning.healthy
+  ) {
+  color: var(--exa-positive);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-positive) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-positive-soft);
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  :is(
+    .exa-portfolio-notice,
+    .exa-portfolio-notice.warning,
+    .exa-available-quantity,
+    .exa-risk-warning
+  ) {
+  color: var(--exa-warning);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-warning) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-warning-soft);
+}
+
+:root[data-theme="light"] .exa-portfolio-page .exa-portfolio-positive {
+  color: var(--exa-positive) !important;
+}
+
+:root[data-theme="light"] .exa-portfolio-page .exa-portfolio-negative {
+  color: var(--exa-negative) !important;
+}
+
+:root[data-theme="light"]
+  .exa-portfolio-page
+  .recharts-cartesian-grid
+  line {
+  stroke: var(--exa-border);
+}
+
+:root[data-theme="light"] .exa-portfolio-page .recharts-text {
+  fill: var(--exa-text-muted);
+}
+
+/* =====================================
+   STOCK COMPARISON
+   ===================================== */
+
+:root[data-theme="light"] .exa-compare-page {
+  color: var(--exa-text-primary);
+  background: transparent;
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  :is(
+    h1,
+    h2,
+    h3,
+    .exa-compare-summary strong,
+    .exa-compare-company-copy strong,
+    .exa-compare-price-row strong,
+    .exa-compare-state strong,
+    .exa-compare-search-result-copy strong,
+    .exa-compare-score-company strong,
+    .exa-compare-category-row strong,
+    .exa-compare-winner-card strong
+  ) {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  :is(
+    .exa-compare-subtitle,
+    .exa-compare-company-copy span,
+    .exa-compare-state p,
+    .exa-compare-search-result-copy span,
+    .exa-compare-score-heading p,
+    .exa-compare-score-company span,
+    .exa-compare-category-row span,
+    .exa-compare-overall-score small,
+    .exa-compare-coverage,
+    .exa-compare-winner-card p,
+    .exa-compare-method-note
+  ) {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  :is(
+    .exa-compare-summary,
+    .exa-compare-company-card,
+    .exa-compare-table-card,
+    .exa-compare-add-panel,
+    .exa-compare-score-section,
+    .exa-compare-score-card,
+    .exa-compare-winner-card
+  ) {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  :is(
+    .exa-compare-back,
+    .exa-compare-logo,
+    .exa-compare-external,
+    .exa-compare-score-rank,
+    .exa-compare-score-track
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-search-input {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-input-background);
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  .exa-compare-search-input:focus {
+  border-color: var(--exa-border-strong);
+  box-shadow: 0 0 0 3px var(--exa-primary-soft);
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-search-results {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-search-result {
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-search-result:hover {
+  background: var(--exa-card-hover);
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-table th {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-table td {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  .exa-compare-table
+  :is(th:first-child, td:first-child) {
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-group-row td {
+  color: var(--exa-text-secondary) !important;
+  background: var(--exa-card-background-soft) !important;
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-best {
+  color: var(--exa-primary) !important;
+  background: var(--exa-primary-soft) !important;
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  :is(
+    .exa-compare-back,
+    .exa-compare-external,
+    .exa-compare-state-button,
+    .exa-compare-search-add,
+    .exa-compare-share-button
+  ) {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"] .exa-compare-page .exa-compare-analyze {
+  color: var(--exa-light-on-accent);
+  border-color: var(--exa-primary);
+  background: var(--exa-primary);
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  :is(
+    .exa-compare-change.positive,
+    .exa-compare-trend.positive
+  ) {
+  color: var(--exa-positive);
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  :is(
+    .exa-compare-change.negative,
+    .exa-compare-trend.negative
+  ) {
+  color: var(--exa-negative);
+}
+
+:root[data-theme="light"]
+  .exa-compare-page
+  :is(
+    .exa-compare-action-message,
+    .exa-compare-score-card.leader
+  ) {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+/* =====================================
+   ANALYZE
+   ===================================== */
+
+:root[data-theme="light"] .exa-analyze-page,
+:root[data-theme="light"]
+  .exa-dashboard-page.exa-dashboard-v2.exa-analyze-page {
+  color: var(--exa-text-primary);
+  background: transparent !important;
+}
+
+:root[data-theme="light"] .exa-analyze-page::before,
+:root[data-theme="light"] .exa-analyze-page::after,
+:root[data-theme="light"] .exa-analyze-container::after {
+  background: none;
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-hero,
+    .exa-analyze-loading-state,
+    .exa-analyze-empty-state,
+    .exa-stock-overview-card,
+    .exa-stock-metric-card,
+    .exa-price-chart-card,
+    .exa-stock-news-card
+  ) {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-title,
+    .exa-analyze-empty-state h2,
+    .exa-analyze-feature strong,
+    .exa-stock-company-name-row h2,
+    .exa-stock-price-row > strong,
+    .exa-stock-metric-card strong,
+    .exa-price-chart-heading h3,
+    .exa-price-chart-summary strong,
+    .exa-chart-state strong,
+    .exa-stock-suggestion-info strong,
+    .exa-stock-suggestion-price strong,
+    .exa-stock-news-title h3,
+    .exa-stock-news-company strong,
+    .exa-stock-news-copy h4,
+    .exa-stock-news-message strong
+  ) {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-subtitle,
+    .exa-analyze-quick-label,
+    .exa-analyze-loading-state span,
+    .exa-analyze-empty-state > p,
+    .exa-analyze-feature span,
+    .exa-stock-company-meta,
+    .exa-stock-price-label,
+    .exa-stock-price-caption,
+    .exa-stock-metric-card p,
+    .exa-stock-metric-card small,
+    .exa-price-chart-heading p,
+    .exa-price-chart-summary span,
+    .exa-chart-state span,
+    .exa-price-chart-footer,
+    .exa-stock-suggestion-info span,
+    .exa-stock-suggestion-price span,
+    .exa-stock-news-title p,
+    .exa-stock-news-meta,
+    .exa-stock-news-message p
+  ) {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-search-input,
+    .exa-analyze-nav-search-field,
+    .exa-analyze-nav-search-input,
+    .exa-analyze-floating-search
+  ) {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-input-background);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-search-input:focus,
+    .exa-analyze-nav-search-field:focus-within,
+    .exa-analyze-floating-search:focus-within
+  ) {
+  border-color: var(--exa-border-strong);
+  background: var(--exa-card-background);
+  box-shadow: 0 0 0 3px var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-quick-chip,
+    .exa-stock-watch-button,
+    .exa-news-refresh-button,
+    .exa-chart-timeframes,
+    .exa-chart-timeframe,
+    .exa-analyze-nav-lens-button,
+    .exa-analyze-lens-button
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-quick-chip:hover:not(:disabled),
+    .exa-stock-watch-button:hover,
+    .exa-news-refresh-button:hover,
+    .exa-chart-timeframe:hover:not(:disabled),
+    .exa-analyze-nav-lens-button:hover:not(:disabled),
+    .exa-analyze-lens-button:hover:not(:disabled)
+  ) {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-submit-button,
+    .exa-chart-timeframe.active
+  ) {
+  color: var(--exa-light-on-accent);
+  border-color: var(--exa-primary);
+  background: var(--exa-primary);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-analyze-feature,
+    .exa-chart-timeframes,
+    .exa-stock-range-values > div,
+    .exa-stock-news-item,
+    .exa-stock-news-message,
+    .exa-news-image-fallback
+  ) {
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"] .exa-analyze-page .exa-stock-suggestions {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-stock-suggestion-item,
+    .exa-stock-suggestion-group
+  ) {
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-stock-suggestion-item:hover,
+    .exa-stock-suggestion-item.active
+  ) {
+  background: var(--exa-card-hover);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  .exa-stock-suggestion-links
+  a {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-stock-change.positive,
+    .exa-price-chart-summary span.positive
+  ) {
+  color: var(--exa-positive);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-stock-change.negative,
+    .exa-price-chart-summary span.negative
+  ) {
+  color: var(--exa-negative);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  :is(
+    .exa-stock-data-status,
+    .exa-chart-live-status
+  ) {
+  color: var(--exa-positive);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-positive) 24%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-positive-soft);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  .exa-analyze-message.error {
+  color: var(--exa-negative);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-negative) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-negative-soft);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  .exa-analyze-message.notice {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  .exa-analyze-right-scroll::-webkit-scrollbar-track {
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  .exa-analyze-right-scroll::-webkit-scrollbar-thumb {
+  background: var(--exa-border-strong);
+}
+
+:root[data-theme="light"]
+  .exa-analyze-page
+  .recharts-cartesian-grid
+  line {
+  stroke: var(--exa-border);
+}
+
+:root[data-theme="light"] .exa-analyze-page .recharts-text {
+  fill: var(--exa-text-muted);
+}
+
+/* Stock news can also render outside the main Analyze root. */
+
+:root[data-theme="light"] .exa-stock-news-card {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"] .exa-stock-news-card .exa-stock-news-item {
+  border-color: var(--exa-border);
+}
+
+:root[data-theme="light"] .exa-stock-news-card .exa-stock-news-copy h4,
+:root[data-theme="light"] .exa-stock-news-card .exa-stock-news-title h3,
+:root[data-theme="light"] .exa-stock-news-card .exa-stock-news-message strong {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"] .exa-stock-news-card .exa-stock-news-meta,
+:root[data-theme="light"] .exa-stock-news-card .exa-stock-news-title p,
+:root[data-theme="light"] .exa-stock-news-card .exa-stock-news-message p {
+  color: var(--exa-text-secondary);
+}
+
+/* =====================================
+   MARKET PULSE
+   ===================================== */
+
+:root[data-theme="light"] .exa-pulse-page {
+  color: var(--exa-text-primary);
+  background: transparent;
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(h1, h2, h3, strong) {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-header-copy,
+    .exa-pulse-card-title p,
+    .exa-pulse-factor span,
+    .exa-pulse-alert-copy p,
+    .exa-pulse-stock-copy span,
+    .exa-pulse-history-meta span,
+    .exa-pulse-session-card span
+  ) {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-index-card,
+    .exa-pulse-card,
+    .exa-pulse-factor,
+    .exa-pulse-breadth-stat,
+    .exa-pulse-detail,
+    .exa-pulse-comparison-tile,
+    .exa-pulse-volume-tile,
+    .exa-pulse-rotation-row,
+    .exa-pulse-alert-item,
+    .exa-pulse-stock-row,
+    .exa-pulse-history-meta,
+    .exa-pulse-history-summary > div,
+    .exa-pulse-session-card,
+    .exa-pulse-chart-shell
+  ) {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-score-ring::before,
+    .exa-pulse-alert-icon,
+    .exa-pulse-stock-rank,
+    .exa-pulse-range-control,
+    .exa-pulse-chart-note
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-factor-track,
+    .exa-pulse-breadth-bar,
+    .exa-pulse-volume-track,
+    .exa-pulse-risk-track
+  ) {
+  background: var(--exa-background-secondary);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-button,
+    .exa-pulse-stock-button,
+    .exa-pulse-range-control button
+  ) {
+  color: var(--exa-text-secondary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-button:hover:not(:disabled),
+    .exa-pulse-stock-button:hover,
+    .exa-pulse-range-control button.active
+  ) {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"] .exa-pulse-page .exa-pulse-interpretation {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .positive,
+    .exa-pulse-delta.positive,
+    .exa-pulse-move.positive,
+    .exa-pulse-rotation-metric strong.positive
+  ) {
+  color: var(--exa-positive);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .negative,
+    .exa-pulse-delta.negative,
+    .exa-pulse-move.negative,
+    .exa-pulse-rotation-metric strong.negative
+  ) {
+  color: var(--exa-negative);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-notice,
+    .exa-pulse-severity.moderate,
+    .exa-pulse-premium-status--delayed strong
+  ) {
+  color: var(--exa-warning);
+  border-color: color-mix(
+    in srgb,
+    var(--exa-warning) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-warning-soft);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-severity.high,
+    .exa-pulse-badge.weakening,
+    .exa-pulse-badge.lagging,
+    .exa-pulse-premium-status--fallback strong,
+    .exa-pulse-premium-status--unavailable strong
+  ) {
+  color: var(--exa-negative);
+  background: var(--exa-light-negative-soft);
+}
+
+:root[data-theme="light"] .exa-pulse-page .exa-pulse-sector {
+  border-color: var(--exa-border);
+}
+
+:root[data-theme="light"] .exa-pulse-page .exa-pulse-sector.neutral {
+  color: var(--exa-text-secondary);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  :is(
+    .exa-pulse-sector.negative,
+    .exa-pulse-sector.strong-negative
+  ) {
+  color: var(--exa-negative);
+  background: var(--exa-light-negative-soft);
+}
+
+:root[data-theme="light"]
+  .exa-pulse-page
+  .recharts-cartesian-grid
+  line {
+  stroke: var(--exa-border);
+}
+
+:root[data-theme="light"] .exa-pulse-page .recharts-text {
+  fill: var(--exa-text-muted);
+}
+
+/* =====================================
+   SNAPSHOT FRESHNESS AND DATA STATUS
+   ===================================== */
+
+:root[data-theme="light"] .exa-snapshot-status__copy strong {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"] .exa-snapshot-status__copy span,
+:root[data-theme="light"] .exa-data-timestamp {
+  color: var(--exa-text-muted);
+}
+
+:root[data-theme="light"] .exa-snapshot-status__reload {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  .exa-snapshot-status__reload:hover:not(:disabled) {
+  border-color: var(--exa-primary);
+  background: var(--exa-card-hover);
+}
+
+:root[data-theme="light"]
+  .exa-snapshot-status--current
+  .exa-snapshot-status__copy
+  strong,
+:root[data-theme="light"] .exa-data-status-badge--live {
+  color: var(--exa-positive);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-snapshot-status--aging,
+    .exa-snapshot-status--previous
+  )
+  .exa-snapshot-status__copy
+  strong,
+:root[data-theme="light"] .exa-data-status-badge--delayed,
+:root[data-theme="light"] .exa-data-status-badge--fallback {
+  color: var(--exa-warning);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-snapshot-status--stale,
+    .exa-snapshot-status--unavailable
+  )
+  .exa-snapshot-status__copy
+  strong,
+:root[data-theme="light"] .exa-data-status-badge--unavailable {
+  color: var(--exa-negative);
+}
+
+:root[data-theme="light"] .exa-data-status-badge--live {
+  border-color: color-mix(
+    in srgb,
+    var(--exa-positive) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-positive-soft);
+}
+
+:root[data-theme="light"] .exa-data-status-badge--cached {
+  color: var(--exa-primary);
+  border-color: var(--exa-border-strong);
+  background: var(--exa-primary-soft);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-data-status-badge--delayed,
+    .exa-data-status-badge--fallback
+  ) {
+  border-color: color-mix(
+    in srgb,
+    var(--exa-warning) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-warning-soft);
+}
+
+:root[data-theme="light"] .exa-data-status-badge--unavailable {
+  border-color: color-mix(
+    in srgb,
+    var(--exa-negative) 25%,
+    var(--exa-border)
+  );
+  background: var(--exa-light-negative-soft);
+}
+
+:root[data-theme="light"] .exa-data-status-badge--loading {
+  color: var(--exa-text-muted);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background-soft);
+}
+
+:root[data-theme="light"] .exa-market-pulse-status {
+  color: var(--exa-text-primary);
+  border-color: var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"] .exa-market-pulse-status__main p,
+:root[data-theme="light"]
+  .exa-market-pulse-status
+  .exa-data-timestamp {
+  color: var(--exa-text-secondary);
+}
+
+/* Shared chart labels and tooltips: override inline presentation values. */
+:root[data-theme="light"] .recharts-text {
+  fill: var(--exa-text-secondary);
+  font-size: 10px !important;
+}
+
+:root[data-theme="light"]
+  :is(
+    .recharts-cartesian-axis-line,
+    .recharts-cartesian-axis-tick-line,
+    .recharts-cartesian-grid line
+  ) {
+  stroke: var(--exa-border);
+}
+
+:root[data-theme="light"] .recharts-default-tooltip {
+  border: 1px solid var(--exa-border) !important;
+  color: var(--exa-text-primary) !important;
+  background: var(--exa-card-background) !important;
+  box-shadow: var(--exa-shadow-card);
+}
+
+:root[data-theme="light"]
+  :is(
+    .recharts-tooltip-label,
+    .recharts-tooltip-item,
+    .recharts-legend-item-text
+  ) {
+  color: var(--exa-text-secondary) !important;
+  font-size: 10px !important;
+}
+
+/* Final page-specific foreground fixes found in the all-route audit. */
+:root[data-theme="light"]
+  :is(
+    .exa-analyze-eyebrow,
+    .exa-screener-eyebrow,
+    .exa-compare-eyebrow,
+    .exa-portfolio-eyebrow,
+    .exa-pulse-eyebrow
+  ) {
+  color: var(--exa-primary-hover);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-analyze-ai-badge,
+    .exa-research-hero-badge
+  ) {
+  color: var(--exa-purple);
+  border-color: color-mix(in srgb, var(--exa-purple) 28%, var(--exa-border));
+  background: var(--exa-purple-soft);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-stock-ticker,
+    .exa-screener-company-logo span,
+    .exa-company-logo > span,
+    .exa-compare-search-state
+  ) {
+  color: var(--exa-text-secondary);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-compare-add-heading,
+    .exa-screener-presets-title,
+    .exa-performance-list-card > strong
+  ) {
+  color: var(--exa-text-primary);
+}
+
+:root[data-theme="light"] .exa-compare-overall-score {
+  color: var(--exa-accent);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-compare-remove,
+    .exa-portfolio-search-state.error
+  ) {
+  color: var(--exa-negative);
+}
+
+:root[data-theme="light"]
+  :is(
+    .exa-compare-winner-card > span,
+    .exa-risk-panel-top svg,
+    .exa-performance-list-card > strong svg
+  ) {
+  color: var(--exa-primary-hover);
+}

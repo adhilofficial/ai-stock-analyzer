@@ -1,9 +1,9 @@
 export const LEGAL_COPY = Object.freeze({
   shortDisclaimer:
-    "Markets by exa provides AI-assisted market research for informational and educational purposes only. It is not personalised investment advice and does not guarantee returns.",
+    "Litses provides AI-assisted market research for informational and educational purposes only. It is not personalised investment advice and does not guarantee returns.",
 
   fullDisclaimer:
-    "Markets by exa provides AI-assisted financial market information, research summaries and analytical tools for informational and educational purposes only. The platform does not consider your personal financial position, investment objectives, risk tolerance or time horizon.",
+    "Litses provides AI-assisted financial market information, research summaries and analytical tools for informational and educational purposes only. The platform does not consider your personal financial position, investment objectives, risk tolerance or time horizon.",
 
   dataWarning:
     "Market prices, fundamentals, news, scores and other information may be delayed, cached, estimated, incomplete or unavailable. Always verify important information using official exchange filings and trusted sources.",

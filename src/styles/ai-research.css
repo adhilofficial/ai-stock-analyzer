@@ -31,7 +31,7 @@
 .exa-research-empty-workspace > div > p,
 .exa-research-executive-main > p:first-child {
   margin: 0 0 9px;
-  color: #60a5fa;
+  color: var(--exa-primary-hover);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -61,7 +61,7 @@
   border: 1px solid rgba(124, 58, 237, 0.28);
   border-radius: 15px;
   background: linear-gradient(145deg, rgba(124, 58, 237, 0.14), rgba(37, 99, 235, 0.08));
-  color: #c4b5fd;
+  color: var(--exa-purple);
   display: flex;
   align-items: center;
   gap: 11px;
@@ -179,7 +179,7 @@
 
 .exa-research-popular-row button:hover {
   border-color: var(--exa-border-strong);
-  color: #60a5fa;
+  color: var(--exa-primary-hover);
 }
 
 .exa-research-suggestions {
@@ -221,7 +221,7 @@
   border: 1px solid var(--exa-border);
   border-radius: 13px;
   background: linear-gradient(145deg, rgba(59, 130, 246, 0.17), rgba(124, 58, 237, 0.15));
-  color: #bfdbfe;
+  color: var(--exa-primary-hover);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -325,7 +325,7 @@
   border: 1px solid rgba(96, 165, 250, 0.22);
   border-radius: 22px;
   background: linear-gradient(145deg, rgba(37, 99, 235, 0.17), rgba(124, 58, 237, 0.12));
-  color: #60a5fa;
+  color: var(--exa-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,7 +369,7 @@
 }
 
 .exa-research-feature-grid svg {
-  color: #60a5fa;
+  color: var(--exa-primary);
 }
 
 .exa-research-feature-grid strong {
@@ -464,7 +464,7 @@
   border: 1px solid rgba(239, 68, 68, 0.28);
   border-radius: 13px;
   background: rgba(127, 29, 29, 0.1);
-  color: #fca5a5;
+  color: var(--exa-negative);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -491,7 +491,7 @@
   padding: 0 13px;
   border: 1px solid rgba(248, 113, 113, 0.26);
   background: rgba(127, 29, 29, 0.14);
-  color: #fecaca;
+  color: var(--exa-negative);
 }
 
 .exa-research-stock-header {
@@ -629,7 +629,7 @@
 
 .exa-research-metric-card > small {
   color: var(--exa-text-muted);
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .exa-research-report {
@@ -707,7 +707,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -751,7 +751,7 @@
 .exa-research-score-dial small {
   margin-left: 2px;
   color: var(--exa-text-muted);
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .exa-research-score-dial-wrap > div:last-child {
@@ -766,7 +766,7 @@
 
 .exa-research-score-dial-wrap > div:last-child small {
   color: var(--exa-text-muted);
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .exa-research-two-column,
@@ -806,7 +806,7 @@
   border: 1px solid rgba(96, 165, 250, 0.19);
   border-radius: 10px;
   background: rgba(37, 99, 235, 0.09);
-  color: #60a5fa;
+  color: var(--exa-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -815,7 +815,7 @@
 
 .exa-research-section-card > header p {
   margin-bottom: 4px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .exa-research-section-card > header h2 {
@@ -867,7 +867,7 @@
 
 .exa-research-bullet-list li > span {
   margin-top: 2px;
-  color: #60a5fa;
+  color: var(--exa-primary);
   flex: 0 0 auto;
 }
 
@@ -931,7 +931,7 @@
 .exa-research-interpretation strong,
 .exa-research-trend-badge > span {
   color: var(--exa-text-muted);
-  font-size: 8px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.07em;
 }
@@ -992,7 +992,7 @@
   height: 28px;
   border-radius: 8px;
   background: rgba(37, 99, 235, 0.11);
-  color: #60a5fa;
+  color: var(--exa-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1034,7 +1034,7 @@
 .exa-research-driver-list small,
 .exa-research-risk-list small {
   color: var(--exa-text-muted);
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 750;
   text-transform: uppercase;
 }
@@ -1115,7 +1115,7 @@
 
 .exa-research-live-only-card {
   min-height: 150px;
-  color: #60a5fa;
+  color: var(--exa-primary);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -1137,7 +1137,7 @@
   max-width: 980px;
   margin: 24px auto 0;
   color: var(--exa-text-muted);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.65;
   text-align: center;
 }

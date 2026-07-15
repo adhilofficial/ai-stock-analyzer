@@ -28,7 +28,7 @@ const platformFeatures = [
     icon: Database,
     title: "Connected financial data",
     description:
-      "Markets by exa combines available market prices, company information, historical data and news from connected data services.",
+      "Litses combines available market prices, company information, historical data and news from connected data services.",
   },
   {
     icon: ShieldCheck,
@@ -53,9 +53,9 @@ export default function About() {
             </h1>
 
             <p>
-              {BRAND.company} is the technology brand behind{" "}
-              <strong>{BRAND.product}</strong>, an AI-powered Indian
-              financial-market research and analytics platform.
+              <strong>{BRAND.product}</strong> is an AI-powered Indian
+              financial-market research and analytics platform built to
+              make complex market information easier to understand.
             </p>
           </div>
 
@@ -72,12 +72,12 @@ export default function About() {
         <section className="exa-about-introduction">
           <div className="exa-about-section-heading">
             <span>Our product</span>
-            <h2>Markets by exa</h2>
+            <h2>Litses</h2>
           </div>
 
           <div className="exa-about-introduction__content">
             <p>
-              Markets by exa is being developed as a modern research
+              Litses is being developed as a modern research
               workspace for people who want to understand Indian stocks,
               market movements and financial information through a clear
               and structured interface.
@@ -116,7 +116,7 @@ export default function About() {
         <section className="exa-about-platform">
           <div className="exa-about-section-heading">
             <span>Platform capabilities</span>
-            <h2>Research tools inside Markets by exa</h2>
+            <h2>Research tools inside Litses</h2>
           </div>
 
           <div className="exa-about-feature-grid">

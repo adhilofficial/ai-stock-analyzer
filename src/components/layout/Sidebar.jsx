@@ -110,7 +110,7 @@ export default function Sidebar({
             to="/dashboard"
             className="exa-brand-link"
             onClick={handleNavigationClick}
-            aria-label="Open Markets by exa dashboard"
+            aria-label="Open Litses dashboard"
           >
             <ExaBrandLogo showTagline />
           </NavLink>
@@ -181,7 +181,7 @@ export default function Sidebar({
                 />
               </span>
 
-              <strong>EXA Pro</strong>
+              <strong>Litses Pro</strong>
             </div>
 
             <p>

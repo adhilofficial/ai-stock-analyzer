@@ -53,7 +53,7 @@ function getAlertVisual(alert) {
       Icon: Sparkles,
       iconClass: "exa-score",
       itemClass: "warning",
-      label: "EXA score alert",
+      label: "Litses score alert",
     };
   }
 

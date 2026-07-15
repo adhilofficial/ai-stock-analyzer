@@ -424,6 +424,7 @@ function CustomRuleCard({
 
         <button
           type="button"
+          className="analyze"
           onClick={() => onAnalyze(rule.symbol)}
           title="Analyze stock"
         >
@@ -1282,7 +1283,7 @@ export default function Alerts() {
           <header className="exa-alert-page-header">
             <div>
               <p className="exa-alert-eyebrow">
-                EXA INTELLIGENCE
+                LITSES INTELLIGENCE
               </p>
 
               <h1>Smart Alerts</h1>
@@ -1388,7 +1389,7 @@ export default function Alerts() {
                 <p>BROWSER NOTIFICATIONS</p>
                 <h2>Get notified when a custom rule triggers</h2>
                 <span>
-                  Notifications work on HTTPS and localhost. EXA stores
+                  Notifications work on HTTPS and localhost. Litses stores
                   permission choices and duplicate protection in this browser.
                 </span>
               </div>
@@ -1457,7 +1458,7 @@ export default function Alerts() {
               notificationStatus.permission === "denied") && (
               <p className="exa-alert-notification-message">
                 {notificationError ||
-                  "Permission is blocked. Open the browser site settings for EXA NEXUS and allow notifications."}
+                  "Permission is blocked. Open the browser site settings for Litses and allow notifications."}
               </p>
             )}
           </section>
@@ -1469,7 +1470,7 @@ export default function Alerts() {
                 <h2>Custom alert rules</h2>
                 <span>
                   Rules are checked against the latest available Yahoo
-                  Finance data when EXA refreshes.
+                  Finance data when Litses refreshes.
                 </span>
               </div>
 
@@ -1848,7 +1849,7 @@ export default function Alerts() {
                         <span>
                           {alert.symbol ||
                             alert.source ||
-                            "EXA market intelligence"}
+                            "Litses market intelligence"}
                         </span>
 
                         <div className="exa-alert-card-actions">

@@ -26,7 +26,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     console.error(
-      "EXA application error:",
+      "Litses application error:",
       error,
       errorInfo,
     );
@@ -53,8 +53,8 @@ export default class ErrorBoundary extends Component {
           minHeight: "100vh",
           padding: "24px",
           background:
-            "radial-gradient(circle at top, #101b35 0%, #050914 55%)",
-          color: "#f8fafc",
+            "radial-gradient(circle at top, var(--exa-primary-soft) 0%, var(--exa-background-secondary) 48%, var(--exa-background) 100%)",
+          color: "var(--exa-text-primary)",
           fontFamily:
             "Inter, system-ui, sans-serif",
           display: "flex",
@@ -68,12 +68,11 @@ export default class ErrorBoundary extends Component {
             maxWidth: "520px",
             padding: "32px",
             border:
-              "1px solid rgba(148, 163, 184, 0.18)",
+              "1px solid var(--exa-border)",
             borderRadius: "20px",
             background:
-              "rgba(9, 16, 32, 0.92)",
-            boxShadow:
-              "0 24px 70px rgba(0, 0, 0, 0.38)",
+              "var(--exa-card-background)",
+            boxShadow: "var(--exa-shadow-card)",
             textAlign: "center",
           }}
         >
@@ -84,8 +83,8 @@ export default class ErrorBoundary extends Component {
               margin: "0 auto 18px",
               borderRadius: "16px",
               background:
-                "rgba(245, 158, 11, 0.12)",
-              color: "#f59e0b",
+                "color-mix(in srgb, var(--exa-warning) 12%, var(--exa-card-background))",
+              color: "var(--exa-warning)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -97,18 +96,19 @@ export default class ErrorBoundary extends Component {
           <p
             style={{
               margin: "0 0 8px",
-              color: "#60a5fa",
+              color: "var(--exa-primary)",
               fontSize: "12px",
               fontWeight: 700,
               letterSpacing: "0.14em",
             }}
           >
-            EXA SYSTEM NOTICE
+            LITSES SYSTEM NOTICE
           </p>
 
           <h1
             style={{
               margin: "0",
+              color: "var(--exa-text-primary)",
               fontSize: "25px",
               lineHeight: 1.25,
             }}
@@ -120,12 +120,12 @@ export default class ErrorBoundary extends Component {
             style={{
               margin: "14px auto 0",
               maxWidth: "410px",
-              color: "#94a3b8",
+              color: "var(--exa-text-secondary)",
               fontSize: "14px",
               lineHeight: 1.65,
             }}
           >
-            EXA could not display this page.
+            Litses could not display this page.
             Your saved watchlist and analyses
             have not been removed.
           </p>
@@ -136,11 +136,11 @@ export default class ErrorBoundary extends Component {
                 marginTop: "18px",
                 padding: "12px 14px",
                 border:
-                  "1px solid rgba(239, 68, 68, 0.2)",
+                  "1px solid color-mix(in srgb, var(--exa-negative) 25%, transparent)",
                 borderRadius: "10px",
                 background:
-                  "rgba(239, 68, 68, 0.07)",
-                color: "#fca5a5",
+                  "color-mix(in srgb, var(--exa-negative) 8%, var(--exa-card-background))",
+                color: "var(--exa-negative)",
                 fontSize: "12px",
                 lineHeight: 1.5,
                 overflowWrap: "anywhere",
@@ -167,7 +167,8 @@ export default class ErrorBoundary extends Component {
                 padding: "0 17px",
                 border: "0",
                 borderRadius: "10px",
-                background: "#2563eb",
+                background:
+                  "linear-gradient(135deg, var(--exa-primary), var(--exa-accent))",
                 color: "#ffffff",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -178,7 +179,7 @@ export default class ErrorBoundary extends Component {
               }}
             >
               <RefreshCw size={16} />
-              Reload EXA
+              Reload Litses
             </button>
 
             <button
@@ -190,11 +191,11 @@ export default class ErrorBoundary extends Component {
                 minHeight: "42px",
                 padding: "0 17px",
                 border:
-                  "1px solid rgba(148, 163, 184, 0.25)",
+                  "1px solid var(--exa-border)",
                 borderRadius: "10px",
                 background:
-                  "rgba(148, 163, 184, 0.06)",
-                color: "#cbd5e1",
+                  "var(--exa-card-background-soft)",
+                color: "var(--exa-text-secondary)",
                 fontWeight: 700,
                 cursor: "pointer",
               }}
@@ -206,7 +207,7 @@ export default class ErrorBoundary extends Component {
           <p
             style={{
               margin: "20px 0 0",
-              color: "#64748b",
+              color: "var(--exa-text-muted)",
               fontSize: "11px",
               lineHeight: 1.5,
             }}

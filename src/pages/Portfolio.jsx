@@ -142,7 +142,7 @@ const PORTFOLIO_STYLES = `
 
   .exa-portfolio-eyebrow {
     margin: 0 0 7px;
-    color: #60a5fa;
+    color: var(--exa-primary-hover);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.15em;
@@ -191,21 +191,21 @@ const PORTFOLIO_STYLES = `
   .exa-portfolio-quote-state {
     display: block;
     margin-top: 4px;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 750;
     letter-spacing: 0.03em;
   }
 
   .exa-portfolio-quote-state.live {
-    color: #4ade80;
+    color: var(--exa-positive);
   }
 
   .exa-portfolio-quote-state.closed {
-    color: #fbbf24;
+    color: var(--exa-warning);
   }
 
   .exa-portfolio-quote-state.unavailable {
-    color: #fb7185;
+    color: var(--exa-negative);
   }
 
   .exa-portfolio-button {
@@ -688,7 +688,7 @@ const PORTFOLIO_STYLES = `
   }
 
   .exa-portfolio-search-state.error {
-    color: #fda4af;
+    color: var(--exa-negative);
   }
 
   .exa-portfolio-search-result {
@@ -731,7 +731,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 3px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-portfolio-selected-stock {
@@ -760,7 +760,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 3px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-portfolio-form-message {
@@ -898,7 +898,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 3px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-portfolio-company.compact .exa-portfolio-logo {
@@ -936,7 +936,7 @@ const PORTFOLIO_STYLES = `
     border-radius: 999px;
     align-items: center;
     justify-content: center;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.08em;
   }
@@ -957,7 +957,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     max-width: 220px;
     overflow: hidden;
-    color: #94a3b8;
+    color: var(--exa-text-secondary);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1007,7 +1007,7 @@ const PORTFOLIO_STYLES = `
   }
 
   .exa-available-quantity strong {
-    color: #bfdbfe;
+    color: var(--exa-primary-hover);
   }
 
   .exa-transaction-preview {
@@ -1116,7 +1116,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 3px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-risk-overview-grid {
@@ -1132,14 +1132,9 @@ const PORTFOLIO_STYLES = `
   .exa-performance-list-card,
   .exa-cashflow-card {
     min-width: 0;
-    border: 1px solid #1e3350;
+    border: 1px solid var(--exa-border);
     border-radius: 15px;
-    background:
-      linear-gradient(
-        145deg,
-        rgba(14, 29, 50, 0.98),
-        rgba(8, 20, 37, 0.98)
-      );
+    background: var(--exa-card-background);
   }
 
   .exa-risk-panel {
@@ -1153,7 +1148,7 @@ const PORTFOLIO_STYLES = `
   }
 
   .exa-risk-panel-top svg {
-    color: #60a5fa;
+    color: var(--exa-primary);
   }
 
   .exa-risk-panel-top strong {
@@ -1195,7 +1190,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 10px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -1215,7 +1210,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 4px;
     color: #94a3b8;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-risk-warning-list {
@@ -1276,7 +1271,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 4px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-analytics-card-header svg {
@@ -1355,12 +1350,12 @@ const PORTFOLIO_STYLES = `
     display: flex;
     align-items: center;
     gap: 7px;
-    color: #f8fafc;
+    color: var(--exa-text-primary);
     font-size: 11px;
   }
 
   .exa-performance-list-card > strong svg {
-    color: #60a5fa;
+    color: var(--exa-primary);
   }
 
   .exa-performance-row {
@@ -1393,7 +1388,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 3px;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-performance-row > strong {
@@ -1414,7 +1409,7 @@ const PORTFOLIO_STYLES = `
   .exa-cashflow-card span {
     display: block;
     color: #64748b;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
   }
@@ -1430,7 +1425,7 @@ const PORTFOLIO_STYLES = `
     display: block;
     margin-top: 4px;
     color: #94a3b8;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .exa-analytics-empty {
@@ -3107,7 +3102,7 @@ export default function Portfolio() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `exa-portfolio-transactions-${new Date()
+    anchor.download = `litses-portfolio-transactions-${new Date()
       .toISOString()
       .slice(0, 10)}.csv`;
     document.body.appendChild(anchor);
@@ -3128,7 +3123,7 @@ export default function Portfolio() {
         <div className="exa-portfolio-container">
           <section className="exa-portfolio-header">
             <div>
-              <p className="exa-portfolio-eyebrow">EXA PORTFOLIO</p>
+              <p className="exa-portfolio-eyebrow">LITSES PORTFOLIO</p>
               <h1>Portfolio Tracker</h1>
               <p className="exa-portfolio-subtitle">
                 Record buy and sell transactions, track weighted average cost,
