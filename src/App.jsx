@@ -255,6 +255,16 @@ function AppRoutes() {
         />
 
         <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
+
+        <Route
           path="*"
           element={
             <Navigate
@@ -268,17 +278,9 @@ function AppRoutes() {
                }
         />
 
-        <Route
-  path="/forgot-password"
-  element={<ForgotPassword />}
-/>
       </Routes>
     </Suspense>
   );
-  <Route
-  path="/reset-password"
-  element={<ResetPassword />}
-/>
 }
 
 export default function App() {

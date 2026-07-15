@@ -11,6 +11,13 @@ import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext(null);
 
+function getAuthRedirectUrl(path = "/") {
+  return new URL(
+    path,
+    window.location.origin
+  ).toString();
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] =
     useState(null);
@@ -159,7 +166,7 @@ export function AuthProvider({ children }) {
           full_name: fullName,
         },
         emailRedirectTo:
-          window.location.origin,
+          getAuthRedirectUrl("/login"),
       },
     });
 
@@ -201,7 +208,7 @@ export function AuthProvider({ children }) {
           provider: "google",
           options: {
             redirectTo:
-              window.location.origin,
+              getAuthRedirectUrl("/login"),
           },
         });
 
@@ -215,7 +222,7 @@ export function AuthProvider({ children }) {
   
   async function sendPasswordResetEmail(email) {
   const redirectUrl =
-    `${window.location.origin}/reset-password`;
+    getAuthRedirectUrl("/reset-password");
 
   const { data, error } =
     await supabase.auth.resetPasswordForEmail(
@@ -300,6 +307,8 @@ async function updatePassword(newPassword) {
   );
 }
 
+// This file intentionally exports the provider and its paired hook.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context =
     useContext(AuthContext);
