@@ -61,7 +61,7 @@ function getUserDisplayName(user, profile) {
     return email.split("@")[0];
   }
 
-  return "EXA User";
+  return "Litses User";
 }
 
 function getUserInitials(name) {
@@ -182,7 +182,7 @@ function getSeverityLabel(value) {
 }
 
 export default function Topbar({
-  theme = "dark",
+  theme = "light",
   onToggleTheme,
   sidebarOpen = false,
   onToggleSidebar,
@@ -486,7 +486,7 @@ const planDetails =
           onClick={handleAskExa}
         >
           <Sparkles size={16} />
-          <span>Ask EXA AI</span>
+          <span>Ask Litses AI</span>
         </button>
 
         <button
@@ -786,7 +786,7 @@ const planDetails =
                 <User size={16} />
 
                 <span>
-                  About EXA NEXUS
+                  About Litses
                 </span>
               </button>
 

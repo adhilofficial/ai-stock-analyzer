@@ -391,7 +391,7 @@ const REPORT_SCHEMA = {
 };
 
 const SYSTEM_PROMPT = `
-You are the research engine for EXA NEXUS, an Indian equity-market education and research platform.
+You are the research engine for Litses, an Indian equity-market education and research platform.
 
 You receive verified market and company data collected from Yahoo Finance. Build a structured research report using only the supplied information and cautious, clearly labelled inference.
 
@@ -1015,7 +1015,7 @@ function createRequestBody(context) {
         parts: [
           {
             text:
-              "Create an EXA NEXUS structured equity research report from this verified data:\n\n" +
+              "Create a Litses structured equity research report from this verified data:\n\n" +
               JSON.stringify(
                 context,
                 null,

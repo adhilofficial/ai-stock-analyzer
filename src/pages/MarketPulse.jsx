@@ -722,7 +722,7 @@ function exportMarketHistoryCsv(rows) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `exa-market-history-${rows[0]?.date || "start"}-${rows[rows.length - 1]?.date || "latest"}.csv`;
+  link.download = `litses-market-history-${rows[0]?.date || "start"}-${rows[rows.length - 1]?.date || "latest"}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -1043,7 +1043,7 @@ export default function MarketPulse() {
     } else {
       setMarketData({
         success: true,
-        source: "EXA fallback dataset",
+        source: "Litses fallback dataset",
         fetchedAt: new Date().toISOString(),
         cached: true,
         marketStatus: dashboardMockData.marketStatus,
@@ -1057,7 +1057,7 @@ export default function MarketPulse() {
     } else {
       setMoversData({
         success: true,
-        source: "EXA fallback dataset",
+        source: "Litses fallback dataset",
         fetchedAt: new Date().toISOString(),
         movers: {
           gainers: (dashboardMockData.movers?.gainers || []).map(normalizeMockMover),
@@ -1072,7 +1072,7 @@ export default function MarketPulse() {
     } else {
       setBreadthData({
         success: true,
-        source: "EXA fallback dataset",
+        source: "Litses fallback dataset",
         fetchedAt: new Date().toISOString(),
         breadth: dashboardMockData.breadth,
       });
@@ -1109,7 +1109,7 @@ export default function MarketPulse() {
     }
 
     if (failures.length === tasks.length) {
-      setError("Live market services are temporarily unavailable. EXA is displaying its fallback market dataset where possible.");
+      setError("Live market services are temporarily unavailable. Litses is displaying its fallback market dataset where possible.");
     } else if (failures.length > 0) {
       setWarning(`${failures.length} market data section${failures.length === 1 ? "" : "s"} could not be refreshed. Available sections remain visible, with fallback data used where possible.`);
     }
@@ -1322,7 +1322,7 @@ export default function MarketPulse() {
         <div className="exa-pulse-container">
           <section className="exa-pulse-header">
   <div className="exa-pulse-header-content">
-    <h1>EXA Market Pulse</h1>
+    <h1>Litses Market Pulse</h1>
   </div>
 
   <div className="exa-pulse-header-controls">

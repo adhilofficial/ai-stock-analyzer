@@ -100,7 +100,7 @@ export default function PremiumAiResearchPanel({
       <article className="exa-ai-confidence-card">
         <div className="exa-ai-card-heading">
           <div>
-            <p>EXA RESEARCH SIGNAL</p>
+            <p>LITSES RESEARCH SIGNAL</p>
 
             <h3>
               AI confidence &amp; risk
@@ -249,7 +249,7 @@ export default function PremiumAiResearchPanel({
           {result.source ||
             "Yahoo Finance"}
         </strong>
-        . EXA research indicators are for
+        . Litses research indicators are for
         educational purposes and are not
         personalized investment advice.
       </div>
@@ -268,16 +268,15 @@ export default function PremiumAiResearchPanel({
           .exa-ai-insights-card {
             min-width: 0;
             padding: 18px;
-            border: 1px solid rgba(148, 163, 184, 0.13);
+            border: 1px solid var(--exa-border);
             border-radius: 18px;
             background:
               linear-gradient(
                 145deg,
-                rgba(13, 27, 49, 0.95),
-                rgba(7, 17, 32, 0.97)
+                var(--exa-card-background),
+                var(--exa-card-background-soft)
               );
-            box-shadow:
-              0 18px 48px rgba(0, 0, 0, 0.17);
+            box-shadow: var(--exa-shadow-card);
           }
 
           .exa-ai-card-heading {
@@ -291,7 +290,7 @@ export default function PremiumAiResearchPanel({
           .exa-ai-summary-heading p,
           .exa-ai-insights-heading p {
             margin: 0 0 4px;
-            color: #60a5fa;
+            color: var(--exa-primary);
             font-size: 8px;
             font-weight: 800;
             letter-spacing: 0.12em;
@@ -301,7 +300,7 @@ export default function PremiumAiResearchPanel({
           .exa-ai-summary-heading h3,
           .exa-ai-insights-heading h3 {
             margin: 0;
-            color: #eaf1fb;
+            color: var(--exa-text-primary);
             font-size: 14px;
             line-height: 1.4;
           }
@@ -310,10 +309,10 @@ export default function PremiumAiResearchPanel({
             width: 36px;
             height: 36px;
             flex-shrink: 0;
-            border: 1px solid rgba(96, 165, 250, 0.16);
+            border: 1px solid var(--exa-border-strong);
             border-radius: 11px;
-            color: #60a5fa;
-            background: rgba(37, 99, 235, 0.1);
+            color: var(--exa-primary);
+            background: var(--exa-primary-soft);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -335,7 +334,7 @@ export default function PremiumAiResearchPanel({
 
           .exa-ai-gauge-wrapper > span {
             margin-top: 7px;
-            color: #64748b;
+            color: var(--exa-text-muted);
             font-size: 9px;
             font-weight: 650;
           }
@@ -345,7 +344,7 @@ export default function PremiumAiResearchPanel({
           }
 
           .exa-ai-risk-label {
-            color: #64748b;
+            color: var(--exa-text-muted);
             font-size: 9px;
             font-weight: 650;
           }
@@ -370,38 +369,38 @@ export default function PremiumAiResearchPanel({
           }
 
           .exa-ai-risk-badge.low {
-            border: 1px solid rgba(52, 211, 153, 0.22);
-            color: #6ee7b7;
-            background: rgba(6, 78, 59, 0.15);
+            border: 1px solid color-mix(in srgb, var(--exa-positive) 24%, transparent);
+            color: var(--exa-positive);
+            background: color-mix(in srgb, var(--exa-positive) 10%, transparent);
           }
 
           .exa-ai-risk-badge.low > span {
-            background: #34d399;
+            background: var(--exa-positive);
           }
 
           .exa-ai-risk-badge.moderate {
-            border: 1px solid rgba(250, 204, 21, 0.22);
-            color: #fde047;
-            background: rgba(113, 63, 18, 0.16);
+            border: 1px solid color-mix(in srgb, var(--exa-warning) 24%, transparent);
+            color: var(--exa-warning);
+            background: color-mix(in srgb, var(--exa-warning) 10%, transparent);
           }
 
           .exa-ai-risk-badge.moderate > span {
-            background: #facc15;
+            background: var(--exa-warning);
           }
 
           .exa-ai-risk-badge.high {
-            border: 1px solid rgba(251, 113, 133, 0.23);
-            color: #fda4af;
-            background: rgba(136, 19, 55, 0.16);
+            border: 1px solid color-mix(in srgb, var(--exa-negative) 24%, transparent);
+            color: var(--exa-negative);
+            background: color-mix(in srgb, var(--exa-negative) 10%, transparent);
           }
 
           .exa-ai-risk-badge.high > span {
-            background: #fb7185;
+            background: var(--exa-negative);
           }
 
           .exa-ai-risk-column p {
             margin: 9px 0 0;
-            color: #526178;
+            color: var(--exa-text-secondary);
             font-size: 8px;
             line-height: 1.55;
           }
@@ -409,8 +408,8 @@ export default function PremiumAiResearchPanel({
           .exa-ai-confidence-footer {
             margin-top: 17px;
             padding-top: 13px;
-            border-top: 1px solid rgba(148, 163, 184, 0.09);
-            color: #68809d;
+            border-top: 1px solid var(--exa-border);
+            color: var(--exa-text-muted);
             font-size: 8px;
             line-height: 1.4;
             display: flex;
@@ -420,7 +419,7 @@ export default function PremiumAiResearchPanel({
 
           .exa-ai-confidence-footer svg {
             flex-shrink: 0;
-            color: #34d399;
+            color: var(--exa-positive);
           }
 
           .exa-ai-summary-heading,
@@ -442,14 +441,14 @@ export default function PremiumAiResearchPanel({
           }
 
           .exa-ai-summary-heading > span {
-            border: 1px solid rgba(96, 165, 250, 0.16);
-            color: #60a5fa;
-            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid var(--exa-border-strong);
+            color: var(--exa-primary);
+            background: var(--exa-primary-soft);
           }
 
           .exa-ai-summary-text {
             margin: 16px 0 0;
-            color: #aebbd0;
+            color: var(--exa-text-secondary);
             font-size: 11px;
             line-height: 1.75;
           }
@@ -457,12 +456,12 @@ export default function PremiumAiResearchPanel({
           .exa-ai-themes-section {
             margin-top: 17px;
             padding-top: 14px;
-            border-top: 1px solid rgba(148, 163, 184, 0.09);
+            border-top: 1px solid var(--exa-border);
           }
 
           .exa-ai-section-label {
             margin: 0 0 8px;
-            color: #64748b;
+            color: var(--exa-text-muted);
             font-size: 9px;
             font-weight: 700;
           }
@@ -475,56 +474,56 @@ export default function PremiumAiResearchPanel({
 
           .exa-ai-theme-list span {
             padding: 5px 9px;
-            border: 1px solid rgba(96, 165, 250, 0.13);
+            border: 1px solid var(--exa-border-strong);
             border-radius: 999px;
-            color: #93c5fd;
-            background: rgba(37, 99, 235, 0.08);
+            color: var(--exa-primary);
+            background: var(--exa-primary-soft);
             font-size: 8px;
             line-height: 1.3;
           }
 
           .exa-ai-insights-card.positive {
-            border-color: rgba(52, 211, 153, 0.16);
+            border-color: color-mix(in srgb, var(--exa-positive) 20%, transparent);
             background:
               linear-gradient(
                 145deg,
-                rgba(5, 46, 22, 0.31),
-                rgba(7, 24, 31, 0.95)
+                color-mix(in srgb, var(--exa-positive) 8%, var(--exa-card-background)),
+                var(--exa-card-background)
               );
           }
 
           .exa-ai-insights-card.negative {
-            border-color: rgba(251, 113, 133, 0.17);
+            border-color: color-mix(in srgb, var(--exa-negative) 20%, transparent);
             background:
               linear-gradient(
                 145deg,
-                rgba(69, 10, 10, 0.28),
-                rgba(26, 15, 25, 0.95)
+                color-mix(in srgb, var(--exa-negative) 8%, var(--exa-card-background)),
+                var(--exa-card-background)
               );
           }
 
           .exa-ai-insights-card.positive
             .exa-ai-insights-heading > span {
-            border: 1px solid rgba(52, 211, 153, 0.19);
-            color: #34d399;
-            background: rgba(6, 78, 59, 0.14);
+            border: 1px solid color-mix(in srgb, var(--exa-positive) 22%, transparent);
+            color: var(--exa-positive);
+            background: color-mix(in srgb, var(--exa-positive) 10%, transparent);
           }
 
           .exa-ai-insights-card.negative
             .exa-ai-insights-heading > span {
-            border: 1px solid rgba(251, 113, 133, 0.2);
-            color: #fb7185;
-            background: rgba(136, 19, 55, 0.13);
+            border: 1px solid color-mix(in srgb, var(--exa-negative) 22%, transparent);
+            color: var(--exa-negative);
+            background: color-mix(in srgb, var(--exa-negative) 10%, transparent);
           }
 
           .exa-ai-insights-card.positive
             .exa-ai-insights-heading p {
-            color: #34d399;
+            color: var(--exa-positive);
           }
 
           .exa-ai-insights-card.negative
             .exa-ai-insights-heading p {
-            color: #fb7185;
+            color: var(--exa-negative);
           }
 
           .exa-ai-insight-list {
@@ -551,38 +550,38 @@ export default function PremiumAiResearchPanel({
 
           .exa-ai-insight-item.positive
             .exa-ai-insight-marker {
-            background: #34d399;
+            background: var(--exa-positive);
           }
 
           .exa-ai-insight-item.negative
             .exa-ai-insight-marker {
-            background: #fb7185;
+            background: var(--exa-negative);
           }
 
           .exa-ai-insight-item p {
             margin: 0;
-            color: #aebbd0;
+            color: var(--exa-text-secondary);
             font-size: 9px;
             line-height: 1.6;
           }
 
           .exa-ai-insight-empty {
             margin: 13px 0 0;
-            color: #596980;
+            color: var(--exa-text-muted);
             font-size: 9px;
             line-height: 1.55;
           }
 
           .exa-ai-research-disclaimer {
             padding: 3px 9px;
-            color: #46546a;
+            color: var(--exa-text-muted);
             font-size: 8px;
             line-height: 1.6;
             text-align: center;
           }
 
           .exa-ai-research-disclaimer strong {
-            color: #64748b;
+            color: var(--exa-text-secondary);
           }
 
           @media (max-width: 1150px) {

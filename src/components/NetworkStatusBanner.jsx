@@ -110,15 +110,14 @@ export default function NetworkStatusBanner() {
         minHeight: "48px",
         padding: "10px 12px",
         border: isOffline
-          ? "1px solid rgba(245, 158, 11, 0.32)"
-          : "1px solid rgba(34, 197, 94, 0.3)",
+          ? "1px solid color-mix(in srgb, var(--exa-warning) 34%, transparent)"
+          : "1px solid color-mix(in srgb, var(--exa-positive) 32%, transparent)",
         borderRadius: "12px",
         background: isOffline
-          ? "rgba(30, 20, 7, 0.96)"
-          : "rgba(7, 28, 19, 0.96)",
-        color: "#f8fafc",
-        boxShadow:
-          "0 18px 48px rgba(0, 0, 0, 0.36)",
+          ? "color-mix(in srgb, var(--exa-warning) 8%, var(--exa-card-background))"
+          : "color-mix(in srgb, var(--exa-positive) 8%, var(--exa-card-background))",
+        color: "var(--exa-text-primary)",
+        boxShadow: "var(--exa-shadow-card)",
         backdropFilter: "blur(14px)",
         transform: "translateX(-50%)",
         display: "flex",
@@ -133,11 +132,11 @@ export default function NetworkStatusBanner() {
           flexShrink: 0,
           borderRadius: "9px",
           color: isOffline
-            ? "#f59e0b"
-            : "#22c55e",
+            ? "var(--exa-warning)"
+            : "var(--exa-positive)",
           background: isOffline
-            ? "rgba(245, 158, 11, 0.12)"
-            : "rgba(34, 197, 94, 0.12)",
+            ? "color-mix(in srgb, var(--exa-warning) 12%, transparent)"
+            : "color-mix(in srgb, var(--exa-positive) 12%, transparent)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -159,6 +158,7 @@ export default function NetworkStatusBanner() {
         <strong
           style={{
             display: "block",
+            color: "var(--exa-text-primary)",
             fontSize: "12px",
             lineHeight: 1.35,
           }}
@@ -171,15 +171,15 @@ export default function NetworkStatusBanner() {
         <span
           style={{
             marginTop: "2px",
-            color: "#94a3b8",
-            fontSize: "10px",
+            color: "var(--exa-text-secondary)",
+            fontSize: "11px",
             lineHeight: 1.4,
             display: "block",
           }}
         >
           {isOffline
             ? "Live market data and news may not update until your connection returns."
-            : "EXA can now refresh live market data again."}
+            : "Litses can now refresh live market data again."}
         </span>
       </div>
 
@@ -196,8 +196,8 @@ export default function NetworkStatusBanner() {
           border: "0",
           borderRadius: "8px",
           background:
-            "rgba(148, 163, 184, 0.08)",
-          color: "#94a3b8",
+            "var(--exa-card-background-soft)",
+          color: "var(--exa-text-muted)",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",

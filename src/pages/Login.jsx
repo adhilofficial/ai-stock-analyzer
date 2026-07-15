@@ -13,30 +13,36 @@ import { useAuth } from "../context/AuthContext";
 
 const styles = {
   page: {
+    width: "100%",
     minHeight: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "24px",
+    padding: "clamp(16px, 4vw, 24px)",
+    boxSizing: "border-box",
+    overflowX: "hidden",
     background:
-      "radial-gradient(circle at top, #13244a 0%, #070b16 45%, #03050c 100%)",
+      "radial-gradient(circle at top, var(--exa-primary-soft) 0%, var(--exa-background-secondary) 46%, var(--exa-background) 100%)",
+    color: "var(--exa-text-primary)",
     fontFamily: "Inter, system-ui, sans-serif",
   },
 
   card: {
     width: "100%",
     maxWidth: "440px",
-    padding: "32px",
+    minWidth: 0,
+    padding: "clamp(22px, 6vw, 32px)",
+    boxSizing: "border-box",
     borderRadius: "22px",
-    border: "1px solid rgba(148, 163, 184, 0.18)",
-    background: "rgba(8, 14, 28, 0.94)",
-    boxShadow: "0 24px 80px rgba(0, 0, 0, 0.45)",
-    color: "#f8fafc",
+    border: "1px solid var(--exa-border)",
+    background: "var(--exa-card-background)",
+    boxShadow: "var(--exa-shadow-card)",
+    color: "var(--exa-text-primary)",
   },
 
   brand: {
     marginBottom: "8px",
-    color: "#3b82f6",
+    color: "var(--exa-primary)",
     fontSize: "14px",
     fontWeight: "800",
     letterSpacing: "0.16em",
@@ -45,13 +51,14 @@ const styles = {
 
   title: {
     margin: "0 0 8px",
+    color: "var(--exa-text-primary)",
     fontSize: "30px",
     lineHeight: "1.2",
   },
 
   subtitle: {
     margin: "0 0 26px",
-    color: "#94a3b8",
+    color: "var(--exa-text-secondary)",
     fontSize: "14px",
     lineHeight: "1.6",
   },
@@ -63,7 +70,7 @@ const styles = {
   label: {
     display: "block",
     marginBottom: "8px",
-    color: "#cbd5e1",
+    color: "var(--exa-text-secondary)",
     fontSize: "13px",
     fontWeight: "700",
   },
@@ -72,11 +79,12 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
     padding: "13px 14px",
-    border: "1px solid rgba(148, 163, 184, 0.24)",
+    border: "1px solid var(--exa-border)",
     borderRadius: "12px",
     outline: "none",
-    background: "#0c1426",
-    color: "#f8fafc",
+    background: "var(--exa-input-background)",
+    color: "var(--exa-text-primary)",
+    caretColor: "var(--exa-primary)",
     fontSize: "15px",
   },
 
@@ -88,7 +96,7 @@ const styles = {
     borderRadius: "12px",
     cursor: "pointer",
     background:
-      "linear-gradient(135deg, #2563eb, #06b6d4)",
+      "linear-gradient(135deg, var(--exa-primary), var(--exa-accent))",
     color: "#ffffff",
     fontSize: "15px",
     fontWeight: "800",
@@ -99,24 +107,26 @@ const styles = {
     padding: "0",
     cursor: "pointer",
     background: "transparent",
-    color: "#60a5fa",
+    color: "var(--exa-primary)",
     fontWeight: "800",
   },
 
   switchText: {
     margin: "22px 0 0",
     textAlign: "center",
-    color: "#94a3b8",
+    color: "var(--exa-text-secondary)",
     fontSize: "14px",
   },
 
   error: {
     marginBottom: "18px",
     padding: "12px 14px",
-    border: "1px solid rgba(248, 113, 113, 0.35)",
+    border:
+      "1px solid color-mix(in srgb, var(--exa-negative) 34%, transparent)",
     borderRadius: "10px",
-    background: "rgba(127, 29, 29, 0.24)",
-    color: "#fecaca",
+    background:
+      "color-mix(in srgb, var(--exa-negative) 9%, var(--exa-card-background))",
+    color: "var(--exa-negative)",
     fontSize: "13px",
     lineHeight: "1.5",
   },
@@ -124,10 +134,12 @@ const styles = {
   success: {
     marginBottom: "18px",
     padding: "12px 14px",
-    border: "1px solid rgba(52, 211, 153, 0.35)",
+    border:
+      "1px solid color-mix(in srgb, var(--exa-positive) 34%, transparent)",
     borderRadius: "10px",
-    background: "rgba(6, 78, 59, 0.24)",
-    color: "#a7f3d0",
+    background:
+      "color-mix(in srgb, var(--exa-positive) 9%, var(--exa-card-background))",
+    color: "var(--exa-positive)",
     fontSize: "13px",
     lineHeight: "1.5",
   },
@@ -139,11 +151,11 @@ const styles = {
   justifyContent: "center",
   gap: "10px",
   padding: "13px 18px",
-  border: "1px solid rgba(148, 163, 184, 0.3)",
+  border: "1px solid var(--exa-border)",
   borderRadius: "12px",
   cursor: "pointer",
-  background: "#ffffff",
-  color: "#111827",
+  background: "var(--exa-card-background-soft)",
+  color: "var(--exa-text-primary)",
   fontSize: "14px",
   fontWeight: "800",
 },
@@ -155,7 +167,7 @@ googleIcon: {
   alignItems: "center",
   justifyContent: "center",
   borderRadius: "50%",
-  color: "#4285f4",
+  color: "var(--exa-primary)",
   fontSize: "18px",
   fontWeight: "900",
 },
@@ -165,7 +177,7 @@ divider: {
   alignItems: "center",
   gap: "12px",
   margin: "22px 0",
-  color: "#64748b",
+  color: "var(--exa-text-muted)",
   fontSize: "12px",
   textTransform: "uppercase",
   letterSpacing: "0.08em",
@@ -174,14 +186,14 @@ divider: {
 dividerLine: {
   flex: 1,
   height: "1px",
-  background: "rgba(148, 163, 184, 0.2)",
+  background: "var(--exa-border)",
 },
 
 forgotLink: {
   display: "block",
   marginTop: "-8px",
   marginBottom: "18px",
-  color: "#60a5fa",
+  color: "var(--exa-primary)",
   fontSize: "13px",
   fontWeight: "700",
   textAlign: "right",
@@ -321,7 +333,7 @@ export default function Login() {
     <main style={styles.page}>
       <section style={styles.card}>
         <div style={styles.brand}>
-          EXA NEXUS
+          Litses
         </div>
 
         <h1 style={styles.title}>
@@ -332,8 +344,8 @@ export default function Login() {
 
         <p style={styles.subtitle}>
           {isSignup
-            ? "Join Markets by exa and start building your personalized market workspace."
-            : "Log in to continue to your Markets by exa dashboard."}
+            ? "Join Litses and start building your personalized market workspace."
+            : "Log in to continue to your Litses dashboard."}
         </p>
 
         {error && (
@@ -359,7 +371,7 @@ export default function Login() {
   disabled={submitting}
   style={{
     ...styles.googleButton,
-    opacity: submitting ? 0.65 : 1,
+    opacity: 1,
     cursor: submitting
       ? "not-allowed"
       : "pointer",
@@ -474,9 +486,10 @@ export default function Login() {
             disabled={submitting}
             style={{
               ...styles.button,
-              opacity: submitting
-                ? 0.65
-                : 1,
+              opacity: 1,
+              background: submitting
+                ? "var(--exa-text-muted)"
+                : styles.button.background,
               cursor: submitting
                 ? "not-allowed"
                 : "pointer",
@@ -493,7 +506,7 @@ export default function Login() {
         <p style={styles.switchText}>
           {isSignup
             ? "Already have an account? "
-            : "New to Markets by exa? "}
+            : "New to Litses? "}
 
           <button
             type="button"

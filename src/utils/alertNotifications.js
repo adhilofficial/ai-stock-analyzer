@@ -145,7 +145,7 @@ export function normalizeAlertHistoryEntry(entry) {
       cleanText(entry.message || entry.description) ||
       "New market activity was detected.",
     symbol: cleanText(entry.symbol || entry.ticker).toUpperCase(),
-    source: cleanText(entry.source) || "EXA alert center",
+    source: cleanText(entry.source) || "Litses alert center",
     occurredAt,
     recordedAt:
       cleanText(entry.recordedAt) || new Date().toISOString(),
@@ -188,7 +188,7 @@ export function readAlertHistory() {
       .filter(Boolean)
       .slice(0, MAX_HISTORY_ITEMS);
   } catch (error) {
-    console.error("Unable to read EXA alert history:", error);
+    console.error("Unable to read Litses alert history:", error);
     return [];
   }
 }
@@ -223,7 +223,7 @@ export function writeAlertHistory(
         JSON.stringify(normalized),
       );
     } catch (error) {
-      console.error("Unable to save EXA alert history:", error);
+      console.error("Unable to save Litses alert history:", error);
     }
   }
 
@@ -421,8 +421,8 @@ function showBrowserNotifications(entries) {
     try {
       const notification = new window.Notification(
         entry.symbol
-          ? `EXA Alert · ${entry.symbol}`
-          : "EXA custom alert triggered",
+          ? `Litses Alert · ${entry.symbol}`
+          : "Litses custom alert triggered",
         {
           body: entry.message,
           tag: `exa-${entry.alertId}`,

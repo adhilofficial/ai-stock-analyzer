@@ -11,17 +11,18 @@ import {
 } from "lucide-react";
 
 const COLORS = {
-  panel: "#101a30",
-  panelAlt: "#0b1729",
-  border: "#1e293b",
-  text: "#cbd5e1",
-  muted: "#64748b",
-  white: "#f8fafc",
-  blue: "#60a5fa",
-  green: "#22c55e",
-  yellow: "#eab308",
-  orange: "#f97316",
-  red: "#ef4444",
+  panel: "var(--exa-card-background)",
+  panelAlt: "var(--exa-card-background-soft)",
+  border: "var(--exa-border)",
+  text: "var(--exa-text-secondary)",
+  muted: "var(--exa-text-muted)",
+  white: "var(--exa-text-primary)",
+  blue: "var(--exa-primary)",
+  green: "var(--exa-positive)",
+  yellow: "var(--exa-warning)",
+  orange:
+    "color-mix(in srgb, var(--exa-warning) 72%, var(--exa-negative))",
+  red: "var(--exa-negative)",
 };
 
 function safeNumber(value) {
@@ -190,25 +191,29 @@ function getSeverityMeta(severity) {
     low: {
       label: "Low",
       color: COLORS.green,
-      background: "rgba(34, 197, 94, 0.10)",
+      background:
+        "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
       score: 5,
     },
     moderate: {
       label: "Moderate",
       color: COLORS.yellow,
-      background: "rgba(234, 179, 8, 0.10)",
+      background:
+        "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
       score: 12,
     },
     elevated: {
       label: "Elevated",
       color: COLORS.orange,
-      background: "rgba(249, 115, 22, 0.10)",
+      background:
+        "color-mix(in srgb, var(--exa-warning) 8%, transparent)",
       score: 18,
     },
     high: {
       label: "High",
       color: COLORS.red,
-      background: "rgba(239, 68, 68, 0.10)",
+      background:
+        "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
       score: 25,
     },
   };
@@ -224,7 +229,8 @@ function RiskBadge({ severity }) {
       style={{
         padding: "5px 9px",
         borderRadius: 999,
-        border: `1px solid ${meta.color}35`,
+        border:
+          `1px solid color-mix(in srgb, ${meta.color} 21%, transparent)`,
         color: meta.color,
         background: meta.background,
         fontSize: 10,
@@ -249,7 +255,7 @@ function RiskCard({ item }) {
         border: `1px solid ${COLORS.border}`,
         borderRadius: 14,
         background:
-          "linear-gradient(145deg, #101a30 0%, #0b1729 100%)",
+          "linear-gradient(145deg, var(--exa-card-background) 0%, var(--exa-card-background-soft) 100%)",
       }}
     >
       <div
@@ -270,7 +276,8 @@ function RiskCard({ item }) {
             borderRadius: 10,
             color: meta.color,
             background: meta.background,
-            border: `1px solid ${meta.color}25`,
+            border:
+              `1px solid color-mix(in srgb, ${meta.color} 15%, transparent)`,
           }}
         >
           <Icon size={18} />
@@ -611,7 +618,8 @@ function getOverallRisk(score) {
     return {
       label: "High risk",
       color: COLORS.red,
-      background: "rgba(239, 68, 68, 0.10)",
+      background:
+        "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
     };
   }
 
@@ -619,14 +627,16 @@ function getOverallRisk(score) {
     return {
       label: "Moderate risk",
       color: COLORS.yellow,
-      background: "rgba(234, 179, 8, 0.10)",
+      background:
+        "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
     };
   }
 
   return {
     label: "Lower risk",
     color: COLORS.green,
-    background: "rgba(34, 197, 94, 0.10)",
+    background:
+      "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
   };
 }
 
@@ -649,7 +659,8 @@ export default function RisksTab({ result, timeframe = "1Y" }) {
       <section
         style={{
           padding: 18,
-          border: `1px solid ${overall.color}35`,
+          border:
+            `1px solid color-mix(in srgb, ${overall.color} 21%, transparent)`,
           borderRadius: 16,
           background: overall.background,
         }}
@@ -674,7 +685,7 @@ export default function RisksTab({ result, timeframe = "1Y" }) {
                 textTransform: "uppercase",
               }}
             >
-              EXA deterministic risk assessment
+              Litses deterministic risk assessment
             </p>
 
             <h3
@@ -703,10 +714,12 @@ export default function RisksTab({ result, timeframe = "1Y" }) {
             style={{
               minWidth: 92,
               padding: "12px 16px",
-              border: `1px solid ${overall.color}35`,
+              border:
+                `1px solid color-mix(in srgb, ${overall.color} 21%, transparent)`,
               borderRadius: 13,
               textAlign: "center",
-              background: "rgba(5, 16, 31, 0.48)",
+              background:
+                "color-mix(in srgb, var(--exa-card-background-soft) 72%, transparent)",
             }}
           >
             <strong
@@ -788,10 +801,12 @@ export default function RisksTab({ result, timeframe = "1Y" }) {
                 key={`${risk}-${index}`}
                 style={{
                   padding: "11px 12px",
-                  border: "1px solid rgba(249, 115, 22, 0.18)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--exa-warning) 18%, transparent)",
                   borderRadius: 10,
                   color: COLORS.text,
-                  background: "rgba(249, 115, 22, 0.06)",
+                  background:
+                    "color-mix(in srgb, var(--exa-warning) 6%, transparent)",
                   fontSize: 12,
                   lineHeight: 1.6,
                 }}
@@ -817,10 +832,11 @@ export default function RisksTab({ result, timeframe = "1Y" }) {
       <div
         style={{
           padding: "12px 14px",
-          border: "1px solid rgba(96, 165, 250, 0.16)",
+          border: "1px solid var(--exa-border-strong)",
           borderRadius: 11,
           color: COLORS.muted,
-          background: "rgba(37, 99, 235, 0.05)",
+          background:
+            "color-mix(in srgb, var(--exa-primary) 5%, transparent)",
           fontSize: 11,
           lineHeight: 1.65,
         }}

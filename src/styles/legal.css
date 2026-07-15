@@ -4,13 +4,13 @@
   gap: 14px;
   width: 100%;
   padding: 16px;
-  border: 1px solid rgba(245, 158, 11, 0.22);
+  border: 1px solid color-mix(in srgb, var(--exa-warning) 28%, transparent);
   border-radius: 14px;
   background:
     linear-gradient(
       135deg,
-      rgba(245, 158, 11, 0.08),
-      rgba(15, 23, 42, 0.35)
+      color-mix(in srgb, var(--exa-warning) 9%, var(--exa-card-background)),
+      var(--exa-card-background)
     );
 }
 
@@ -25,8 +25,8 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  color: #fbbf24;
-  background: rgba(245, 158, 11, 0.12);
+  color: var(--exa-warning);
+  background: color-mix(in srgb, var(--exa-warning) 12%, transparent);
 }
 
 .research-disclaimer__content {
@@ -36,13 +36,13 @@
 .research-disclaimer__content strong {
   display: block;
   margin-bottom: 4px;
-  color: #f8fafc;
+  color: var(--exa-text-primary);
   font-size: 0.9rem;
 }
 
 .research-disclaimer__content p {
   margin: 0;
-  color: #aeb9ca;
+  color: var(--exa-text-secondary);
   font-size: 0.82rem;
   line-height: 1.55;
 }
@@ -55,7 +55,7 @@
 }
 
 .research-disclaimer__links a {
-  color: #8eb5ff;
+  color: var(--exa-primary);
   font-size: 0.78rem;
   font-weight: 600;
   text-decoration: none;
@@ -69,19 +69,20 @@
   width: 100%;
   margin-top: 48px;
   overflow: hidden;
-  border: 1px solid rgba(96, 165, 250, 0.14);
+  border: 1px solid var(--exa-border);
   border-radius: 22px;
   background:
     radial-gradient(
       circle at top left,
-      rgba(37, 99, 235, 0.13),
+      color-mix(in srgb, var(--exa-primary) 13%, transparent),
       transparent 34%
     ),
     linear-gradient(
       150deg,
-      rgba(9, 23, 44, 0.99),
-      rgba(4, 13, 26, 0.99)
+      var(--exa-card-background),
+      var(--exa-card-background-soft)
     );
+  box-shadow: var(--exa-shadow-card);
 }
 
 .exa-company-footer__top {
@@ -102,29 +103,29 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  border: 1px solid rgba(96, 165, 250, 0.25);
+  border: 1px solid var(--exa-border-strong);
   border-radius: 16px;
-  color: #93c5fd;
-  background: rgba(37, 99, 235, 0.14);
+  color: var(--exa-primary);
+  background: var(--exa-primary-soft);
 }
 
 .exa-company-footer__brand strong {
   display: block;
-  color: #f8fafc;
+  color: var(--exa-text-primary);
   font-size: 1.08rem;
 }
 
 .exa-company-footer__brand span {
   display: block;
   margin-top: 4px;
-  color: #64748b;
+  color: var(--exa-text-muted);
   font-size: 0.76rem;
 }
 
 .exa-company-footer__identity > p {
   max-width: 340px;
   margin: 18px 0;
-  color: #8090a6;
+  color: var(--exa-text-secondary);
   font-size: 0.82rem;
   line-height: 1.65;
 }
@@ -133,7 +134,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #8eb5ff;
+  color: var(--exa-primary);
   font-size: 0.78rem;
   text-decoration: none;
 }
@@ -146,7 +147,7 @@
 
 .exa-company-footer__group h3 {
   margin: 0 0 15px;
-  color: #8b5cf6;
+  color: var(--exa-accent);
   font-size: 0.96rem;
 }
 
@@ -158,7 +159,7 @@
 }
 
 .exa-company-footer__group a {
-  color: #a6b1c2;
+  color: var(--exa-text-secondary);
   font-size: 0.82rem;
   text-decoration: none;
   transition:
@@ -167,7 +168,7 @@
 }
 
 .exa-company-footer__group a:hover {
-  color: #f1f5f9;
+  color: var(--exa-primary);
   transform: translateX(3px);
 }
 
@@ -187,10 +188,10 @@
   place-items: center;
   width: 42px;
   height: 42px;
-  border: 1px solid rgba(148, 163, 184, 0.13);
+  border: 1px solid var(--exa-border);
   border-radius: 50%;
-  color: #7da8ff;
-  background: rgba(255, 255, 255, 0.035);
+  color: var(--exa-primary);
+  background: var(--exa-card-background-soft);
   transition:
     transform 0.18s ease,
     background 0.18s ease;
@@ -198,19 +199,19 @@
 
 .exa-company-footer__social-icons a:hover {
   transform: translateY(-3px);
-  background: rgba(37, 99, 235, 0.13);
+  background: var(--exa-primary-soft);
 }
 
 .exa-company-footer__risk {
   padding: 17px 30px;
-  border-top: 1px solid rgba(148, 163, 184, 0.09);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.09);
-  color: #d2d9e5;
+  border-top: 1px solid var(--exa-border);
+  border-bottom: 1px solid var(--exa-border);
+  color: var(--exa-text-secondary);
   font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.6;
   text-align: center;
-  background: rgba(3, 10, 21, 0.38);
+  background: var(--exa-card-background-soft);
 }
 
 .exa-company-footer__legal {
@@ -223,8 +224,8 @@
 
 .exa-company-footer__legal p {
   margin: 0;
-  color: #64748b;
-  font-size: 0.7rem;
+  color: var(--exa-text-secondary);
+  font-size: 0.75rem;
   line-height: 1.55;
 }
 
@@ -233,8 +234,212 @@
   text-align: right;
 }
 
+.legal-page {
+  width: min(1080px, calc(100% - 40px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 48px 0;
+  color: var(--exa-text-primary);
+}
+
+.legal-page__hero {
+  padding: 40px;
+  overflow: hidden;
+  border: 1px solid var(--exa-border);
+  border-radius: 24px;
+  background:
+    radial-gradient(
+      circle at 88% 12%,
+      color-mix(in srgb, var(--exa-accent) 12%, transparent),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 8% 100%,
+      color-mix(in srgb, var(--exa-primary) 13%, transparent),
+      transparent 38%
+    ),
+    var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+.legal-page__eyebrow {
+  color: var(--exa-primary);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.legal-page__hero h1 {
+  margin: 12px 0 10px;
+  color: var(--exa-text-primary);
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 1.08;
+}
+
+.legal-page__hero p {
+  max-width: 680px;
+  margin: 0;
+  color: var(--exa-text-secondary);
+  line-height: 1.7;
+}
+
+.legal-page__summary,
+.legal-section,
+.methodology-introduction,
+.methodology-step,
+.signal-methodology,
+.methodology-limitations,
+.legal-page__responsibility {
+  border: 1px solid var(--exa-border);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
+}
+
+.legal-page__summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 22px;
+  border-color: color-mix(in srgb, var(--exa-warning) 28%, transparent);
+  border-radius: 18px;
+  color: var(--exa-warning);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--exa-warning) 8%, var(--exa-card-background)),
+      var(--exa-card-background)
+    );
+}
+
+.legal-page__summary svg {
+  flex: 0 0 auto;
+}
+
+.legal-page__summary strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--exa-text-primary);
+}
+
+.legal-page__summary p,
+.legal-section p,
+.methodology-introduction p,
+.methodology-step p,
+.signal-methodology__row p,
+.methodology-limitations li,
+.legal-page__responsibility p {
+  margin: 0;
+  color: var(--exa-text-secondary);
+  line-height: 1.7;
+}
+
+.legal-page__sections,
+.methodology-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.legal-section,
+.methodology-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.legal-section__icon,
+.methodology-step__icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: var(--exa-primary);
+  background: var(--exa-primary-soft);
+}
+
+.legal-section h2,
+.methodology-step h2,
+.methodology-introduction h2,
+.signal-methodology h2,
+.methodology-limitations h2,
+.legal-page__responsibility h2 {
+  margin: 0 0 9px;
+  color: var(--exa-text-primary);
+  font-size: 1.12rem;
+}
+
+.legal-page__responsibility,
+.methodology-introduction,
+.signal-methodology,
+.methodology-limitations {
+  margin-top: 24px;
+  padding: 28px;
+  border-radius: 20px;
+}
+
+.legal-page__responsibility p + p {
+  margin-top: 12px;
+}
+
+.legal-page__last-updated {
+  margin: 24px 0 0;
+  color: var(--exa-text-secondary);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.methodology-page > .research-disclaimer {
+  margin-top: 24px;
+}
+
+.signal-methodology__table {
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--exa-border);
+  border-radius: 14px;
+}
+
+.signal-methodology__row {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.25fr) minmax(0, 1fr);
+  gap: 20px;
+  padding: 16px 18px;
+  background: var(--exa-card-background-soft);
+}
+
+.signal-methodology__row + .signal-methodology__row {
+  border-top: 1px solid var(--exa-border);
+}
+
+.signal-methodology__row strong {
+  color: var(--exa-primary);
+}
+
+.methodology-limitations ul {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding-left: 22px;
+}
+
+.methodology-limitations li::marker {
+  color: var(--exa-accent);
+}
+
 @media (max-width: 900px) {
   .exa-company-footer__top {
+    grid-template-columns: 1fr;
+  }
+
+  .legal-page__sections,
+  .methodology-steps {
     grid-template-columns: 1fr;
   }
 }
@@ -251,6 +456,20 @@
 
   .exa-company-footer__legal p:last-child {
     text-align: left;
+  }
+
+  .legal-page {
+    width: min(100% - 28px, 1080px);
+    padding: 26px 0;
+  }
+
+  .legal-page__hero {
+    padding: 28px 24px;
+  }
+
+  .signal-methodology__row {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 }
 

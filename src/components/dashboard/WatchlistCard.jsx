@@ -251,7 +251,7 @@ export default function WatchlistCard({
             <span>Company</span>
             <span>Price</span>
             <span>1D</span>
-            <span>EXA Score</span>
+            <span>Litses Score</span>
             <span>AI View</span>
             <span>Actions</span>
           </div>
@@ -382,7 +382,7 @@ export default function WatchlistCard({
       )}
 
       <p className="exa-watchlist-note">
-        Market data may be delayed. EXA scores appear only after a successful AI analysis.
+        Market data may be delayed. Litses scores appear only after a successful AI analysis.
       </p>
     </article>
   );

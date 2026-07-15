@@ -12,7 +12,7 @@ const footerGroups = [
     title: "Company",
     links: [
       {
-        label: "About EXA NEXUS",
+        label: "About Litses",
         to: "/about",
       },
       {
@@ -30,7 +30,7 @@ const footerGroups = [
     ],
   },
   {
-    title: "Markets by exa",
+    title: "Litses",
     links: [
       {
         label: "Dashboard",
@@ -112,7 +112,7 @@ export default function LegalFooter() {
               <strong>{BRAND.product}</strong>
 
               <span>
-                A product by {BRAND.company}
+                {BRAND.tagline}
               </span>
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function LegalFooter() {
         </p>
 
         <p>
-          Markets by exa provides AI-assisted market
+          Litses provides AI-assisted market
           research for informational and educational
           purposes only. Information may be delayed,
           cached, incomplete or inaccurate and does not

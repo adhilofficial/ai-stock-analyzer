@@ -272,7 +272,7 @@ export default function NewsInsightsCard({
                   <span className="exa-news-meta">
                     <span>
                       {article?.source ||
-                        "EXA Market News"}
+                        "Litses Market News"}
                     </span>
 
                     <span aria-hidden="true">

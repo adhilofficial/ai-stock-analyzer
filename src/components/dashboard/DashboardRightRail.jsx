@@ -10,7 +10,7 @@ const DEFAULT_NEWS_ARTICLES = [
       "How to read market breadth alongside NIFTY 50",
     summary:
       "Learn why advancing and declining stocks can confirm or question an index move.",
-    source: "EXA Learn",
+    source: "Litses Learn",
     time: "12m ago",
   },
   {
@@ -19,7 +19,7 @@ const DEFAULT_NEWS_ARTICLES = [
       "Why India VIX matters for short-term market risk",
     summary:
       "A simple guide to interpreting changes in expected market volatility.",
-    source: "EXA Research",
+    source: "Litses Research",
     time: "28m ago",
   },
   {
@@ -28,7 +28,7 @@ const DEFAULT_NEWS_ARTICLES = [
       "Understanding sector rotation in Indian equities",
     summary:
       "See how money can move between banking, IT, energy, FMCG and other sectors.",
-    source: "EXA Learn",
+    source: "Litses Learn",
     time: "1h ago",
   },
   {
@@ -37,7 +37,7 @@ const DEFAULT_NEWS_ARTICLES = [
       "Using volume spikes as an educational research signal",
     summary:
       "Higher-than-normal volume may indicate increased participation or unusual activity.",
-    source: "EXA Research",
+    source: "Litses Research",
     time: "2h ago",
   },
 ];

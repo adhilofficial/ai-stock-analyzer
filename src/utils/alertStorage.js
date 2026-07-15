@@ -77,7 +77,7 @@ export function normalizeCachedAlert(alert) {
       cleanText(alert.message || alert.description) ||
       "New market activity has been detected.",
     symbol: cleanText(alert.symbol || alert.ticker).toUpperCase(),
-    source: cleanText(alert.source) || "EXA alert center",
+    source: cleanText(alert.source) || "Litses alert center",
     occurredAt:
       cleanText(alert.occurredAt || alert.createdAt) || null,
     fetchedAt: cleanText(alert.fetchedAt) || null,
@@ -116,7 +116,7 @@ export function readAlertCenterState() {
       updatedAt: cleanText(parsed?.updatedAt) || null,
     };
   } catch (error) {
-    console.error("Unable to read EXA alert state:", error);
+    console.error("Unable to read Litses alert state:", error);
 
     return {
       readIds: [],
@@ -148,7 +148,7 @@ export function writeAlertCenterState(nextState) {
       state: normalized,
     });
   } catch (error) {
-    console.error("Unable to save EXA alert state:", error);
+    console.error("Unable to save Litses alert state:", error);
   }
 
   return normalized;
@@ -265,7 +265,7 @@ export function readAlertCenterCache() {
       source: cleanText(parsed?.source),
     };
   } catch (error) {
-    console.error("Unable to read EXA alert cache:", error);
+    console.error("Unable to read Litses alert cache:", error);
 
     return {
       alerts: [],
@@ -299,7 +299,7 @@ export function writeAlertCenterCache({
   const payload = {
     alerts: normalizedAlerts,
     fetchedAt: cleanText(fetchedAt) || new Date().toISOString(),
-    source: cleanText(source) || "EXA alert center",
+    source: cleanText(source) || "Litses alert center",
   };
 
   if (hasBrowserStorage()) {
@@ -314,7 +314,7 @@ export function writeAlertCenterCache({
         cache: payload,
       });
     } catch (error) {
-      console.error("Unable to save EXA alert cache:", error);
+      console.error("Unable to save Litses alert cache:", error);
     }
   }
 
@@ -338,7 +338,7 @@ export function mergeAlertCenterCache(alerts, metadata = {}) {
     ],
     fetchedAt:
       metadata.fetchedAt || current.fetchedAt || new Date().toISOString(),
-    source: metadata.source || current.source || "EXA alert center",
+    source: metadata.source || current.source || "Litses alert center",
   });
 }
 

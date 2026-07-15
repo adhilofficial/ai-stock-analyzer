@@ -10,30 +10,31 @@
   align-items: center;
   padding: 42px;
   overflow: hidden;
-  border: 1px solid rgba(96, 165, 250, 0.14);
+  border: 1px solid var(--exa-border);
   border-radius: 24px;
   background:
     radial-gradient(
       circle at 85% 15%,
-      rgba(79, 70, 229, 0.2),
+      color-mix(in srgb, var(--exa-primary) 14%, transparent),
       transparent 32%
     ),
     radial-gradient(
       circle at 10% 100%,
-      rgba(14, 165, 233, 0.12),
+      color-mix(in srgb, var(--exa-accent) 12%, transparent),
       transparent 35%
     ),
     linear-gradient(
       145deg,
-      rgba(10, 25, 48, 0.98),
-      rgba(5, 14, 28, 0.99)
+      var(--exa-card-background),
+      var(--exa-card-background-soft)
     );
+  box-shadow: var(--exa-shadow-card);
 }
 
 .exa-about-eyebrow,
 .exa-about-section-heading span,
 .exa-about-mission span {
-  color: #60a5fa;
+  color: var(--exa-primary);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -43,7 +44,7 @@
 .exa-about-hero h1 {
   max-width: 760px;
   margin: 12px 0 16px;
-  color: #f8fafc;
+  color: var(--exa-text-primary);
   font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 1.08;
 }
@@ -51,13 +52,13 @@
 .exa-about-hero__content p {
   max-width: 690px;
   margin: 0;
-  color: #94a3b8;
+  color: var(--exa-text-secondary);
   font-size: 1rem;
   line-height: 1.75;
 }
 
 .exa-about-hero__content strong {
-  color: #dbeafe;
+  color: var(--exa-text-primary);
 }
 
 .exa-about-hero__visual {
@@ -67,10 +68,10 @@
   justify-content: center;
   flex-direction: column;
   padding: 28px;
-  border: 1px solid rgba(96, 165, 250, 0.14);
+  border: 1px solid var(--exa-border);
   border-radius: 20px;
   text-align: center;
-  background: rgba(4, 13, 27, 0.48);
+  background: var(--exa-card-background-soft);
 }
 
 .exa-about-brand-mark {
@@ -79,25 +80,25 @@
   width: 70px;
   height: 70px;
   margin-bottom: 16px;
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  border: 1px solid var(--exa-border-strong);
   border-radius: 21px;
-  color: #93c5fd;
+  color: var(--exa-primary);
   background:
     linear-gradient(
       145deg,
-      rgba(37, 99, 235, 0.25),
-      rgba(79, 70, 229, 0.18)
+      var(--exa-primary-soft),
+      color-mix(in srgb, var(--exa-accent) 14%, transparent)
     );
 }
 
 .exa-about-hero__visual strong {
-  color: #f8fafc;
+  color: var(--exa-text-primary);
   font-size: 1.25rem;
 }
 
 .exa-about-hero__visual span {
   margin-top: 7px;
-  color: #64748b;
+  color: var(--exa-text-muted);
   font-size: 0.78rem;
 }
 
@@ -107,20 +108,21 @@
   gap: 40px;
   margin-top: 24px;
   padding: 34px;
-  border: 1px solid rgba(148, 163, 184, 0.11);
+  border: 1px solid var(--exa-border);
   border-radius: 20px;
-  background: rgba(10, 22, 40, 0.66);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
 }
 
 .exa-about-section-heading h2 {
   margin: 8px 0 0;
-  color: #f1f5f9;
+  color: var(--exa-text-primary);
   font-size: 1.75rem;
 }
 
 .exa-about-introduction__content p {
   margin: 0;
-  color: #94a3b8;
+  color: var(--exa-text-secondary);
   line-height: 1.75;
 }
 
@@ -134,13 +136,13 @@
   align-items: flex-start;
   margin-top: 24px;
   padding: 30px 34px;
-  border: 1px solid rgba(96, 165, 250, 0.15);
+  border: 1px solid var(--exa-border-strong);
   border-radius: 20px;
   background:
     linear-gradient(
       135deg,
-      rgba(37, 99, 235, 0.11),
-      rgba(5, 14, 28, 0.9)
+      var(--exa-primary-soft),
+      var(--exa-card-background)
     );
 }
 
@@ -151,21 +153,21 @@
   width: 50px;
   height: 50px;
   border-radius: 15px;
-  color: #93c5fd;
-  background: rgba(37, 99, 235, 0.15);
+  color: var(--exa-primary);
+  background: var(--exa-primary-soft);
 }
 
 .exa-about-mission h2 {
   max-width: 760px;
   margin: 7px 0 10px;
-  color: #f1f5f9;
+  color: var(--exa-text-primary);
   font-size: 1.45rem;
 }
 
 .exa-about-mission p {
   max-width: 850px;
   margin: 0;
-  color: #94a3b8;
+  color: var(--exa-text-secondary);
   line-height: 1.7;
 }
 
@@ -182,9 +184,10 @@
 
 .exa-about-feature {
   padding: 22px;
-  border: 1px solid rgba(148, 163, 184, 0.11);
+  border: 1px solid var(--exa-border);
   border-radius: 17px;
-  background: rgba(10, 22, 40, 0.68);
+  background: var(--exa-card-background);
+  box-shadow: var(--exa-shadow-card);
 }
 
 .exa-about-feature__icon {
@@ -194,19 +197,19 @@
   height: 42px;
   margin-bottom: 18px;
   border-radius: 12px;
-  color: #60a5fa;
-  background: rgba(37, 99, 235, 0.12);
+  color: var(--exa-primary);
+  background: var(--exa-primary-soft);
 }
 
 .exa-about-feature h3 {
   margin: 0 0 9px;
-  color: #e2e8f0;
+  color: var(--exa-text-primary);
   font-size: 0.95rem;
 }
 
 .exa-about-feature p {
   margin: 0;
-  color: #7f8ea3;
+  color: var(--exa-text-secondary);
   font-size: 0.79rem;
   line-height: 1.65;
 }

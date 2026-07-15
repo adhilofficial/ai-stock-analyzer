@@ -57,8 +57,8 @@
   background:
     linear-gradient(
       135deg,
-      #2563eb,
-      #06b6d4
+      var(--exa-primary),
+      var(--exa-accent)
     );
 
   color: #ffffff;
@@ -164,7 +164,9 @@
 
 .exa-profile-dropdown-item:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  color: var(--exa-text-muted);
+  background: var(--exa-card-background-soft);
+  opacity: 1;
 }
 
 .exa-profile-logout {
@@ -214,6 +216,28 @@ html[data-theme="light"]
 html[data-theme="light"]
   .exa-profile-dropdown-copy span {
   color: #64748b;
+}
+
+html[data-theme="light"]
+  .exa-profile-plan-row span {
+  color: var(--exa-text-secondary);
+}
+
+html[data-theme="light"]
+  .exa-profile-plan-row strong {
+  color: var(--exa-primary-hover);
+  background: var(--exa-primary-soft);
+}
+
+html[data-theme="light"]
+  .exa-profile-error {
+  border-color: color-mix(
+    in srgb,
+    var(--exa-negative) 34%,
+    transparent
+  );
+  color: var(--exa-negative);
+  background: var(--exa-negative-soft);
 }
 
 html[data-theme="light"]

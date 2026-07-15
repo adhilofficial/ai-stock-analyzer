@@ -14,18 +14,18 @@ import {
 } from "lucide-react";
 
 const COLORS = {
-  card: "#101A30",
-  cardSecondary: "#0D1B2A",
-  border: "#1E293B",
-  white: "#F8FAFC",
-  text: "#CBD5E1",
-  muted: "#64748B",
-  blue: "#2F80ED",
-  cyan: "#22D3EE",
-  green: "#22C55E",
-  yellow: "#EAB308",
-  red: "#EF4444",
-  purple: "#8B5CF6",
+  card: "var(--exa-card-background)",
+  cardSecondary: "var(--exa-card-background-soft)",
+  border: "var(--exa-border)",
+  white: "var(--exa-text-primary)",
+  text: "var(--exa-text-secondary)",
+  muted: "var(--exa-text-muted)",
+  blue: "var(--exa-primary)",
+  cyan: "var(--exa-accent)",
+  green: "var(--exa-positive)",
+  yellow: "var(--exa-warning)",
+  red: "var(--exa-negative)",
+  purple: "var(--exa-purple)",
 };
 
 function safeNumber(value) {
@@ -144,7 +144,7 @@ function getMetricStatus(
       label: "Unavailable",
       color: COLORS.muted,
       background:
-        "rgba(100, 116, 139, 0.10)",
+        "color-mix(in srgb, var(--exa-text-muted) 10%, transparent)",
     };
   }
 
@@ -154,7 +154,7 @@ function getMetricStatus(
         label: "Strong growth",
         color: COLORS.green,
         background:
-          "rgba(34, 197, 94, 0.10)",
+          "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
       };
     }
 
@@ -163,7 +163,7 @@ function getMetricStatus(
         label: "Positive",
         color: COLORS.cyan,
         background:
-          "rgba(34, 211, 238, 0.10)",
+          "color-mix(in srgb, var(--exa-accent) 10%, transparent)",
       };
     }
 
@@ -171,7 +171,7 @@ function getMetricStatus(
       label: "Declining",
       color: COLORS.red,
       background:
-        "rgba(239, 68, 68, 0.10)",
+        "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
     };
   }
 
@@ -181,7 +181,7 @@ function getMetricStatus(
         label: "High margin",
         color: COLORS.green,
         background:
-          "rgba(34, 197, 94, 0.10)",
+          "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
       };
     }
 
@@ -190,7 +190,7 @@ function getMetricStatus(
         label: "Positive",
         color: COLORS.yellow,
         background:
-          "rgba(234, 179, 8, 0.10)",
+          "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
       };
     }
 
@@ -198,7 +198,7 @@ function getMetricStatus(
       label: "Negative",
       color: COLORS.red,
       background:
-        "rgba(239, 68, 68, 0.10)",
+        "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
     };
   }
 
@@ -208,7 +208,7 @@ function getMetricStatus(
         label: "Strong",
         color: COLORS.green,
         background:
-          "rgba(34, 197, 94, 0.10)",
+          "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
       };
     }
 
@@ -217,7 +217,7 @@ function getMetricStatus(
         label: "Moderate",
         color: COLORS.yellow,
         background:
-          "rgba(234, 179, 8, 0.10)",
+          "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
       };
     }
 
@@ -225,7 +225,7 @@ function getMetricStatus(
       label: "Low",
       color: COLORS.red,
       background:
-        "rgba(239, 68, 68, 0.10)",
+        "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
     };
   }
 
@@ -235,7 +235,7 @@ function getMetricStatus(
         label: "Low debt",
         color: COLORS.green,
         background:
-          "rgba(34, 197, 94, 0.10)",
+          "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
       };
     }
 
@@ -244,7 +244,7 @@ function getMetricStatus(
         label: "Moderate",
         color: COLORS.yellow,
         background:
-          "rgba(234, 179, 8, 0.10)",
+          "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
       };
     }
 
@@ -252,7 +252,7 @@ function getMetricStatus(
       label: "High debt",
       color: COLORS.red,
       background:
-        "rgba(239, 68, 68, 0.10)",
+        "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
     };
   }
 
@@ -262,7 +262,7 @@ function getMetricStatus(
         label: "Healthy",
         color: COLORS.green,
         background:
-          "rgba(34, 197, 94, 0.10)",
+          "color-mix(in srgb, var(--exa-positive) 10%, transparent)",
       };
     }
 
@@ -271,7 +271,7 @@ function getMetricStatus(
         label: "Adequate",
         color: COLORS.yellow,
         background:
-          "rgba(234, 179, 8, 0.10)",
+          "color-mix(in srgb, var(--exa-warning) 10%, transparent)",
       };
     }
 
@@ -279,7 +279,7 @@ function getMetricStatus(
       label: "Weak",
       color: COLORS.red,
       background:
-        "rgba(239, 68, 68, 0.10)",
+        "color-mix(in srgb, var(--exa-negative) 10%, transparent)",
     };
   }
 
@@ -287,7 +287,7 @@ function getMetricStatus(
     label: "Reported",
     color: COLORS.blue,
     background:
-      "rgba(47, 128, 237, 0.10)",
+      "color-mix(in srgb, var(--exa-primary) 10%, transparent)",
   };
 }
 
@@ -307,7 +307,8 @@ function StatusBadge({
         fontWeight: 700,
         color,
         background,
-        border: `1px solid ${color}33`,
+        border:
+          `1px solid color-mix(in srgb, ${color} 20%, transparent)`,
         whiteSpace: "nowrap",
       }}
     >
@@ -338,7 +339,7 @@ function MetricCard({
         borderRadius: 14,
         border: `1px solid ${COLORS.border}`,
         background:
-          "linear-gradient(145deg, #101A30 0%, #0D1B2A 100%)",
+          "linear-gradient(145deg, var(--exa-card-background) 0%, var(--exa-card-background-soft) 100%)",
       }}
     >
       <div
@@ -359,8 +360,10 @@ function MetricCard({
             justifyContent: "center",
             borderRadius: 10,
             color: accent,
-            background: `${accent}15`,
-            border: `1px solid ${accent}2E`,
+            background:
+              `color-mix(in srgb, ${accent} 8%, transparent)`,
+            border:
+              `1px solid color-mix(in srgb, ${accent} 18%, transparent)`,
           }}
         >
           <Icon size={18} />
@@ -422,7 +425,7 @@ function DetailRow({
         gap: 18,
         padding: "11px 0",
         borderBottom:
-          "1px solid rgba(30, 41, 59, 0.75)",
+          "1px solid var(--exa-border)",
       }}
     >
       <span
@@ -490,9 +493,9 @@ export default function FundamentalsTab({
             padding: "13px 15px",
             color: COLORS.yellow,
             background:
-              "rgba(234, 179, 8, 0.08)",
+              "color-mix(in srgb, var(--exa-warning) 8%, transparent)",
             border:
-              "1px solid rgba(234, 179, 8, 0.22)",
+              "1px solid color-mix(in srgb, var(--exa-warning) 22%, transparent)",
             borderRadius: 12,
             fontSize: 12,
             lineHeight: 1.6,
@@ -857,9 +860,9 @@ export default function FundamentalsTab({
           padding: "13px 15px",
           color: COLORS.muted,
           background:
-            "rgba(47, 128, 237, 0.06)",
+            "color-mix(in srgb, var(--exa-primary) 6%, transparent)",
           border:
-            "1px solid rgba(47, 128, 237, 0.18)",
+            "1px solid color-mix(in srgb, var(--exa-primary) 18%, transparent)",
           borderRadius: 12,
           fontSize: 11,
           lineHeight: 1.65,

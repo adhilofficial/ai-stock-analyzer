@@ -471,7 +471,7 @@ export default function DashboardStats({
       <article className="exa-stat-card score">
         <div className="exa-stat-card-top">
           <span className="exa-stat-label">
-            EXA Market Score
+            Litses Market Score
           </span>
 
           <span className="exa-stat-icon">

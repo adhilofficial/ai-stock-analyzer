@@ -2148,6 +2148,80 @@
     opacity: 1;
   }
 }
+
+/* =========================================
+   LITSES BRAND LOCKUP
+   ========================================= */
+
+.exa-brand-lockup,
+.exa-brand-lockup.compact {
+  width: auto !important;
+  max-width: 160px !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.exa-brand-lockup .exa-brand-image,
+.exa-brand-lockup.compact .exa-brand-image,
+.exa-sidebar-brand .exa-brand-image {
+  width: 42px !important;
+  height: 42px !important;
+  max-width: 42px !important;
+  max-height: 42px !important;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  object-fit: contain !important;
+}
+
+.exa-brand-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.exa-brand-wordmark {
+  color: var(--exa-text-primary);
+  font-size: 24px;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.exa-brand-tagline {
+  margin-top: 4px;
+  padding-left: 0;
+  color: var(--exa-text-secondary);
+  font-size: 7px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.exa-brand-lockup.compact .exa-brand-image {
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  flex-basis: 36px;
+}
+
+.exa-brand-lockup.compact .exa-brand-wordmark {
+  font-size: 20px;
+}
+
+@media (max-width: 900px) {
+  .exa-brand-lockup,
+  .exa-sidebar-brand .exa-brand-lockup {
+    max-width: 150px !important;
+  }
+
+  .exa-brand-wordmark {
+    font-size: 22px;
+  }
+}
 /* =====================================
    STEP 3B — MAIN CONTENT + RIGHT RAIL
    ===================================== */
@@ -4721,4 +4795,158 @@ html[data-theme="light"]
   .exa-compact-remove-button {
     opacity: 1;
   }
+}
+
+/* =========================================
+   FINAL LITSES SHELL AND BRAND OVERRIDES
+   Keep this block last so older legacy logo rules cannot win.
+   ========================================= */
+
+.exa-brand-lockup,
+.exa-sidebar-brand .exa-brand-lockup,
+.exa-brand-lockup.compact {
+  width: auto !important;
+  max-width: 168px !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.exa-brand-lockup .exa-brand-image,
+.exa-sidebar-brand .exa-brand-image,
+.exa-brand-lockup.compact .exa-brand-image {
+  width: 42px !important;
+  height: 42px !important;
+  max-width: 42px !important;
+  max-height: 42px !important;
+  flex: 0 0 42px !important;
+  object-fit: contain;
+}
+
+.exa-brand-copy {
+  min-width: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.exa-brand-wordmark {
+  color: var(--exa-text-primary);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.exa-brand-tagline {
+  margin-top: 4px !important;
+  padding-left: 0 !important;
+  color: var(--exa-text-secondary) !important;
+  font-size: 10px !important;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.exa-brand-lockup.compact .exa-brand-copy {
+  display: none;
+}
+
+.exa-sidebar-section-label {
+  color: var(--exa-text-secondary);
+  font-size: 11px;
+}
+
+.exa-sidebar-link,
+.exa-topbar-search input,
+.exa-ask-ai-button,
+.exa-profile-copy strong {
+  font-size: 12px;
+}
+
+.exa-upgrade-card p,
+.exa-sidebar-disclaimer,
+.exa-profile-copy small,
+.exa-compact-watchlist-meta-copy .exa-data-timestamp,
+.exa-compact-watchlist-warning {
+  color: var(--exa-text-secondary);
+  font-size: 10px;
+}
+
+.exa-sidebar-toggle-arrows {
+  color: var(--exa-primary);
+}
+
+html[data-theme="light"] .exa-sidebar-link.active,
+html[data-theme="light"] .exa-ask-ai-button {
+  color: #ffffff;
+  background: linear-gradient(
+    115deg,
+    var(--exa-primary-hover),
+    var(--exa-accent)
+  );
+}
+
+@media (max-width: 900px) {
+  .exa-brand-lockup,
+  .exa-sidebar-brand .exa-brand-lockup {
+    max-width: 154px !important;
+  }
+}
+
+/* Dashboard readability floor for dense labels and metadata. */
+.exa-notification-count,
+.exa-stat-card > small,
+.exa-stat-status,
+.exa-alert-stat-copy,
+.exa-premium-chart-controls button,
+.exa-chart-market-state,
+.exa-premium-chart-tooltip span,
+.exa-premium-chart-footer span,
+.exa-live-intelligence-badge,
+.exa-ai-updated,
+.exa-summary-metrics span,
+.exa-summary-sector-row span,
+.exa-summary-disclaimer,
+.exa-compact-stock-copy small,
+.exa-compact-stock-price span,
+.exa-compact-view-all,
+.exa-compact-watchlist-state p,
+.exa-dashboard-right-rail .exa-alert-title-row time,
+.exa-dashboard-right-rail .exa-alert-content p,
+.exa-dashboard-right-rail .exa-alerts-note,
+.exa-right-rail-status,
+.exa-news-view-all-top,
+.exa-news-summary,
+.exa-news-meta,
+.exa-news-disclaimer,
+.exa-data-timestamp,
+.exa-compact-watchlist-warning {
+  font-size: 10px !important;
+}
+
+.exa-news-copy > strong,
+.exa-dashboard-right-rail .exa-alert-title-row strong {
+  font-size: 11px;
+}
+
+html[data-theme="light"]
+  :is(
+    .exa-sector-tile > p,
+    .exa-sector-tile-footer > span,
+    .exa-alert-content p,
+    .exa-alert-title-row time,
+    .exa-alerts-note,
+    .exa-watchlist-company small,
+    .exa-mover-company small,
+    .exa-recent-company small,
+    .exa-recent-company time,
+    .exa-news-summary,
+    .exa-news-meta,
+    .exa-news-disclaimer
+  ) {
+  color: var(--exa-text-secondary);
 }

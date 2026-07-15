@@ -91,7 +91,7 @@ export default function Methodology() {
         <h2>How the analysis works</h2>
 
         <p>
-          Markets by exa combines available market information,
+          Litses combines available market information,
           calculated indicators and AI-assisted interpretation.
           The output is designed to support further research, not
           replace independent verification or professional advice.

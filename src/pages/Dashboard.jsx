@@ -2575,7 +2575,7 @@ useEffect(() => {
         <section className="exa-dashboard-header">
           <div>
             <p className="exa-dashboard-eyebrow">
-              EXA NEXUS
+              LITSES
             </p>
 
             <h1>Dashboard</h1>

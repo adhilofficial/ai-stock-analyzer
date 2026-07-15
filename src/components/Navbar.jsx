@@ -25,7 +25,7 @@ export default function Navbar() {
           fontWeight: 700, color: "#fff", fontSize: 16
         }}>X</div>
         <div>
-          <div style={{ color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: 0.5 }}>EXA NEXUS</div>
+          <div style={{ color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: 0.5 }}>Litses</div>
           <div style={{ color: "#64748b", fontSize: 11 }}>AI-powered market intelligence for Indian markets</div>
         </div>
       </div>

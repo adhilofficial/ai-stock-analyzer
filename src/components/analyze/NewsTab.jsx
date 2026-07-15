@@ -23,9 +23,9 @@ const SENTIMENTS = [
 ];
 
 const SENTIMENT_COLORS = {
-  Positive: "#22c55e",
-  Neutral: "#60a5fa",
-  Negative: "#fb7185",
+  Positive: "var(--exa-positive)",
+  Neutral: "var(--exa-primary)",
+  Negative: "var(--exa-negative)",
 };
 
 function formatRelativeTime(value) {
@@ -66,10 +66,12 @@ function SentimentBadge({ sentiment = "Neutral" }) {
         alignItems: "center",
         minHeight: 24,
         padding: "3px 9px",
-        border: `1px solid ${color}44`,
+        border:
+          `1px solid color-mix(in srgb, ${color} 27%, transparent)`,
         borderRadius: 999,
         color,
-        background: `${color}16`,
+        background:
+          `color-mix(in srgb, ${color} 9%, transparent)`,
         fontSize: 10,
         fontWeight: 800,
       }}
@@ -94,16 +96,16 @@ function NewsSkeleton() {
           key={index}
           style={{
             minHeight: 260,
-            border: "1px solid #1e3350",
+            border: "1px solid var(--exa-border)",
             borderRadius: 16,
-            background: "#0d1a2e",
+            background: "var(--exa-card-background)",
             overflow: "hidden",
           }}
         >
           <div
             style={{
               height: 140,
-              background: "#142641",
+              background: "var(--exa-card-hover)",
             }}
           />
 
@@ -116,7 +118,7 @@ function NewsSkeleton() {
                   height: 10,
                   marginBottom: 10,
                   borderRadius: 999,
-                  background: "#1a2d4a",
+                  background: "var(--exa-border)",
                 }}
               />
             ))}
@@ -133,14 +135,14 @@ function SummaryCard({ label, value, color }) {
       style={{
         minWidth: 105,
         padding: "12px 14px",
-        border: "1px solid #1e3350",
+        border: "1px solid var(--exa-border)",
         borderRadius: 12,
-        background: "#101e34",
+        background: "var(--exa-card-background-soft)",
       }}
     >
       <span
         style={{
-          color: "#64748b",
+          color: "var(--exa-text-muted)",
           fontSize: 10,
           fontWeight: 700,
         }}
@@ -166,9 +168,9 @@ function ArticleCard({ article }) {
   return (
     <article
       style={{
-        border: "1px solid #1e3350",
+        border: "1px solid var(--exa-border)",
         borderRadius: 16,
-        background: "#0d1a2e",
+        background: "var(--exa-card-background)",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
@@ -181,7 +183,7 @@ function ArticleCard({ article }) {
         style={{
           display: "block",
           height: 155,
-          background: "#101e34",
+          background: "var(--exa-card-background-soft)",
           overflow: "hidden",
         }}
       >
@@ -204,7 +206,7 @@ function ArticleCard({ article }) {
             style={{
               width: "100%",
               height: "100%",
-              color: "#60a5fa",
+              color: "var(--exa-primary)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -235,7 +237,7 @@ function ArticleCard({ article }) {
 
           <span
             style={{
-              color: "#64748b",
+              color: "var(--exa-text-muted)",
               fontSize: 10,
             }}
           >
@@ -246,7 +248,7 @@ function ArticleCard({ article }) {
         <h3
           style={{
             margin: "12px 0 0",
-            color: "#f8fafc",
+            color: "var(--exa-text-primary)",
             fontSize: 15,
             lineHeight: 1.45,
           }}
@@ -260,7 +262,7 @@ function ArticleCard({ article }) {
             overflow: "hidden",
             minHeight: 57,
             margin: "9px 0 0",
-            color: "#94a3b8",
+            color: "var(--exa-text-secondary)",
             fontSize: 11,
             lineHeight: 1.65,
             WebkitBoxOrient: "vertical",
@@ -284,7 +286,7 @@ function ArticleCard({ article }) {
           <span
             style={{
               overflow: "hidden",
-              color: "#60a5fa",
+              color: "var(--exa-primary)",
               fontSize: 10,
               fontWeight: 700,
               textOverflow: "ellipsis",
@@ -299,7 +301,7 @@ function ArticleCard({ article }) {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              color: "#93c5fd",
+              color: "var(--exa-primary)",
               display: "inline-flex",
               alignItems: "center",
               gap: 5,
@@ -466,10 +468,10 @@ export default function NewsTab({ symbol, company }) {
       <section
         style={{
           padding: 18,
-          border: "1px solid #1e3350",
+          border: "1px solid var(--exa-border)",
           borderRadius: 16,
           background:
-            "linear-gradient(145deg, rgba(10,24,43,.98), rgba(7,18,35,.98))",
+            "linear-gradient(145deg, var(--exa-card-background), var(--exa-card-background-soft))",
         }}
       >
         <div
@@ -483,7 +485,7 @@ export default function NewsTab({ symbol, company }) {
           <div>
             <span
               style={{
-                color: "#60a5fa",
+                color: "var(--exa-primary)",
                 fontSize: 10,
                 fontWeight: 800,
                 letterSpacing: ".14em",
@@ -496,7 +498,7 @@ export default function NewsTab({ symbol, company }) {
             <h2
               style={{
                 margin: "6px 0 0",
-                color: "#f8fafc",
+                color: "var(--exa-text-primary)",
                 fontSize: 20,
               }}
             >
@@ -507,7 +509,7 @@ export default function NewsTab({ symbol, company }) {
               style={{
                 maxWidth: 700,
                 margin: "7px 0 0",
-                color: "#94a3b8",
+                color: "var(--exa-text-secondary)",
                 fontSize: 12,
                 lineHeight: 1.65,
               }}
@@ -523,10 +525,10 @@ export default function NewsTab({ symbol, company }) {
             style={{
               minHeight: 38,
               padding: "8px 12px",
-              border: "1px solid rgba(96,165,250,.25)",
+              border: "1px solid var(--exa-border-strong)",
               borderRadius: 10,
-              color: "#93c5fd",
-              background: "rgba(37,99,235,.1)",
+              color: "var(--exa-primary)",
+              background: "var(--exa-primary-soft)",
               display: "inline-flex",
               alignItems: "center",
               gap: 7,
@@ -552,10 +554,10 @@ export default function NewsTab({ symbol, company }) {
             flexWrap: "wrap",
           }}
         >
-          <SummaryCard label="Total articles" value={news.length} color="#f8fafc" />
-          <SummaryCard label="Positive" value={counts.Positive} color="#22c55e" />
-          <SummaryCard label="Neutral" value={counts.Neutral} color="#60a5fa" />
-          <SummaryCard label="Negative" value={counts.Negative} color="#fb7185" />
+          <SummaryCard label="Total articles" value={news.length} color="var(--exa-text-primary)" />
+          <SummaryCard label="Positive" value={counts.Positive} color="var(--exa-positive)" />
+          <SummaryCard label="Neutral" value={counts.Neutral} color="var(--exa-primary)" />
+          <SummaryCard label="Negative" value={counts.Negative} color="var(--exa-negative)" />
         </div>
       </section>
 
@@ -563,16 +565,16 @@ export default function NewsTab({ symbol, company }) {
         style={{
           marginTop: 14,
           padding: 14,
-          border: "1px solid #1e3350",
+          border: "1px solid var(--exa-border)",
           borderRadius: 14,
-          background: "#0b1729",
+          background: "var(--exa-card-background)",
           display: "flex",
           alignItems: "center",
           gap: 8,
           flexWrap: "wrap",
         }}
       >
-        <Filter size={15} color="#60a5fa" />
+        <Filter size={15} color="var(--exa-primary)" />
 
         {SENTIMENTS.map((option) => (
           <button
@@ -587,16 +589,19 @@ export default function NewsTab({ symbol, company }) {
               padding: "6px 11px",
               border:
                 sentimentFilter === option
-                  ? "1px solid rgba(96,165,250,.45)"
-                  : "1px solid #1e3350",
+                  ? "1px solid var(--exa-border-strong)"
+                  : "1px solid var(--exa-border)",
               borderRadius: 999,
-              color: sentimentFilter === option ? "#fff" : "#94a3b8",
+              color:
+                sentimentFilter === option
+                  ? "var(--exa-primary-contrast)"
+                  : "var(--exa-text-secondary)",
               background:
                 sentimentFilter === option
-                  ? "rgba(37,99,235,.2)"
-                  : "#101e34",
+                  ? "var(--exa-primary)"
+                  : "var(--exa-card-background-soft)",
               cursor: "pointer",
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: 750,
             }}
           >
@@ -615,10 +620,10 @@ export default function NewsTab({ symbol, company }) {
             minHeight: 32,
             maxWidth: 180,
             padding: "5px 9px",
-            border: "1px solid #1e3350",
+            border: "1px solid var(--exa-border)",
             borderRadius: 8,
-            color: "#cbd5e1",
-            background: "#101e34",
+            color: "var(--exa-text-secondary)",
+            background: "var(--exa-card-background-soft)",
             fontSize: 10,
           }}
         >
@@ -639,10 +644,10 @@ export default function NewsTab({ symbol, company }) {
           style={{
             minHeight: 32,
             padding: "6px 10px",
-            border: "1px solid #1e3350",
+            border: "1px solid var(--exa-border)",
             borderRadius: 8,
-            color: "#cbd5e1",
-            background: "#101e34",
+            color: "var(--exa-text-secondary)",
+            background: "var(--exa-card-background-soft)",
             display: "inline-flex",
             alignItems: "center",
             gap: 6,
@@ -663,10 +668,12 @@ export default function NewsTab({ symbol, company }) {
           <div
             style={{
               padding: 28,
-              border: "1px solid rgba(251,113,133,.24)",
+              border:
+                "1px solid color-mix(in srgb, var(--exa-negative) 24%, transparent)",
               borderRadius: 16,
-              color: "#fda4af",
-              background: "rgba(127,29,29,.14)",
+              color: "var(--exa-negative)",
+              background:
+                "color-mix(in srgb, var(--exa-negative) 9%, var(--exa-card-background))",
               textAlign: "center",
             }}
           >
@@ -699,10 +706,10 @@ export default function NewsTab({ symbol, company }) {
                   style={{
                     minHeight: 38,
                     padding: "8px 15px",
-                    border: "1px solid rgba(96,165,250,.28)",
+                    border: "1px solid var(--exa-border-strong)",
                     borderRadius: 10,
-                    color: "#93c5fd",
-                    background: "rgba(37,99,235,.1)",
+                    color: "var(--exa-primary)",
+                    background: "var(--exa-primary-soft)",
                     cursor: "pointer",
                     fontSize: 11,
                     fontWeight: 750,
@@ -717,19 +724,19 @@ export default function NewsTab({ symbol, company }) {
           <div
             style={{
               padding: 34,
-              border: "1px solid #1e3350",
+              border: "1px solid var(--exa-border)",
               borderRadius: 16,
-              color: "#94a3b8",
-              background: "#0b1729",
+              color: "var(--exa-text-secondary)",
+              background: "var(--exa-card-background)",
               textAlign: "center",
             }}
           >
-            <Newspaper size={26} color="#60a5fa" />
+            <Newspaper size={26} color="var(--exa-primary)" />
             <strong
               style={{
                 display: "block",
                 marginTop: 10,
-                color: "#f8fafc",
+                color: "var(--exa-text-primary)",
               }}
             >
               No matching articles
@@ -742,14 +749,14 @@ export default function NewsTab({ symbol, company }) {
         style={{
           marginTop: 16,
           paddingTop: 14,
-          borderTop: "1px solid #1e3350",
+          borderTop: "1px solid var(--exa-border)",
           display: "flex",
           justifyContent: "space-between",
           gap: 12,
           flexWrap: "wrap",
         }}
       >
-        <span style={{ color: "#64748b", fontSize: 10 }}>
+        <span style={{ color: "var(--exa-text-muted)", fontSize: 10 }}>
           Sentiment uses headline keywords and is not investment advice.
         </span>
 
@@ -758,7 +765,7 @@ export default function NewsTab({ symbol, company }) {
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            color: "#93c5fd",
+            color: "var(--exa-primary)",
             display: "inline-flex",
             alignItems: "center",
             gap: 6,

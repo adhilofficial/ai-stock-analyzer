@@ -26,7 +26,7 @@ const OUTPUT_FILE = path.join(
 );
 
 /*
- * Starter universe for the EXA NEXUS Stock Screener.
+ * Starter universe for the Litses Stock Screener.
  *
  * Every symbol is checked against your existing
  * indian-stock-master.json file.

@@ -22,7 +22,7 @@ const disclaimerSections = [
     icon: ShieldAlert,
     title: "No personalised investment advice",
     content:
-      "Markets by exa does not evaluate your income, liabilities, investment objectives, financial condition, risk tolerance or investment horizon. Content displayed by the platform should not be interpreted as personalised financial, investment, tax or legal advice.",
+      "Litses does not evaluate your income, liabilities, investment objectives, financial condition, risk tolerance or investment horizon. Content displayed by the platform should not be interpreted as personalised financial, investment, tax or legal advice.",
   },
   {
     id: "ai-limitations",

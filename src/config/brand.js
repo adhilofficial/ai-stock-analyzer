@@ -1,11 +1,11 @@
 export const BRAND = Object.freeze({
-  company: "EXA NEXUS",
-  product: "Markets by exa",
-  shortProductName: "Markets",
+  company: "Litses",
+  product: "Litses",
+  shortProductName: "Litses",
   tagline: "AI-powered market research and intelligence",
   description:
-    "Markets by exa is an AI-powered Indian financial market research and analytics platform developed by EXA NEXUS.",
-  legalName: "EXA NEXUS",
+    "Litses is an AI-powered Indian financial market research and analytics platform.",
+  legalName: "Litses",
 });
 
 export default BRAND;

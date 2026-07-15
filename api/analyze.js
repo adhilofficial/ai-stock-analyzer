@@ -141,7 +141,7 @@ const ANALYSIS_SCHEMA = {
 };
 
 const SYSTEM_PROMPT = `
-You are the AI research engine for EXA NEXUS,
+You are the AI research engine for Litses,
 an Indian financial-market research platform.
 
 You will receive verified stock-market data retrieved
@@ -1442,4 +1442,4 @@ export default async function handler(
           : undefined,
     });
   }
-} 
+}
